@@ -1,0 +1,35 @@
+CREATE TABLE abfallAbcWaste
+(
+    id          INTEGER NOT NULL PRIMARY KEY,
+    language    TEXT,
+    title       TEXT,
+    description TEXT,
+    tips        TEXT
+);
+
+CREATE TABLE abfallAbcDisposalRoutes
+(
+    id                INTEGER NOT NULL PRIMARY KEY,
+    language          TEXT,
+    alternativeRoute  TEXT,
+    collection        TEXT,
+    dischargePoint    TEXT
+);
+
+CREATE TABLE abfallAbcWasteAbfallAbcDisposalRoutes
+(
+    wasteId  INTEGER NOT NULL REFERENCES abfallAbcWaste ON DELETE CASCADE,
+    routesId INTEGER NOT NULL REFERENCES abfallAbcDisposalRoutes ON DELETE CASCADE,
+    PRIMARY KEY (wasteId, routesId)
+);
+
+searchAbfallAbcWaste:
+SELECT *
+FROM abfallAbcWaste
+WHERE title LIKE '%' || :name || '%'
+   OR description LIKE '%' || :name || '%'
+ORDER BY title;
+
+insertAbfallAbcWaste:
+INSERT OR REPLACE INTO abfallAbcWaste
+VALUES ?;
