@@ -110,7 +110,6 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.animation.graphics)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.navigation.compose)
 
@@ -119,8 +118,6 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material3.adaptive.navigation)
-    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
 
     implementation(platform(libs.io.insert.koin.koin.bom))
     implementation(libs.io.insert.koin.koin.core)
@@ -131,23 +128,9 @@ dependencies {
     implementation(libs.io.coil.network.okhttp)
     implementation(libs.io.coil.coil.svg)
 
-    implementation(libs.org.jetbrains.kotlinx.kotlinx.datetime)
-    implementation(libs.org.jetbrains.kotlinx.kotlinx.serialization.json)
-    implementation(libs.org.jetbrains.kotlinx.kotlinx.coroutines.core)
-    runtimeOnly(libs.org.jetbrains.kotlinx.kotlinx.coroutines.android)
-
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.fcm)
-
-    implementation(platform(libs.retrofit2.bom))
-    implementation(libs.retrofit2)
-    implementation(libs.retrofit2.converter.kotlinx)
-
     implementation(libs.accompanist.permissions)
 
     implementation(libs.androidx.adaptive.android)
-
-    implementation(libs.richeditor.compose)
 
     implementation(libs.compose.material.icons.extended)
 

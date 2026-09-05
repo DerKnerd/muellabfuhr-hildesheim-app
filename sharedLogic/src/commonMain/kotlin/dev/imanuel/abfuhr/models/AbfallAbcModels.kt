@@ -1,4 +1,4 @@
-package dev.imanuel.abfuhr.api.models
+package dev.imanuel.abfuhr.models
 
 import kotlinx.serialization.Serializable
 
@@ -35,7 +35,7 @@ data class AbfallAbcDisposalRoute(
 
 @Serializable
 data class AbfallAbcDisposalRoutes(
-    val id: Int,
+    val id: Long,
     val language: String,
     val alternativeRoute: AbfallAbcDisposalRoute? = null,
     val collection: AbfallAbcDisposalRoute? = null,
@@ -44,7 +44,7 @@ data class AbfallAbcDisposalRoutes(
 
 @Serializable
 data class AbfallAbcWaste(
-    val id: Int,
+    val id: Long,
     val language: String,
     val title: String,
     val description: String,
@@ -55,8 +55,8 @@ data class AbfallAbcWaste(
 
 @Serializable
 data class AbfallAbcWasteMapping(
-    val wasteId: Int,
-    val routesId: Int
+    val wasteId: Long,
+    val routesId: Long
 )
 
 @Serializable

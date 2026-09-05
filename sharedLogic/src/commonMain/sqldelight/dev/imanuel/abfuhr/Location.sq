@@ -1,0 +1,47 @@
+CREATE TABLE location (
+    type TEXT NOT NULL,
+    name TEXT NOT NULL PRIMARY KEY,
+    latitude TEXT NOT NULL,
+    longitude TEXT NOT NULL,
+    description TEXT NOT NULL,
+    openingHours TEXT NOT NULL,
+    mail TEXT NOT NULL,
+    www TEXT NOT NULL,
+    tel TEXT NOT NULL,
+    fax TEXT NOT NULL
+);
+
+CREATE VIRTUAL TABLE location_fts USING fts5(
+    description
+);
+
+CREATE TRIGGER location_ai AFTER INSERT ON location BEGIN
+  INSERT INTO location_fts(rowid, description) VALUES (new.rowid, new.description);
+END;
+
+CREATE TRIGGER location_ad AFTER DELETE ON location BEGIN
+  INSERT INTO location_fts(location_fts, rowid, description) VALUES('delete', old.rowid, old.description);
+END;
+
+CREATE TRIGGER location_au AFTER UPDATE ON location BEGIN
+  INSERT INTO location_fts(location_fts, rowid, description) VALUES('delete', old.rowid, old.description);
+  INSERT INTO location_fts(rowid, description) VALUES (new.rowid, new.description);
+END;
+
+insertLocation:
+INSERT OR REPLACE INTO location(type, name, latitude, longitude, description, openingHours, mail, www, tel, fax)
+VALUES ?;
+
+getAllLocations:
+SELECT * FROM location;
+
+clearLocations:
+DELETE FROM location;
+
+searchLocationByKeyword:
+SELECT l.*
+FROM location l
+LEFT JOIN location_fts f ON l.rowid = f.rowid
+WHERE (:locationType = '' OR l.type = :locationType)
+  AND (:keyword = '' OR f.description MATCH :keyword)
+LIMIT 5;

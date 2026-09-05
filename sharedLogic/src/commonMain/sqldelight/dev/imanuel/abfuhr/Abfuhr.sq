@@ -1,0 +1,79 @@
+CREATE TABLE abfuhrPickup (
+    streetId INTEGER NOT NULL,
+    date INTEGER NOT NULL,
+    isPostponed INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    PRIMARY KEY(streetId, date, type)
+);
+
+CREATE TABLE abfuhrLocation (
+    streetId INTEGER NOT NULL PRIMARY KEY,
+    street TEXT NOT NULL,
+    locality TEXT NOT NULL,
+    localityId INTEGER NOT NULL,
+    district TEXT NOT NULL,
+    districtId INTEGER NOT NULL,
+    streetLatitude REAL NOT NULL,
+    streetLongitude REAL NOT NULL,
+    districtLatitude REAL NOT NULL,
+    districtLongitude REAL NOT NULL,
+    localityLatitude REAL NOT NULL,
+    localityLongitude REAL NOT NULL
+);
+
+CREATE VIRTUAL TABLE abfuhrLocation_fts USING fts5(
+    locality,
+    street,
+    district
+);
+
+CREATE TRIGGER abfuhrLocation_ai AFTER INSERT ON abfuhrLocation BEGIN
+  INSERT INTO abfuhrLocation_fts(rowid, locality, street, district) VALUES (new.streetId, new.locality, new.street, new.district);
+END;
+
+CREATE TRIGGER abfuhrLocation_ad AFTER DELETE ON abfuhrLocation BEGIN
+  INSERT INTO abfuhrLocation_fts(abfuhrLocation_fts, rowid, locality, street, district) VALUES('delete', old.streetId, old.locality, old.street, old.district);
+END;
+
+CREATE TRIGGER abfuhrLocation_au AFTER UPDATE ON abfuhrLocation BEGIN
+  INSERT INTO abfuhrLocation_fts(abfuhrLocation_fts, rowid, locality, street, district) VALUES('delete', old.streetId, old.locality, old.street, old.district);
+  INSERT INTO abfuhrLocation_fts(rowid, locality, street, district) VALUES (new.streetId, new.locality, new.street, new.district);
+END;
+
+insertPickup:
+INSERT OR REPLACE INTO abfuhrPickup(streetId, date, isPostponed, type)
+VALUES ?;
+
+insertLocation:
+INSERT OR REPLACE INTO abfuhrLocation(streetId, street, locality, localityId, district, districtId, streetLatitude, streetLongitude, districtLatitude, districtLongitude, localityLatitude, localityLongitude)
+VALUES ?;
+
+getAllPickups:
+SELECT * FROM abfuhrPickup;
+
+getAllLocations:
+SELECT * FROM abfuhrLocation;
+
+clearPickups:
+DELETE FROM abfuhrPickup;
+
+clearLocations:
+DELETE FROM abfuhrLocation;
+
+searchAbfuhrLocationByKeyword:
+SELECT l.*
+FROM abfuhrLocation l
+LEFT JOIN abfuhrLocation_fts f ON l.streetId = f.rowid
+WHERE (:keyword = '' OR f.abfuhrLocation_fts MATCH :keyword)
+LIMIT 5;
+
+getPickupsByStreetId:
+SELECT *
+FROM abfuhrPickup
+WHERE streetId = :streetId;
+
+searchByGeolocation:
+SELECT *, ((streetLatitude - :lat) * (streetLatitude - :lat) + (streetLongitude - :lon) * (streetLongitude - :lon)) AS distance
+FROM abfuhrLocation
+ORDER BY distance ASC
+LIMIT 5;

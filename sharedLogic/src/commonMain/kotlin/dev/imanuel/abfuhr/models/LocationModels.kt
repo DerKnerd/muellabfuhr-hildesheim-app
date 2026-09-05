@@ -1,4 +1,4 @@
-package dev.imanuel.abfuhr.api.models
+package dev.imanuel.abfuhr.models
 
 import kotlinx.serialization.Serializable
 

@@ -1,0 +1,165 @@
+CREATE TABLE abfallAbcWaste (
+    id INTEGER NOT NULL PRIMARY KEY,
+    language TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL
+);
+
+CREATE TABLE abfallAbcDisposalRoute (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    street TEXT NOT NULL,
+    zipcode TEXT NOT NULL,
+    city TEXT NOT NULL,
+    openingHours TEXT NOT NULL,
+    fees TEXT NOT NULL,
+    link1 TEXT,
+    link2 TEXT,
+    link3 TEXT,
+    descriptionLink1 TEXT,
+    descriptionLink2 TEXT,
+    descriptionLink3 TEXT,
+    file1 TEXT,
+    file2 TEXT,
+    file3 TEXT,
+    descriptionFile1 TEXT,
+    descriptionFile2 TEXT,
+    descriptionFile3 TEXT
+);
+
+CREATE TABLE abfallAbcDisposalRoutes (
+    id INTEGER NOT NULL PRIMARY KEY,
+    language TEXT NOT NULL,
+    alternativeRouteId INTEGER,
+    collectionId INTEGER,
+    dischargePointId INTEGER,
+    FOREIGN KEY(alternativeRouteId) REFERENCES abfallAbcDisposalRoute(id),
+    FOREIGN KEY(collectionId) REFERENCES abfallAbcDisposalRoute(id),
+    FOREIGN KEY(dischargePointId) REFERENCES abfallAbcDisposalRoute(id)
+);
+
+CREATE TABLE abfallAbcWasteMapping (
+    wasteId INTEGER NOT NULL,
+    routesId INTEGER NOT NULL,
+    PRIMARY KEY(wasteId, routesId),
+    FOREIGN KEY(wasteId) REFERENCES abfallAbcWaste(id),
+    FOREIGN KEY(routesId) REFERENCES abfallAbcDisposalRoutes(id)
+);
+
+CREATE TABLE abfallAbcWasteTips (
+    wasteId INTEGER NOT NULL,
+    tip TEXT NOT NULL,
+    FOREIGN KEY(wasteId) REFERENCES abfallAbcWaste(id)
+);
+
+CREATE VIRTUAL TABLE abfallAbcWaste_fts USING fts5(
+    title,
+    description
+);
+
+CREATE TRIGGER abfallAbcWaste_ai AFTER INSERT ON abfallAbcWaste BEGIN
+  INSERT INTO abfallAbcWaste_fts(rowid, title, description) VALUES (new.rowid, new.title, new.description);
+END;
+
+CREATE TRIGGER abfallAbcWaste_ad AFTER DELETE ON abfallAbcWaste BEGIN
+  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description) VALUES('delete', old.rowid, old.title, old.description);
+END;
+
+CREATE TRIGGER abfallAbcWaste_au AFTER UPDATE ON abfallAbcWaste BEGIN
+  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description) VALUES('delete', old.rowid, old.title, old.description);
+  INSERT INTO abfallAbcWaste_fts(rowid, title, description) VALUES (new.rowid, new.title, new.description);
+END;
+
+CREATE VIRTUAL TABLE abfallAbcWasteTips_fts USING fts5(
+    tip,
+    wasteId UNINDEXED
+);
+
+CREATE TRIGGER abfallAbcWasteTips_ai AFTER INSERT ON abfallAbcWasteTips BEGIN
+  INSERT INTO abfallAbcWasteTips_fts(rowid, tip, wasteId) VALUES (new.rowid, new.tip, new.wasteId);
+END;
+
+CREATE TRIGGER abfallAbcWasteTips_ad AFTER DELETE ON abfallAbcWasteTips BEGIN
+  INSERT INTO abfallAbcWasteTips_fts(abfallAbcWasteTips_fts, rowid, tip, wasteId) VALUES('delete', old.rowid, old.tip, old.wasteId);
+END;
+
+CREATE TRIGGER abfallAbcWasteTips_au AFTER UPDATE ON abfallAbcWasteTips BEGIN
+  INSERT INTO abfallAbcWasteTips_fts(abfallAbcWasteTips_fts, rowid, tip, wasteId) VALUES('delete', old.rowid, old.tip, old.wasteId);
+  INSERT INTO abfallAbcWasteTips_fts(rowid, tip, wasteId) VALUES (new.rowid, new.tip, new.wasteId);
+END;
+
+insertWaste:
+INSERT OR REPLACE INTO abfallAbcWaste(id, language, title, description)
+VALUES ?;
+
+insertWasteTip:
+INSERT INTO abfallAbcWasteTips(wasteId, tip)
+VALUES ?;
+
+insertDisposalRoute:
+INSERT OR REPLACE INTO abfallAbcDisposalRoute(title, description, street, zipcode, city, openingHours, fees, link1, link2, link3, descriptionLink1, descriptionLink2, descriptionLink3, file1, file2, file3, descriptionFile1, descriptionFile2, descriptionFile3)
+VALUES ?;
+
+insertDisposalRoutes:
+INSERT OR REPLACE INTO abfallAbcDisposalRoutes(id, language, alternativeRouteId, collectionId, dischargePointId)
+VALUES ?;
+
+insertWasteMapping:
+INSERT OR REPLACE INTO abfallAbcWasteMapping(wasteId, routesId)
+VALUES ?;
+
+getAllWaste:
+SELECT * FROM abfallAbcWaste;
+
+getAllWasteTips:
+SELECT * FROM abfallAbcWasteTips;
+
+getAllDisposalRoutes:
+SELECT * FROM abfallAbcDisposalRoutes;
+
+getAllWasteMapping:
+SELECT * FROM abfallAbcWasteMapping;
+
+clearWasteMapping:
+DELETE FROM abfallAbcWasteMapping;
+
+clearWasteTips:
+DELETE FROM abfallAbcWasteTips;
+
+clearWaste:
+DELETE FROM abfallAbcWaste;
+
+clearDisposalRoutes:
+DELETE FROM abfallAbcDisposalRoutes;
+
+clearDisposalRoute:
+DELETE FROM abfallAbcDisposalRoute;
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+searchAbfallAbcByKeyword:
+SELECT DISTINCT w.*
+FROM abfallAbcWaste w
+LEFT JOIN abfallAbcWaste_fts f1 ON w.rowid = f1.rowid
+LEFT JOIN abfallAbcWasteTips_fts f2 ON w.id = f2.wasteId
+WHERE w.language = :language
+  AND (:keyword = '' OR f1.abfallAbcWaste_fts MATCH :keyword OR f2.abfallAbcWasteTips_fts MATCH :keyword)
+LIMIT 5;
+
+getWasteTipsByWasteId:
+SELECT tip
+FROM abfallAbcWasteTips
+WHERE wasteId = :wasteId;
+
+getDisposalRouteById:
+SELECT *
+FROM abfallAbcDisposalRoute
+WHERE id = :id;
+
+getDisposalRoutesByWasteId:
+SELECT r.*
+FROM abfallAbcDisposalRoutes r
+JOIN abfallAbcWasteMapping m ON r.id = m.routesId
+WHERE m.wasteId = :wasteId;

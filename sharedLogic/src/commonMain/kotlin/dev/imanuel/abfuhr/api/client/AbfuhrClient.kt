@@ -1,6 +1,10 @@
 package dev.imanuel.abfuhr.api.client
 
-import dev.imanuel.abfuhr.api.models.*
+import dev.imanuel.abfuhr.models.AbfallAbcDump
+import dev.imanuel.abfuhr.models.AbfallAbcWaste
+import dev.imanuel.abfuhr.models.AbfuhrDump
+import dev.imanuel.abfuhr.models.AbfuhrLocation
+import dev.imanuel.abfuhr.models.Location
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
