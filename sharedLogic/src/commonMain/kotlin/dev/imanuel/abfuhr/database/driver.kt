@@ -2,6 +2,10 @@ package dev.imanuel.abfuhr.database
 
 import app.cash.sqldelight.db.SqlDriver
 import dev.imanuel.abfuhr.database.AbfallDatabase
+import org.koin.core.module.Module
+import org.koin.dsl.module
+
+expect val databaseModule: Module
 
 expect class DriverFactory {
     fun createDriver(): SqlDriver

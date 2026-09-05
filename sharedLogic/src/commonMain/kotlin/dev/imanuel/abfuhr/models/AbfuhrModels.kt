@@ -21,10 +21,6 @@ data class AbfuhrLocation(
     val districtId: Long,
     val streetLatitude: Double,
     val streetLongitude: Double,
-    val districtLatitude: Double,
-    val districtLongitude: Double,
-    val localityLatitude: Double,
-    val localityLongitude: Double,
     val pickups: List<AbfuhrPickup>
 )
 

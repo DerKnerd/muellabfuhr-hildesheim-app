@@ -14,11 +14,7 @@ CREATE TABLE abfuhrLocation (
     district TEXT NOT NULL,
     districtId INTEGER NOT NULL,
     streetLatitude REAL NOT NULL,
-    streetLongitude REAL NOT NULL,
-    districtLatitude REAL NOT NULL,
-    districtLongitude REAL NOT NULL,
-    localityLatitude REAL NOT NULL,
-    localityLongitude REAL NOT NULL
+    streetLongitude REAL NOT NULL
 );
 
 CREATE VIRTUAL TABLE abfuhrLocation_fts USING fts5(

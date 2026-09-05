@@ -101,10 +101,6 @@ class SearchClient(
                 districtId = location.districtId,
                 streetLatitude = location.streetLatitude,
                 streetLongitude = location.streetLongitude,
-                districtLatitude = location.districtLatitude,
-                districtLongitude = location.districtLongitude,
-                localityLatitude = location.localityLatitude,
-                localityLongitude = location.localityLongitude,
             )
         }
     }
@@ -139,10 +135,6 @@ class SearchClient(
                 districtId = location.districtId,
                 streetLatitude = location.streetLatitude,
                 streetLongitude = location.streetLongitude,
-                districtLatitude = location.districtLatitude,
-                districtLongitude = location.districtLongitude,
-                localityLatitude = location.localityLatitude,
-                localityLongitude = location.localityLongitude,
             )
         }
     }
