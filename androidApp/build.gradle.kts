@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -110,7 +108,6 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.navigation.compose)
 
     implementation(platform(libs.androidx.compose.bom))
@@ -119,22 +116,19 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
 
-    implementation(libs.androidx.work.runtime.ktx)
-
     implementation(platform(libs.io.insert.koin.bom))
     implementation(libs.io.insert.koin.core)
     implementation(libs.io.insert.koin.compose)
     implementation(libs.io.insert.koin.android)
     implementation(libs.io.insert.koin.androidx.workmanager)
-
-    implementation(libs.io.coil.compose)
-    implementation(libs.io.coil.network.okhttp)
-    implementation(libs.io.coil.coil.svg)
+//
+//    implementation(libs.io.coil.compose)
+//    implementation(libs.io.coil.network.okhttp)
+//    implementation(libs.io.coil.coil.svg)
 
     implementation(libs.accompanist.permissions)
 
     implementation(libs.androidx.adaptive.android)
-    implementation(libs.androidx.compose.material3.adaptive.navigation)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
 
     implementation(libs.compose.material.icons.extended)
@@ -143,7 +137,6 @@ dependencies {
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(project(":sharedLogic"))
