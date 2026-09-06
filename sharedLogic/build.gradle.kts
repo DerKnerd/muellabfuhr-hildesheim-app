@@ -17,24 +17,22 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     android {
-       namespace = "dev.imanuel.abfuhr.sharedLogic"
+        namespace = "dev.imanuel.abfuhr.sharedLogic"
         compileSdk {
             version = release(37)
         }
-       minSdk = 28
-    
-       compilerOptions {
-           jvmTarget = JvmTarget.JVM_23
-       }
-       androidResources {
-           enable = true
-       }
-       withHostTest {
-       }
+        minSdk = 28
+
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_23
+        }
+        androidResources {
+            enable = true
+        }
     }
-    
+
     sourceSets {
         sourceSets.commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
@@ -43,12 +41,13 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.io.insert.koin.koin.core)
+            implementation(libs.io.insert.koin.core)
         }
 
         sourceSets.androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.sqlite.android)
         }
 
         sourceSets.iosMain.dependencies {

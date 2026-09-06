@@ -20,10 +20,8 @@ class SearchClient(
     private val client: AbfuhrClient,
     private val database: AbfallDatabase,
     private val syncClient: SyncClient,
+    private val isSyncCompletedAndSuccessful: Boolean = syncClient.isSuccess.value && !syncClient.isSyncing.value
 ) {
-    val isSyncCompletedAndSuccessful: Boolean
-        get() = syncClient.isSuccess.value && !syncClient.isSyncing.value
-
     suspend fun searchAbfallAbc(keyword: String, language: String = "de"): List<AbfallAbcWaste> {
         if (!isSyncCompletedAndSuccessful) {
             return client.searchAbfallAbc(keyword = keyword, language = language)
@@ -78,7 +76,8 @@ class SearchClient(
         }
 
         val locations =
-            database.abfuhrQueries.searchAbfuhrLocationByKeyword(keyword = keyword).executeAsList()
+            database.abfuhrQueries.searchAbfuhrLocationByKeyword(keyword = keyword)
+                .executeAsList()
 
         return locations.map { location ->
             val pickups =
@@ -165,7 +164,7 @@ class SearchClient(
         }
     }
 
-    private fun dev.imanuel.abfuhr.AbfallAbcDisposalRoute.toModel(): AbfallAbcDisposalRoute {
+    private fun dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute.toModel(): AbfallAbcDisposalRoute {
         return AbfallAbcDisposalRoute(
             title = title,
             description = description,

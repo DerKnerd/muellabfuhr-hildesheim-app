@@ -119,10 +119,13 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
 
-    implementation(platform(libs.io.insert.koin.koin.bom))
-    implementation(libs.io.insert.koin.koin.core)
-    implementation(libs.io.insert.koin.koin.compose)
-    implementation(libs.io.insert.koin.koin.android)
+    implementation(libs.androidx.work.runtime.ktx)
+
+    implementation(platform(libs.io.insert.koin.bom))
+    implementation(libs.io.insert.koin.core)
+    implementation(libs.io.insert.koin.compose)
+    implementation(libs.io.insert.koin.android)
+    implementation(libs.io.insert.koin.androidx.workmanager)
 
     implementation(libs.io.coil.compose)
     implementation(libs.io.coil.network.okhttp)
@@ -133,6 +136,13 @@ dependencies {
     implementation(libs.androidx.adaptive.android)
 
     implementation(libs.compose.material.icons.extended)
+
+    implementation(libs.play.services.location)
+
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(project(":sharedLogic"))
 }

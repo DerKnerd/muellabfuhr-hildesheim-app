@@ -1,5 +1,6 @@
 package dev.imanuel.abfuhr.models
 
+import dev.imanuel.abfuhr.database.AbfuhrLocation
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
@@ -25,7 +26,19 @@ data class AbfuhrLocation(
 )
 
 @Serializable
+data class AbfuhrDumpLocation(
+    val street: String,
+    val streetId: Long,
+    val locality: String,
+    val localityId: Long,
+    val district: String,
+    val districtId: Long,
+    val streetLatitude: Double,
+    val streetLongitude: Double
+)
+
+@Serializable
 data class AbfuhrDump(
-    val locations: List<AbfuhrLocation>,
+    val locations: List<AbfuhrDumpLocation>,
     val pickups: List<AbfuhrPickup>
 )

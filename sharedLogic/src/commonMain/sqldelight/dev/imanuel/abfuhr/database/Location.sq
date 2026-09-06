@@ -1,6 +1,7 @@
 CREATE TABLE location (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL,
-    name TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
     latitude TEXT NOT NULL,
     longitude TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -12,20 +13,21 @@ CREATE TABLE location (
 );
 
 CREATE VIRTUAL TABLE location_fts USING fts5(
-    description
+    description,
+    tokenize = 'trigram'
 );
 
 CREATE TRIGGER location_ai AFTER INSERT ON location BEGIN
-  INSERT INTO location_fts(rowid, description) VALUES (new.rowid, new.description);
+  INSERT INTO location_fts(rowid, description) VALUES (new.id, new.description);
 END;
 
 CREATE TRIGGER location_ad AFTER DELETE ON location BEGIN
-  INSERT INTO location_fts(location_fts, rowid, description) VALUES('delete', old.rowid, old.description);
+  DELETE FROM location_fts WHERE rowid = old.id;
 END;
 
 CREATE TRIGGER location_au AFTER UPDATE ON location BEGIN
-  INSERT INTO location_fts(location_fts, rowid, description) VALUES('delete', old.rowid, old.description);
-  INSERT INTO location_fts(rowid, description) VALUES (new.rowid, new.description);
+  DELETE FROM location_fts WHERE rowid = old.id;
+  INSERT INTO location_fts(rowid, description) VALUES (new.id, new.description);
 END;
 
 insertLocation:
@@ -40,8 +42,8 @@ DELETE FROM location;
 
 searchLocationByKeyword:
 SELECT l.*
-FROM location l
-LEFT JOIN location_fts f ON l.rowid = f.rowid
+FROM location_fts f
+JOIN location l ON l.id = f.rowid
 WHERE (:locationType = '' OR l.type = :locationType)
-  AND (:keyword = '' OR f.description MATCH :keyword)
+  AND location_fts MATCH :keyword
 LIMIT 5;

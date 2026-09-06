@@ -55,38 +55,46 @@ CREATE TABLE abfallAbcWasteTips (
 
 CREATE VIRTUAL TABLE abfallAbcWaste_fts USING fts5(
     title,
-    description
+    description,
+    tokenize = 'trigram'
 );
 
 CREATE TRIGGER abfallAbcWaste_ai AFTER INSERT ON abfallAbcWaste BEGIN
-  INSERT INTO abfallAbcWaste_fts(rowid, title, description) VALUES (new.rowid, new.title, new.description);
+  INSERT INTO abfallAbcWaste_fts(rowid, title, description)
+  VALUES (new.id, new.title, new.description);
 END;
 
 CREATE TRIGGER abfallAbcWaste_ad AFTER DELETE ON abfallAbcWaste BEGIN
-  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description) VALUES('delete', old.rowid, old.title, old.description);
+  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description)
+  VALUES('delete', old.id, old.title, old.description);
 END;
 
 CREATE TRIGGER abfallAbcWaste_au AFTER UPDATE ON abfallAbcWaste BEGIN
-  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description) VALUES('delete', old.rowid, old.title, old.description);
-  INSERT INTO abfallAbcWaste_fts(rowid, title, description) VALUES (new.rowid, new.title, new.description);
+  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description)
+  VALUES('delete', old.id, old.title, old.description);
+  INSERT INTO abfallAbcWaste_fts(rowid, title, description)
+  VALUES (new.id, new.title, new.description);
 END;
 
 CREATE VIRTUAL TABLE abfallAbcWasteTips_fts USING fts5(
     tip,
-    wasteId UNINDEXED
+    wasteId UNINDEXED,
+    tokenize = 'trigram'
 );
 
 CREATE TRIGGER abfallAbcWasteTips_ai AFTER INSERT ON abfallAbcWasteTips BEGIN
-  INSERT INTO abfallAbcWasteTips_fts(rowid, tip, wasteId) VALUES (new.rowid, new.tip, new.wasteId);
+  INSERT INTO abfallAbcWasteTips_fts(rowid, tip, wasteId)
+  VALUES (new.rowid, new.tip, new.wasteId);
 END;
 
 CREATE TRIGGER abfallAbcWasteTips_ad AFTER DELETE ON abfallAbcWasteTips BEGIN
-  INSERT INTO abfallAbcWasteTips_fts(abfallAbcWasteTips_fts, rowid, tip, wasteId) VALUES('delete', old.rowid, old.tip, old.wasteId);
+  DELETE FROM abfallAbcWasteTips_fts WHERE rowid = old.rowid;
 END;
 
 CREATE TRIGGER abfallAbcWasteTips_au AFTER UPDATE ON abfallAbcWasteTips BEGIN
-  INSERT INTO abfallAbcWasteTips_fts(abfallAbcWasteTips_fts, rowid, tip, wasteId) VALUES('delete', old.rowid, old.tip, old.wasteId);
-  INSERT INTO abfallAbcWasteTips_fts(rowid, tip, wasteId) VALUES (new.rowid, new.tip, new.wasteId);
+  DELETE FROM abfallAbcWasteTips_fts WHERE rowid = old.rowid;
+  INSERT INTO abfallAbcWasteTips_fts(rowid, tip, wasteId)
+  VALUES (new.rowid, new.tip, new.wasteId);
 END;
 
 insertWaste:
@@ -140,12 +148,20 @@ lastInsertRowId:
 SELECT last_insert_rowid();
 
 searchAbfallAbcByKeyword:
-SELECT DISTINCT w.*
+SELECT w.*
 FROM abfallAbcWaste w
-LEFT JOIN abfallAbcWaste_fts f1 ON w.rowid = f1.rowid
-LEFT JOIN abfallAbcWasteTips_fts f2 ON w.id = f2.wasteId
 WHERE w.language = :language
-  AND (:keyword = '' OR f1.abfallAbcWaste_fts MATCH :keyword OR f2.abfallAbcWasteTips_fts MATCH :keyword)
+  AND w.id IN (
+    SELECT f1.rowid
+    FROM abfallAbcWaste_fts f1
+    WHERE abfallAbcWaste_fts MATCH :keyword
+
+    UNION
+
+    SELECT f2.wasteId
+    FROM abfallAbcWasteTips_fts f2
+    WHERE abfallAbcWasteTips_fts MATCH :keyword
+  )
 LIMIT 5;
 
 getWasteTipsByWasteId:

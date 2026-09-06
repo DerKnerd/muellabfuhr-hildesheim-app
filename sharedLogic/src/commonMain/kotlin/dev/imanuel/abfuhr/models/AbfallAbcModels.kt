@@ -48,7 +48,7 @@ data class AbfallAbcWaste(
     val language: String,
     val title: String,
     val description: String,
-    val tips: List<String>,
+    val tips: List<String> = emptyList(),
     val routes: List<AbfallAbcDisposalRoutes>,
     val symbol: AbfallAbcSymbol? = null
 )

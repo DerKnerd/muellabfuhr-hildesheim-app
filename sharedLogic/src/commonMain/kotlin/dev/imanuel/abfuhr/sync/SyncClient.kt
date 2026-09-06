@@ -1,13 +1,13 @@
 package dev.imanuel.abfuhr.sync
 
-import dev.imanuel.abfuhr.AbfallAbcDisposalRoute
-import dev.imanuel.abfuhr.AbfallAbcDisposalRoutes
-import dev.imanuel.abfuhr.AbfallAbcWaste
-import dev.imanuel.abfuhr.AbfallAbcWasteMapping
-import dev.imanuel.abfuhr.AbfallAbcWasteTips
-import dev.imanuel.abfuhr.AbfuhrLocation
-import dev.imanuel.abfuhr.AbfuhrPickup
-import dev.imanuel.abfuhr.Location
+import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute
+import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoutes
+import dev.imanuel.abfuhr.database.AbfallAbcWaste
+import dev.imanuel.abfuhr.database.AbfallAbcWasteMapping
+import dev.imanuel.abfuhr.database.AbfallAbcWasteTips
+import dev.imanuel.abfuhr.database.AbfuhrLocation
+import dev.imanuel.abfuhr.database.AbfuhrPickup
+import dev.imanuel.abfuhr.database.Location
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import kotlinx.coroutines.CancellationException
@@ -24,13 +24,11 @@ class SyncClient(
     private val client: AbfuhrClient,
     private val database: AbfallDatabase,
 ) {
-    private val _isSyncing = MutableStateFlow(false)
+    private val _isSyncing = MutableStateFlow(true)
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
 
     private val _isSuccess = MutableStateFlow(false)
     val isSuccess: StateFlow<Boolean> = _isSuccess.asStateFlow()
-    val didSucceed: StateFlow<Boolean> = isSuccess
-    val isSuccessful: StateFlow<Boolean> = isSuccess
 
     suspend fun sync() {
         _isSyncing.value = true
@@ -176,6 +174,8 @@ class SyncClient(
                 }
 
                 for ((street, streetId, locality, localityId, district, districtId, streetLatitude, streetLongitude) in abfuhrDump.locations) {
+                    val locationByStreetId =
+                        database.abfuhrQueries.getLocationByStreetId(streetId).executeAsOneOrNull()
                     database.abfuhrQueries.insertLocation(
                         AbfuhrLocation(
                             street = street,
@@ -186,6 +186,7 @@ class SyncClient(
                             districtId = districtId,
                             streetLatitude = streetLatitude,
                             streetLongitude = streetLongitude,
+                            hasReminder = locationByStreetId?.hasReminder ?: 0L
                         )
                     )
                 }
@@ -203,6 +204,7 @@ class SyncClient(
                 for ((type, name, latitude, longitude, description, openingHours, mail, www, tel, fax) in locations) {
                     database.locationQueries.insertLocation(
                         Location(
+                            id = 0,
                             type = type,
                             name = name,
                             latitude = latitude,
