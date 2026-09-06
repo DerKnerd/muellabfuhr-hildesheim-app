@@ -18,8 +18,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -35,38 +39,42 @@ fun SimpleTopSearchBar(
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = Icons.Default.Clear,
                 contentDescription = closeLabel,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.clickable(
-                    onClick = { onClose() },
-                    onClickLabel = closeLabel
+                    onClick = { onClose() }, onClickLabel = closeLabel
                 )
             )
             Spacer(modifier = Modifier.width(12.dp))
             BasicTextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
                     onSearch = {
                         onSearchExecuted(query)
-                    }
-                ),
+                    }),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 decorationBox = { innerTextField ->
                     if (query.isEmpty()) {
@@ -77,12 +85,12 @@ fun SimpleTopSearchBar(
                         )
                     }
                     innerTextField()
-                })
+                },
+            )
             IconButton(
                 onClick = {
                     onSearchExecuted(query)
-                }
-            ) {
+                }) {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = searchLabel,

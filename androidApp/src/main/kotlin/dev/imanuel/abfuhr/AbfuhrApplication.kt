@@ -1,12 +1,6 @@
 package dev.imanuel.abfuhr
 
 import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
-import android.location.LocationManager
-import androidx.core.content.edit
-import androidx.core.content.getSystemService
-import androidx.core.location.LocationManagerCompat
 import dev.imanuel.abfuhr.api.client.apiModule
 import dev.imanuel.abfuhr.database.databaseModule
 import dev.imanuel.abfuhr.search.searchModule

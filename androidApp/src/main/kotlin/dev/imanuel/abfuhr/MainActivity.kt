@@ -9,10 +9,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Recycling
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Recycling
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteColors
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,12 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import dev.imanuel.abfuhr.composables.PickupCalendarDialog
 import dev.imanuel.abfuhr.composables.PickupScreen
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.theme.AppTheme
@@ -87,6 +94,8 @@ fun MainComposable(
     val syncClientSyncing by syncClient.isSyncing.collectAsState()
     var syncing by remember { mutableStateOf(!context.firstSyncHappened() && syncClientSyncing) }
 
+    var activeScreen by remember { mutableStateOf(Screens.Pickup) }
+
     LaunchedEffect(syncClientSyncing) {
         if (!syncClientSyncing) syncing = false
     }
@@ -111,14 +120,55 @@ fun MainComposable(
                 }
             }
         } else {
-            NavHost(
-                navController = navController,
-                startDestination = Screens.Pickup.name
+            NavigationSuiteScaffold(
+                navigationItems = {
+                    NavigationSuiteItem(
+                        selected = activeScreen == Screens.Pickup,
+                        onClick = { activeScreen = Screens.Pickup },
+                        icon = {
+                            Icon(
+                                imageVector = if (activeScreen == Screens.Pickup) Icons.Filled.CalendarMonth else Icons.Outlined.CalendarMonth,
+                                contentDescription = null
+                            )
+                        },
+                        label = { Text("Abfuhrtermine") }
+                    )
+                    NavigationSuiteItem(
+                        selected = activeScreen == Screens.WasteAbc,
+                        onClick = { navController.navigate(Screens.WasteAbc.name) },
+                        icon = {
+                            Icon(
+                                imageVector = if (activeScreen == Screens.WasteAbc) Icons.Filled.Recycling else Icons.Outlined.Recycling,
+                                contentDescription = "Abfall ABC"
+                            )
+                        },
+                        label = {
+                            Text("Abfall ABC")
+                        }
+                    )
+                    NavigationSuiteItem(
+                        selected = activeScreen == Screens.Locations,
+                        onClick = { navController.navigate(Screens.Locations.name) },
+                        icon = {
+                            Icon(
+                                imageVector = if (activeScreen == Screens.Locations) Icons.Filled.LocationOn else Icons.Outlined.LocationOn,
+                                contentDescription = "Standorte"
+                            )
+                        },
+                        label = {
+                            Text("Standorte")
+                        }
+                    )
+                },
+                navigationItemVerticalArrangement = Arrangement.Center
             ) {
-                composable(Screens.Pickup.name) {
-                    PickupScreen(
+                when (activeScreen) {
+                    Screens.Pickup -> PickupScreen(
                         navController = navController
                     )
+
+                    Screens.WasteAbc -> {}
+                    Screens.Locations -> {}
                 }
             }
         }

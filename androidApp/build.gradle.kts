@@ -134,6 +134,8 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     implementation(libs.androidx.adaptive.android)
+    implementation(libs.androidx.compose.material3.adaptive.navigation)
+    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
 
     implementation(libs.compose.material.icons.extended)
 

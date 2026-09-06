@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -18,7 +19,6 @@ import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -40,6 +40,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
@@ -53,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
@@ -67,14 +69,12 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dev.imanuel.abfuhr.R
-import dev.imanuel.abfuhr.Screens
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrPickup
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.sync.SyncClient
-import dev.imanuel.abfuhr.ui.AppNavigationBar
 import dev.imanuel.abfuhr.ui.SimpleTopSearchBar
 import dev.imanuel.abfuhr.utils.fetchFineLocation
 import dev.imanuel.abfuhr.utils.firstSyncHappened
@@ -209,6 +209,9 @@ fun PickupCalendarDialog(
         }
     }
 
+    val isExpandedWindow =
+        currentWindowAdaptiveInfoV2().windowSizeClass.isWidthAtLeastBreakpoint(840)
+
     LaunchedEffect(loading) {
         if (loading) {
             withContext(Dispatchers.IO) {
@@ -228,8 +231,8 @@ fun PickupCalendarDialog(
     }
 
     Dialog(
-        onDismissRequest = { onDismissRequest() },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = isExpandedWindow)
     ) {
         Scaffold(
             snackbarHost = {
@@ -241,15 +244,24 @@ fun PickupCalendarDialog(
                         Text(location.street)
                     },
                     navigationIcon = {
-                        IconButton(onClick = { onDismissRequest() }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Schließen"
-                            )
-                        }
+                        if (!isExpandedWindow)
+                            IconButton(onClick = { onDismissRequest() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Schließen"
+                                )
+                            }
                     },
                     scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-                    actions = {}
+                    actions = {
+                        if (isExpandedWindow)
+                            IconButton(onClick = { onDismissRequest() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Schließen"
+                                )
+                            }
+                    }
                 )
             },
             floatingActionButton = {
@@ -276,12 +288,20 @@ fun PickupCalendarDialog(
                         )
                     }
                 }
-            }
+            },
+            modifier = Modifier
+                .graphicsLayer {
+                    if (isExpandedWindow) {
+                        shape = RoundedCornerShape(24.dp)
+                        clip = true
+                        shadowElevation = 8.0f
+                    }
+                }
         ) { innerPadding ->
             Surface(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .fillMaxSize()
+                    .fillMaxSize(),
             ) {
                 PullToRefreshBox(
                     isRefreshing = loading,
@@ -508,11 +528,6 @@ fun PickupScreen(
                     }
                 }
             }
-        },
-        bottomBar = {
-            AppNavigationBar(
-                activeScreen = Screens.Pickup, navController = navController
-            )
         },
         floatingActionButton = {
             if (syncSuccessful && locationEnabled && activeTab == PickupTabs.Search) {

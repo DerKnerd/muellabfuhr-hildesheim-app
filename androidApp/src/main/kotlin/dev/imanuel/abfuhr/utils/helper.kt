@@ -29,7 +29,10 @@ fun Context.markLastSync() =
     getSharedPrefs().edit { putLong("lastSync", System.currentTimeMillis()) }
 
 fun Context.syncDue() =
-    System.currentTimeMillis() > getSharedPrefs().getLong("lastSync", 0) + 28L * 24L * 60L * 60L * 1000L
+    System.currentTimeMillis() > getSharedPrefs().getLong(
+        "lastSync",
+        0
+    ) + 28L * 24L * 60L * 60L * 1000L
 
 @SuppressLint("MissingPermission")
 suspend fun Context.fetchFineLocation(): Location? {
