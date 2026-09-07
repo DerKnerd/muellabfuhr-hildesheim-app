@@ -64,15 +64,15 @@ suspend fun Context.fetchFineLocation(): Location? {
 }
 
 fun Context.clearAbfuhrNotifications(locations: List<AbfuhrLocation>) {
-    val workManager = getSystemService<WorkManager>()
-    locations.forEach { location -> workManager?.cancelAllWorkByTag("trash-reminder-${location.streetId}") }
+    val workManager = WorkManager.getInstance(this)
+    locations.forEach { location -> workManager.cancelAllWorkByTag("trash-reminder-${location.streetId}") }
 }
 
 fun Context.createAbfuhrNotifications(
     abfallDatabase: AbfallDatabase,
     locations: List<AbfuhrLocation>
 ) {
-    val workManager = getSystemService<WorkManager>()
+    val workManager = WorkManager.getInstance(this)
     val today = Clock
         .System
         .now()
@@ -108,6 +108,7 @@ fun Context.createAbfuhrNotifications(
                 request
             }
     }
+        .first()
 
-    workManager?.enqueue(workRequests)
+    workManager.enqueue(workRequests)
 }

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 fun computeVersionName(): String {
@@ -87,12 +88,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_23
-        targetCompatibility = JavaVersion.VERSION_23
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     buildFeatures {
         compose = true
+        viewBinding = true
     }
 
     composeOptions {
@@ -108,6 +110,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.compose)
 
     implementation(platform(libs.androidx.compose.bom))
@@ -121,10 +125,6 @@ dependencies {
     implementation(libs.io.insert.koin.compose)
     implementation(libs.io.insert.koin.android)
     implementation(libs.io.insert.koin.androidx.workmanager)
-//
-//    implementation(libs.io.coil.compose)
-//    implementation(libs.io.coil.network.okhttp)
-//    implementation(libs.io.coil.coil.svg)
 
     implementation(libs.accompanist.permissions)
 
@@ -134,6 +134,7 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
 
     implementation(libs.play.services.location)
+    implementation(libs.google.maps.compose)
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.core)

@@ -154,8 +154,8 @@ class SearchClient(
             Location(
                 type = loc.type,
                 name = loc.name,
-                latitude = loc.latitude,
-                longitude = loc.longitude,
+                latitude = loc.latitude.toString(),
+                longitude = loc.longitude.toString(),
                 description = loc.description,
                 openingHours = loc.openingHours,
                 mail = loc.mail,
