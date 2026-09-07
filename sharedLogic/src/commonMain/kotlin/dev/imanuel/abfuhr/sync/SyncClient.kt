@@ -1,15 +1,15 @@
 package dev.imanuel.abfuhr.sync
 
+import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoutes
 import dev.imanuel.abfuhr.database.AbfallAbcWaste
 import dev.imanuel.abfuhr.database.AbfallAbcWasteMapping
 import dev.imanuel.abfuhr.database.AbfallAbcWasteTips
+import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrLocation
 import dev.imanuel.abfuhr.database.AbfuhrPickup
 import dev.imanuel.abfuhr.database.Location
-import dev.imanuel.abfuhr.api.client.AbfuhrClient
-import dev.imanuel.abfuhr.database.AbfallDatabase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -160,6 +160,7 @@ class SyncClient(
                             AbfallAbcWasteTips(
                                 wasteId = id,
                                 tip = tip,
+                                language = language
                             )
                         )
                     }

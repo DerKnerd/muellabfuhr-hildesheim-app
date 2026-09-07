@@ -1,16 +1,16 @@
 package dev.imanuel.abfuhr.search
 
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
+import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoutes
 import dev.imanuel.abfuhr.models.AbfallAbcWaste
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.models.AbfuhrPickup
 import dev.imanuel.abfuhr.models.Location
-import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.sync.SyncClient
-import kotlin.time.Instant
 import org.koin.dsl.module
+import kotlin.time.Instant
 
 val searchModule = module {
     single { SearchClient(get(), get(), get()) }
@@ -33,9 +33,11 @@ class SearchClient(
         ).executeAsList()
 
         return wastes.map { waste ->
-            val tips = database.abfallAbcQueries.getWasteTipsByWasteId(waste.id).executeAsList()
+            val tips = database.abfallAbcQueries.getWasteTipsByWasteId(waste.id, waste.language)
+                .executeAsList()
             val routes =
-                database.abfallAbcQueries.getDisposalRoutesByWasteId(waste.id).executeAsList()
+                database.abfallAbcQueries.getDisposalRoutesByWasteId(waste.id, language)
+                    .executeAsList()
                     .map { routes ->
                         val alternativeRoute = routes.alternativeRouteId?.let { id ->
                             database.abfallAbcQueries.getDisposalRouteById(id).executeAsOneOrNull()

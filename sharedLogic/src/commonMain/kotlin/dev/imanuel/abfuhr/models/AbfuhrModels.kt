@@ -1,6 +1,5 @@
 package dev.imanuel.abfuhr.models
 
-import dev.imanuel.abfuhr.database.AbfuhrLocation
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 

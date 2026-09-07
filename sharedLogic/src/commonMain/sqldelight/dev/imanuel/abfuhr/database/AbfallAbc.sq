@@ -1,8 +1,10 @@
 CREATE TABLE abfallAbcWaste (
-    id INTEGER NOT NULL PRIMARY KEY,
+    id INTEGER NOT NULL,
     language TEXT NOT NULL,
     title TEXT NOT NULL,
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+
+    PRIMARY KEY (id, language)
 );
 
 CREATE TABLE abfallAbcDisposalRoute (
@@ -29,11 +31,13 @@ CREATE TABLE abfallAbcDisposalRoute (
 );
 
 CREATE TABLE abfallAbcDisposalRoutes (
-    id INTEGER NOT NULL PRIMARY KEY,
+    id INTEGER NOT NULL,
     language TEXT NOT NULL,
     alternativeRouteId INTEGER,
     collectionId INTEGER,
     dischargePointId INTEGER,
+    PRIMARY KEY (id, language),
+
     FOREIGN KEY(alternativeRouteId) REFERENCES abfallAbcDisposalRoute(id),
     FOREIGN KEY(collectionId) REFERENCES abfallAbcDisposalRoute(id),
     FOREIGN KEY(dischargePointId) REFERENCES abfallAbcDisposalRoute(id)
@@ -50,6 +54,7 @@ CREATE TABLE abfallAbcWasteMapping (
 CREATE TABLE abfallAbcWasteTips (
     wasteId INTEGER NOT NULL,
     tip TEXT NOT NULL,
+    language TEXT NOT NULL,
     FOREIGN KEY(wasteId) REFERENCES abfallAbcWaste(id)
 );
 
@@ -102,7 +107,7 @@ INSERT OR REPLACE INTO abfallAbcWaste(id, language, title, description)
 VALUES ?;
 
 insertWasteTip:
-INSERT INTO abfallAbcWasteTips(wasteId, tip)
+INSERT INTO abfallAbcWasteTips(wasteId, tip, language)
 VALUES ?;
 
 insertDisposalRoute:
@@ -150,24 +155,16 @@ SELECT last_insert_rowid();
 searchAbfallAbcByKeyword:
 SELECT w.*
 FROM abfallAbcWaste w
+JOIN abfallAbcWaste_fts f ON w.id = f.rowid
 WHERE w.language = :language
-  AND w.id IN (
-    SELECT f1.rowid
-    FROM abfallAbcWaste_fts f1
-    WHERE abfallAbcWaste_fts MATCH :keyword
-
-    UNION
-
-    SELECT f2.wasteId
-    FROM abfallAbcWasteTips_fts f2
-    WHERE abfallAbcWasteTips_fts MATCH :keyword
-  )
-LIMIT 5;
+  AND abfallAbcWaste_fts MATCH :keyword
+ORDER BY bm25(abfallAbcWaste_fts, 10.0, 1.0);
 
 getWasteTipsByWasteId:
 SELECT tip
 FROM abfallAbcWasteTips
-WHERE wasteId = :wasteId;
+WHERE wasteId = :wasteId
+  AND language = :language;
 
 getDisposalRouteById:
 SELECT *
@@ -176,6 +173,9 @@ WHERE id = :id;
 
 getDisposalRoutesByWasteId:
 SELECT r.*
-FROM abfallAbcDisposalRoutes r
-JOIN abfallAbcWasteMapping m ON r.id = m.routesId
-WHERE m.wasteId = :wasteId;
+FROM abfallAbcWaste w
+JOIN abfallAbcWasteMapping m ON w.id = m.wasteId
+JOIN abfallAbcDisposalRoutes r ON r.id = m.routesId
+WHERE m.wasteId = :wasteId
+  AND w.language = :language
+  AND r.language = :language;

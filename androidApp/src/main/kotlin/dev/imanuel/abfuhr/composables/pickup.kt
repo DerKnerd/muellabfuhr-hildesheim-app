@@ -61,11 +61,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.content.getSystemService
 import androidx.navigation.NavController
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -77,10 +73,11 @@ import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.ui.SimpleTopSearchBar
+import dev.imanuel.abfuhr.utils.clearAbfuhrNotifications
+import dev.imanuel.abfuhr.utils.createAbfuhrNotifications
 import dev.imanuel.abfuhr.utils.fetchFineLocation
 import dev.imanuel.abfuhr.utils.firstSyncHappened
 import dev.imanuel.abfuhr.utils.isLocationEnabled
-import dev.imanuel.abfuhr.worker.PickupReminderWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -92,10 +89,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
@@ -138,8 +132,6 @@ fun PickupCalendarDialog(
     }
     var location by remember { mutableStateOf(location) }
 
-    val workManager = context.getSystemService<WorkManager>()
-
     val snackbarHostState = remember { SnackbarHostState() }
 
     val agendaState = rememberLazyListState(pickups.indexOfFirst {
@@ -152,28 +144,10 @@ fun PickupCalendarDialog(
         null
     }
     val enqueueReminder = {
-        val pickupWorkRequests = pickups
-            .filter {
-                it.date >= today.toEpochMilliseconds()
-            }
-            .map {
-                val reminderTime =
-                    it.date - 1.days.inWholeMilliseconds + 18.hours.inWholeMilliseconds
-                val request = OneTimeWorkRequestBuilder<PickupReminderWorker>()
-                    .setInitialDelay(reminderTime, TimeUnit.MILLISECONDS)
-                    .setInputData(
-                        workDataOf(
-                            "streetId" to location.streetId,
-                            "type" to it.type,
-                            "date" to it.date
-                        )
-                    )
-                    .addTag("trash-reminder-${location.streetId}")
-                    .build()
-
-                request
-            }
-        workManager?.enqueue(pickupWorkRequests)
+        context.createAbfuhrNotifications(
+            abfallDatabase,
+            listOf(location)
+        )
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
                 abfallDatabase.abfuhrQueries.setReminder(location.streetId)
@@ -194,7 +168,7 @@ fun PickupCalendarDialog(
                     duration = SnackbarDuration.Short
                 )
                 if (snackbarResult == SnackbarResult.ActionPerformed) {
-                    workManager?.cancelAllWorkByTag("trash-reminder-${location.streetId}")
+                    context.clearAbfuhrNotifications(listOf(location))
                     abfallDatabase.abfuhrQueries.unsetReminder(location.streetId)
                     loading = true
                 }
@@ -202,7 +176,7 @@ fun PickupCalendarDialog(
         }
     }
     val stopRemindingMe = {
-        workManager?.cancelAllWorkByTag("trash-reminder-${location.streetId}")
+        context.clearAbfuhrNotifications(listOf(location))
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
                 abfallDatabase.abfuhrQueries.unsetReminder(location.streetId)

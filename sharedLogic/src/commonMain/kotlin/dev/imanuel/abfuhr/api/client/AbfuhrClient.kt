@@ -5,12 +5,19 @@ import dev.imanuel.abfuhr.models.AbfallAbcWaste
 import dev.imanuel.abfuhr.models.AbfuhrDump
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.models.Location
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.serialization.XML
+import nl.adaptivity.xmlutil.serialization.XmlElement
+import nl.adaptivity.xmlutil.serialization.XmlSerialName
 import org.koin.dsl.module
 
 val apiModule = module {
@@ -25,6 +32,14 @@ val apiModule = module {
     }
     single { AbfuhrClient(get()) }
 }
+
+@Serializable
+@XmlSerialName("configuration")
+data class abfallAbcConfiguration(
+    @XmlElement(true)
+    @XmlSerialName("contentFilesURL")
+    val contentFilesURL: String
+)
 
 class AbfuhrClient(private val httpClient: HttpClient) {
     private val baseUrl = "https://abfuhr.imanuel.dev"
@@ -77,5 +92,19 @@ class AbfuhrClient(private val httpClient: HttpClient) {
      */
     suspend fun dumpLocations(): List<Location> {
         return httpClient.get("$baseUrl/dump/location").body()
+    }
+
+    suspend fun getContentFilesUrl(language: String): String {
+        val baseUrl = when (language) {
+            "en" -> "https://rest-hildesheim-en.epresto-orange.de"
+            "fr" -> "https://rest-hildesheim-fr.epresto-orange.de"
+            "ku" -> "https://rest-hildesheim-ku.epresto-orange.de"
+            "ar" -> "https://rest-hildesheim-ar.epresto-orange.de"
+            else -> "https://rest-hildesheim.epresto-orange.de"
+        }
+        val response = httpClient.get("$baseUrl/abfall-abc/configuration/configuration.aspx")
+        val body = response.bodyAsText()
+        val config = XML.v1.decodeFromString<abfallAbcConfiguration>(body)
+        return config.contentFilesURL
     }
 }

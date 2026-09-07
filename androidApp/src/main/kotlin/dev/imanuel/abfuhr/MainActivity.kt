@@ -40,6 +40,7 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import dev.imanuel.abfuhr.composables.PickupScreen
+import dev.imanuel.abfuhr.composables.WasteAbc
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.theme.AppTheme
 import dev.imanuel.abfuhr.utils.firstSyncHappened
@@ -145,7 +146,7 @@ fun MainComposable(
                     )
                     NavigationSuiteItem(
                         selected = activeScreen == Screens.WasteAbc,
-                        onClick = { navController.navigate(Screens.WasteAbc.name) },
+                        onClick = { activeScreen = Screens.WasteAbc },
                         icon = {
                             Icon(
                                 imageVector = if (activeScreen == Screens.WasteAbc) Icons.Filled.Recycling else Icons.Outlined.Recycling,
@@ -158,7 +159,7 @@ fun MainComposable(
                     )
                     NavigationSuiteItem(
                         selected = activeScreen == Screens.Locations,
-                        onClick = { navController.navigate(Screens.Locations.name) },
+                        onClick = { activeScreen = Screens.Locations },
                         icon = {
                             Icon(
                                 imageVector = if (activeScreen == Screens.Locations) Icons.Filled.LocationOn else Icons.Outlined.LocationOn,
@@ -177,7 +178,10 @@ fun MainComposable(
                         navController = navController
                     )
 
-                    Screens.WasteAbc -> {}
+                    Screens.WasteAbc -> WasteAbc(
+                        navController = navController
+                    )
+
                     Screens.Locations -> {}
                 }
             }
