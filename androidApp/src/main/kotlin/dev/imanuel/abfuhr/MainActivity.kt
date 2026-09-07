@@ -1,5 +1,7 @@
 package dev.imanuel.abfuhr
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,10 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteColors
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import dev.imanuel.abfuhr.composables.PickupScreen
@@ -58,6 +59,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
+        val notificationManager = getSystemService<NotificationManager>()
+        notificationManager?.createNotificationChannel(
+            NotificationChannel(
+                "trash-reminder",
+                "Erinnerungen für Abfuhrtermine",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+        )
 
         if (!firstSyncHappened() || syncDue()) {
             lifecycleScope.launch {

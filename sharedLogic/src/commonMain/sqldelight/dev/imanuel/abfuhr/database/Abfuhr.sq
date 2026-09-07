@@ -99,3 +99,10 @@ SELECT *
 FROM abfuhrLocation
 WHERE hasReminder = 1
 ORDER BY locality, street;
+
+getPickupByStreetDateAndType:
+SELECT *
+FROM abfuhrPickup
+WHERE streetId = :streetId
+  AND date = :date
+  AND type = :type;

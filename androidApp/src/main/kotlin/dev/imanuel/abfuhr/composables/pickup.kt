@@ -65,6 +65,7 @@ import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -158,10 +159,19 @@ fun PickupCalendarDialog(
             .map {
                 val reminderTime =
                     it.date - 1.days.inWholeMilliseconds + 18.hours.inWholeMilliseconds
-                OneTimeWorkRequestBuilder<PickupReminderWorker>()
+                val request = OneTimeWorkRequestBuilder<PickupReminderWorker>()
                     .setInitialDelay(reminderTime, TimeUnit.MILLISECONDS)
+                    .setInputData(
+                        workDataOf(
+                            "streetId" to location.streetId,
+                            "type" to it.type,
+                            "date" to it.date
+                        )
+                    )
                     .addTag("trash-reminder-${location.streetId}")
                     .build()
+
+                request
             }
         workManager?.enqueue(pickupWorkRequests)
         coroutineScope.launch {
