@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import dev.imanuel.abfuhr.composables.LocationsScreen
 import dev.imanuel.abfuhr.composables.PickupScreen
 import dev.imanuel.abfuhr.composables.WasteAbc
 import dev.imanuel.abfuhr.sync.SyncClient
@@ -182,7 +183,8 @@ fun MainComposable(
                         navController = navController
                     )
 
-                    Screens.Locations -> {}
+                    Screens.Locations -> LocationsScreen(
+                    )
                 }
             }
         }

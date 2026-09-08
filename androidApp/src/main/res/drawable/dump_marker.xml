@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="64dp"
+        android:height="64dp"
+        android:viewportWidth="24"
+        android:viewportHeight="24">
+    <path
+            android:fillColor="@color/marker_background"
+            android:strokeColor="@color/marker_foreground"
+            android:strokeLineJoin="round"
+            android:strokeLineCap="round"
+            android:strokeWidth="0.5"
+            android:pathData="M12,2C8.134,2 5,5.134 5,9c0,5.25 7,13 7,13 0,0 7,-7.75 7,-13 0,-3.866 -3.134,-7 -7,-7z" />
+    <path
+            android:pathData="M16.907,10.049 L15.653,12.221c-0.246,0.431 -0.702,0.657 -1.163,0.627H13.487v1.003L12.233,11.594 13.487,9.337v1.003h1.414l-1.113,-1.931 2.172,-1.254 0.903,1.565c0.261,0.386 0.296,0.903 0.045,1.329M10.583,3.85h2.508c0.491,0 0.918,0.286 1.123,0.697L14.716,5.42 15.583,4.919 14.259,7.13 11.677,7.175 12.544,6.674 11.837,5.445 10.729,7.376 8.552,6.122 9.455,4.558C9.661,4.141 10.087,3.85 10.583,3.85M8.497,12.226 L7.243,10.054C6.998,9.628 7.033,9.116 7.288,8.73L7.79,7.863 6.922,7.361 9.5,7.401 10.829,9.618 9.961,9.116 9.254,10.34h2.227v2.508H9.676c-0.466,0.035 -0.928,-0.196 -1.179,-0.622z"
+            android:fillColor="@color/marker_foreground" />
+</vector>

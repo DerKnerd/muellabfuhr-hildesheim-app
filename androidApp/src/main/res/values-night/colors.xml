@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#388E3C</color>
+    <color name="marker_foreground">#000</color>
+    <color name="marker_background">#1B5E20</color>
     <color name="icon_background">#1B5E20</color>
     <color name="icon_foreground">#388E3C</color>
 </resources>

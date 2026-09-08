@@ -1,7 +1,7 @@
 CREATE TABLE location (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL,
-    name TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     description TEXT NOT NULL,
