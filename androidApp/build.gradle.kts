@@ -110,8 +110,6 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.compose)
 
     implementation(platform(libs.androidx.compose.bom))
@@ -130,7 +128,6 @@ dependencies {
 
     implementation(libs.androidx.adaptive.android)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
-
     implementation(libs.compose.material.icons.extended)
 
     implementation(libs.play.services.location)
@@ -141,6 +138,10 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    implementation(libs.androidx.glance)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.glance.appwidget)
 
     implementation(project(":sharedLogic"))
 }

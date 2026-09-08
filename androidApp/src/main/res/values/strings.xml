@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Müllabfuhr Hildesheim</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="next_pickup_widget_description">Bleib auf dem Laufenden über die nächsten Abholtermine</string>
 </resources>

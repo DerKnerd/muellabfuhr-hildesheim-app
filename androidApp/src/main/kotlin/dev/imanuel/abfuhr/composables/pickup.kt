@@ -1,5 +1,6 @@
 package dev.imanuel.abfuhr.composables
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +62,8 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.updateAll
 import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -78,6 +81,8 @@ import dev.imanuel.abfuhr.utils.createAbfuhrNotifications
 import dev.imanuel.abfuhr.utils.fetchFineLocation
 import dev.imanuel.abfuhr.utils.firstSyncHappened
 import dev.imanuel.abfuhr.utils.isLocationEnabled
+import dev.imanuel.abfuhr.widgets.NextPickupsFrontScreenWidget
+import dev.imanuel.abfuhr.widgets.NextPickupsWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -92,6 +97,11 @@ import java.time.format.FormatStyle
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
+
+private suspend fun Context.updateAllWidgets() {
+    NextPickupsWidget().updateAll(this)
+    NextPickupsFrontScreenWidget().updateAll(this)
+}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -151,6 +161,7 @@ fun PickupCalendarDialog(
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
                 abfallDatabase.abfuhrQueries.setReminder(location.streetId)
+                context.updateAllWidgets()
                 loading = true
             }
         }
@@ -170,6 +181,7 @@ fun PickupCalendarDialog(
                 if (snackbarResult == SnackbarResult.ActionPerformed) {
                     context.clearAbfuhrNotifications(listOf(location))
                     abfallDatabase.abfuhrQueries.unsetReminder(location.streetId)
+                    context.updateAllWidgets()
                     loading = true
                 }
             }
@@ -180,6 +192,7 @@ fun PickupCalendarDialog(
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
                 abfallDatabase.abfuhrQueries.unsetReminder(location.streetId)
+                context.updateAllWidgets()
                 loading = true
                 val snackbarResult = snackbarHostState.showSnackbar(
                     "Erinnerung für ${location.street} wurden gelöscht",
