@@ -194,13 +194,15 @@ class NextPickupsFrontScreenWidget : GlanceAppWidget() {
                                                             )
                                                         ),
                                                     style = TextDefaults.defaultTextStyle.copy(
-                                                        fontSize = 10.sp
+                                                        fontSize = 10.sp,
+                                                        color = GlanceTheme.colors.onSurface
                                                     )
                                                 )
                                                 Text(
                                                     trashCan,
                                                     style = TextDefaults.defaultTextStyle.copy(
-                                                        fontSize = 14.sp
+                                                        fontSize = 14.sp,
+                                                        color = GlanceTheme.colors.onSurface
                                                     )
                                                 )
                                                 Text(
@@ -210,7 +212,8 @@ class NextPickupsFrontScreenWidget : GlanceAppWidget() {
                                                         "Reguläre Abfuhr"
                                                     },
                                                     style = TextDefaults.defaultTextStyle.copy(
-                                                        fontSize = 10.sp
+                                                        fontSize = 10.sp,
+                                                        color = GlanceTheme.colors.onSurface
                                                     )
                                                 )
                                             }

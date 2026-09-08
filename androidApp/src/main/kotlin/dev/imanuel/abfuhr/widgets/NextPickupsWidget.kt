@@ -185,11 +185,17 @@ class NextPickupsWidget : GlanceAppWidget() {
                                                             FormatStyle.MEDIUM
                                                         )
                                                     ),
-                                                style = TextDefaults.defaultTextStyle.copy(fontSize = 10.sp)
+                                                style = TextDefaults.defaultTextStyle.copy(
+                                                    fontSize = 10.sp,
+                                                    color = GlanceTheme.colors.onSurface
+                                                )
                                             )
                                             Text(
                                                 trashCan,
-                                                style = TextDefaults.defaultTextStyle.copy(fontSize = 14.sp)
+                                                style = TextDefaults.defaultTextStyle.copy(
+                                                    fontSize = 14.sp,
+                                                    color = GlanceTheme.colors.onSurface
+                                                )
                                             )
                                             Text(
                                                 if (isPostponed == 1L) {
@@ -197,7 +203,10 @@ class NextPickupsWidget : GlanceAppWidget() {
                                                 } else {
                                                     "Reguläre Abfuhr"
                                                 },
-                                                style = TextDefaults.defaultTextStyle.copy(fontSize = 10.sp)
+                                                style = TextDefaults.defaultTextStyle.copy(
+                                                    fontSize = 10.sp,
+                                                    color = GlanceTheme.colors.onSurface
+                                                )
                                             )
                                         }
                                     }
