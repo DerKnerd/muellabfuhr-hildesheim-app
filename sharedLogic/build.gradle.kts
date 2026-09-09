@@ -44,6 +44,7 @@ kotlin {
             implementation(libs.io.insert.koin.core)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
+            implementation(libs.kotlinx.html)
         }
 
         sourceSets.androidMain.dependencies {

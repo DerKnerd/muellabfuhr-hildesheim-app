@@ -1,5 +1,6 @@
 [versions]
 agp = "9.4.0"
+kotlinxHtml = "0.12.0"
 mapsCompose = "8.6.0"
 xmlutil = "1.0.2.1"
 kotlin = "2.4.10"
@@ -44,6 +45,7 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 
 google-maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 
+kotlinx-html = { module = "org.jetbrains.kotlinx:kotlinx-html", version.ref = "kotlinxHtml" }
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 

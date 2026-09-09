@@ -34,17 +34,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import dev.imanuel.abfuhr.composables.LocationsScreen
 import dev.imanuel.abfuhr.composables.PickupScreen
-import dev.imanuel.abfuhr.composables.WasteAbc
+import dev.imanuel.abfuhr.composables.ReportWasteScreen
+import dev.imanuel.abfuhr.composables.WasteAbcScreen
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.theme.AppTheme
 import dev.imanuel.abfuhr.utils.firstSyncHappened
+import dev.imanuel.abfuhr.utils.isLocationEnabled
 import dev.imanuel.abfuhr.utils.markFirstSync
 import dev.imanuel.abfuhr.utils.markLastSync
 import dev.imanuel.abfuhr.utils.syncDue
@@ -92,7 +96,8 @@ class MainActivity : ComponentActivity() {
 enum class Screens {
     Pickup,
     WasteAbc,
-    Locations
+    Locations,
+    ReportWaste
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -107,6 +112,10 @@ fun MainComposable(
     var syncing by remember { mutableStateOf(!context.firstSyncHappened() && syncClientSyncing) }
 
     var activeScreen by remember { mutableStateOf(Screens.Pickup) }
+
+    val locationEnabled = remember {
+        context.isLocationEnabled()
+    }
 
     LaunchedEffect(syncClientSyncing) {
         if (!syncClientSyncing) syncing = false
@@ -171,6 +180,21 @@ fun MainComposable(
                             Text("Standorte")
                         }
                     )
+                    if (locationEnabled) {
+                        NavigationSuiteItem(
+                            selected = activeScreen == Screens.ReportWaste,
+                            onClick = { activeScreen = Screens.ReportWaste },
+                            icon = {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(R.drawable.broom),
+                                    contentDescription = "Müll melden"
+                                )
+                            },
+                            label = {
+                                Text("Müll melden")
+                            }
+                        )
+                    }
                 },
                 navigationItemVerticalArrangement = Arrangement.Center
             ) {
@@ -179,12 +203,13 @@ fun MainComposable(
                         navController = navController
                     )
 
-                    Screens.WasteAbc -> WasteAbc(
+                    Screens.WasteAbc -> WasteAbcScreen(
                         navController = navController
                     )
 
-                    Screens.Locations -> LocationsScreen(
-                    )
+                    Screens.Locations -> LocationsScreen()
+
+                    Screens.ReportWaste -> ReportWasteScreen()
                 }
             }
         }

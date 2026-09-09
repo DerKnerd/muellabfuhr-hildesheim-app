@@ -226,7 +226,7 @@ fun DisposalRouteDialog(
 }
 
 @Composable
-fun WasteAbc(
+fun WasteAbcScreen(
     navController: NavController,
     syncClient: SyncClient = koinInject(),
     abfuhrClient: AbfuhrClient = koinInject(),
