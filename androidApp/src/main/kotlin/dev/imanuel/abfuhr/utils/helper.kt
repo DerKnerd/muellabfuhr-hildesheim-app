@@ -3,35 +3,35 @@ package dev.imanuel.abfuhr.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Canvas
 import android.location.Location
 import android.location.LocationManager
-import androidx.annotation.DrawableRes
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
-import androidx.core.graphics.createBitmap
 import androidx.core.location.LocationManagerCompat
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.tasks.CancellationTokenSource
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrLocation
 import dev.imanuel.abfuhr.worker.PickupReminderWorker
+import dev.imanuel.abfuhr.worker.RefreshDataWorker
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.temporal.TemporalAdjusters
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
 
 fun Context.isLocationEnabled(): Boolean {
     val locationManager = this.getSystemService<LocationManager>()
@@ -97,10 +97,20 @@ fun Context.createAbfuhrNotifications(
                 it.date >= today.toEpochMilliseconds()
             }
             .map {
-                val reminderTime =
-                    it.date - 1.days.inWholeMilliseconds + 18.hours.inWholeMilliseconds
+                val targetInstant = Instant.ofEpochMilli(it.date)
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(1)
+                    .withHour(18)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0)
+                    .toInstant()
+
+                val delayMillis =
+                    (targetInstant.toEpochMilli() - System.currentTimeMillis()).coerceAtLeast(0)
+
                 val request = OneTimeWorkRequestBuilder<PickupReminderWorker>()
-                    .setInitialDelay(reminderTime, TimeUnit.MILLISECONDS)
+                    .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
                     .setInputData(
                         workDataOf(
                             "streetId" to location.streetId,
@@ -117,4 +127,20 @@ fun Context.createAbfuhrNotifications(
         .first()
 
     workManager.enqueue(workRequests)
+}
+
+fun Context.enqueueRefreshDataWorker() {
+    val now = LocalDateTime.now()
+    val firstOfNextMonth = now.plusMonths(1)
+        .with(TemporalAdjusters.firstDayOfMonth())
+        .withHour(0).withMinute(0).withSecond(0).withNano(0)
+
+    val workManager = WorkManager.getInstance(this)
+    val delayInSeconds = Duration.between(now, firstOfNextMonth).seconds
+
+    val workRequest = OneTimeWorkRequestBuilder<RefreshDataWorker>()
+        .setInitialDelay(delayInSeconds, TimeUnit.SECONDS)
+        .build()
+
+    workManager.enqueue(workRequest)
 }

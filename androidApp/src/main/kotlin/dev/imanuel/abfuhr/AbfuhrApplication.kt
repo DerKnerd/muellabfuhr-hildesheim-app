@@ -6,6 +6,7 @@ import dev.imanuel.abfuhr.database.databaseModule
 import dev.imanuel.abfuhr.search.searchModule
 import dev.imanuel.abfuhr.sync.syncModule
 import dev.imanuel.abfuhr.worker.PickupReminderWorker
+import dev.imanuel.abfuhr.worker.RefreshDataWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.dsl.worker
@@ -17,6 +18,9 @@ import org.koin.dsl.module
 private val appModule = module {
     worker { params ->
         PickupReminderWorker(get(), params.get(), get())
+    }
+    worker { params ->
+        RefreshDataWorker(get(), params.get(), get(), get())
     }
 }
 

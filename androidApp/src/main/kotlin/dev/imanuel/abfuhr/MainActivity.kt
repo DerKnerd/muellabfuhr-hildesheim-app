@@ -47,6 +47,7 @@ import dev.imanuel.abfuhr.composables.ReportWasteScreen
 import dev.imanuel.abfuhr.composables.WasteAbcScreen
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.theme.AppTheme
+import dev.imanuel.abfuhr.utils.enqueueRefreshDataWorker
 import dev.imanuel.abfuhr.utils.firstSyncHappened
 import dev.imanuel.abfuhr.utils.isLocationEnabled
 import dev.imanuel.abfuhr.utils.markFirstSync
@@ -82,6 +83,7 @@ class MainActivity : ComponentActivity() {
                     if (syncClient.isSuccess.value) {
                         markFirstSync()
                         markLastSync()
+                        enqueueRefreshDataWorker()
                     }
                 }
             }
