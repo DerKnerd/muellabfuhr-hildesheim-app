@@ -203,13 +203,15 @@ class SyncClient(
                 }
 
                 for ((type, name, latitude, longitude, description, openingHours, mail, www, tel, fax) in locations) {
+                    val parsedLat = latitude.trim().replace(",", ".").toDoubleOrNull() ?: 0.0
+                    val parsedLon = longitude.trim().replace(",", ".").toDoubleOrNull() ?: 0.0
                     database.locationQueries.insertLocation(
                         Location(
                             id = 0,
                             type = type,
                             name = name,
-                            latitude = latitude.replace(",", ".").toDouble(),
-                            longitude = longitude.replace(",", ".").toDouble(),
+                            latitude = parsedLat,
+                            longitude = parsedLon,
                             description = description,
                             openingHours = openingHours,
                             mail = mail,

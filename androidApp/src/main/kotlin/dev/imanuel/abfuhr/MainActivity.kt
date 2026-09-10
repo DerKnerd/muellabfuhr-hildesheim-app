@@ -51,8 +51,6 @@ import dev.imanuel.abfuhr.utils.enqueueRefreshDataWorker
 import dev.imanuel.abfuhr.utils.firstSyncHappened
 import dev.imanuel.abfuhr.utils.isLocationEnabled
 import dev.imanuel.abfuhr.utils.markFirstSync
-import dev.imanuel.abfuhr.utils.markLastSync
-import dev.imanuel.abfuhr.utils.syncDue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,13 +74,12 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        if (!firstSyncHappened() || syncDue()) {
+        if (!firstSyncHappened() ) {
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
                     syncClient.sync()
                     if (syncClient.isSuccess.value) {
                         markFirstSync()
-                        markLastSync()
                         enqueueRefreshDataWorker()
                     }
                 }

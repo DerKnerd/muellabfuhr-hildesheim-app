@@ -70,13 +70,11 @@ CREATE TRIGGER abfallAbcWaste_ai AFTER INSERT ON abfallAbcWaste BEGIN
 END;
 
 CREATE TRIGGER abfallAbcWaste_ad AFTER DELETE ON abfallAbcWaste BEGIN
-  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description)
-  VALUES('delete', old.id, old.title, old.description);
+  DELETE FROM abfallAbcWaste_fts WHERE rowid = old.id;
 END;
 
 CREATE TRIGGER abfallAbcWaste_au AFTER UPDATE ON abfallAbcWaste BEGIN
-  INSERT INTO abfallAbcWaste_fts(abfallAbcWaste_fts, rowid, title, description)
-  VALUES('delete', old.id, old.title, old.description);
+  DELETE FROM abfallAbcWaste_fts WHERE rowid = old.id;
   INSERT INTO abfallAbcWaste_fts(rowid, title, description)
   VALUES (new.id, new.title, new.description);
 END;

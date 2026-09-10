@@ -45,15 +45,6 @@ fun Context.firstSyncHappened() = getSharedPrefs().getBoolean("firstSync", false
 
 fun Context.markFirstSync() = getSharedPrefs().edit { putBoolean("firstSync", true) }
 
-fun Context.markLastSync() =
-    getSharedPrefs().edit { putLong("lastSync", System.currentTimeMillis()) }
-
-fun Context.syncDue() =
-    System.currentTimeMillis() > getSharedPrefs().getLong(
-        "lastSync",
-        0
-    ) + 28L * 24L * 60L * 60L * 1000L
-
 @SuppressLint("MissingPermission")
 suspend fun Context.fetchFineLocation(): Location? {
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
