@@ -2,7 +2,6 @@ package dev.imanuel.abfuhr.database
 
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
-import dev.imanuel.abfuhr.database.AbfallDatabase
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
