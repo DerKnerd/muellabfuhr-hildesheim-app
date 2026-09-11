@@ -222,15 +222,32 @@ private class SidebarCollectionViewController(
 
     override fun viewDidLoad() {
         super.viewDidLoad()
-        title = headerTitle ?: ""
+
+        navigationItem.title = headerTitle ?: ""
+        navigationItem.largeTitleDisplayMode =
+            UINavigationItemLargeTitleDisplayMode.UINavigationItemLargeTitleDisplayModeAutomatic
 
         val config =
-            UICollectionLayoutListConfiguration(UICollectionLayoutListAppearance.UICollectionLayoutListAppearanceSidebar)
-        val layout = UICollectionViewCompositionalLayout.layoutWithListConfiguration(config)
+            UICollectionLayoutListConfiguration(
+                UICollectionLayoutListAppearance.UICollectionLayoutListAppearanceSidebar
+            )
 
-        collectionView = UICollectionView(frame = view.bounds, collectionViewLayout = layout).apply {
-            autoresizingMask = UIViewAutoresizingFlexibleWidth or UIViewAutoresizingFlexibleHeight
-            registerClass(UICollectionViewListCell.`class`(), forCellWithReuseIdentifier = "SidebarCell")
+        val layout =
+            UICollectionViewCompositionalLayout.layoutWithListConfiguration(config)
+
+        collectionView = UICollectionView(
+            frame = view.bounds,
+            collectionViewLayout = layout
+        ).apply {
+            autoresizingMask =
+                UIViewAutoresizingFlexibleWidth or
+                        UIViewAutoresizingFlexibleHeight
+
+            registerClass(
+                UICollectionViewListCell.`class`(),
+                forCellWithReuseIdentifier = "SidebarCell"
+            )
+
             delegate = SidebarDelegate()
             dataSource = SidebarDataSource()
         }
@@ -406,6 +423,10 @@ class AdaptiveNavigationController(
 
     private fun setupSplitViewController() {
         val splitVc = UISplitViewController(style = UISplitViewControllerStyle.UISplitViewControllerStyleDoubleColumn)
+        splitVc.view.backgroundColor = UIColor.systemBackgroundColor
+        splitVc.setPrimaryBackgroundStyle(
+            UISplitViewControllerBackgroundStyle.UISplitViewControllerBackgroundStyleSidebar
+        )
 
         val sidebarVc = SidebarCollectionViewController(
             sections = sections,
@@ -417,11 +438,18 @@ class AdaptiveNavigationController(
         )
         this.sidebarController = sidebarVc
 
-        val sidebarNav = UINavigationController(rootViewController = sidebarVc)
+        val sidebarNav = UINavigationController(rootViewController = sidebarVc).apply {
+            navigationBar.prefersLargeTitles = true
+        }
         val targetItem = allItems.getOrNull(selectedIndex) ?: allItems.firstOrNull()
 
         val initialDetailVc = targetItem?.resolveViewController() ?: UIViewController()
+
+        initialDetailVc.view.backgroundColor = UIColor.systemBackgroundColor
+
         val detailNav = UINavigationController(rootViewController = initialDetailVc)
+        detailNav.view.backgroundColor = UIColor.systemBackgroundColor
+        detailNav.navigationBar.backgroundColor = UIColor.systemBackgroundColor
 
         if (showsDisplayModeButtonItem) {
             detailNav.topViewController?.navigationItem?.leftBarButtonItem = splitVc.displayModeButtonItem()
@@ -469,7 +497,11 @@ class AdaptiveNavigationController(
 
         splitViewController?.let { splitVc ->
             val resolved = item.resolveViewController()
+            resolved.view.backgroundColor = UIColor.systemBackgroundColor
+
             val secondaryNav = UINavigationController(rootViewController = resolved)
+            secondaryNav.view.backgroundColor = UIColor.systemBackgroundColor
+            secondaryNav.navigationBar.backgroundColor = UIColor.systemBackgroundColor
             if (showsDisplayModeButtonItem) {
                 secondaryNav.topViewController?.navigationItem?.leftBarButtonItem = splitVc.displayModeButtonItem()
             }
