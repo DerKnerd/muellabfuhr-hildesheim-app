@@ -24,6 +24,8 @@ class ButtonBuilder(
     var borderColor: UIColor? = null
     var tintColor: UIColor? = null
     var image: UIImage? = null
+    // Spacing between image and title (in points)
+    var imageTitleSpacing: Double = 6.0
     var isEnabled: Boolean = true
     var isSelected: Boolean = false
     var clipsToBounds: Boolean = true
@@ -122,6 +124,21 @@ class ButtonBuilder(
         button.setEnabled(isEnabled)
         button.setSelected(isSelected)
         button.clipsToBounds = clipsToBounds
+
+        // Add spacing between image and title when both are present
+        if (image != null && title != null) {
+            // Prefer UIButtonConfiguration if present
+            val existingConfig = button.configuration
+            if (existingConfig != null) {
+                existingConfig.imagePadding = imageTitleSpacing
+                button.configuration = existingConfig
+            } else {
+                // Fallback for pre-configuration style buttons
+                val inset = imageTitleSpacing
+                button.setTitleEdgeInsets(UIEdgeInsetsMake(0.0, inset, 0.0, -inset))
+                button.setImageEdgeInsets(UIEdgeInsetsMake(0.0, -inset, 0.0, inset))
+            }
+        }
 
         clickAction?.let { action ->
             button.onClick(action)
