@@ -280,7 +280,7 @@ class StaggeredGridBuilder(
         text: String? = null,
         builder: TextFieldBuilder.() -> Unit = {}
     ): UITextField {
-        val tf = dev.imanuel.abfuhr.uikit.dsl.textField(placeholder, text, builder)
+        val tf = dev.imanuel.abfuhr.uikit.dsl.singleLineTextField(placeholder, text, builder)
         pendingItems.add(tf)
         return tf
     }

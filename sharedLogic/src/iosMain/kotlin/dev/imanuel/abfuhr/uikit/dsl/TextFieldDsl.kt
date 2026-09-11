@@ -9,7 +9,7 @@ import platform.darwin.NSObject
 import platform.objc.OBJC_ASSOCIATION_RETAIN_NONATOMIC
 import platform.objc.objc_setAssociatedObject
 
-class TextFieldDelegateBridge(
+class SingleLineTextFieldDelegateBridge(
     var onReturnAction: (() -> Boolean)? = null,
     var onBeginEditingAction: (() -> Unit)? = null,
     var onEndEditingAction: (() -> Unit)? = null
@@ -31,11 +31,36 @@ class TextFieldDelegateBridge(
     }
 }
 
+fun UITextView.getLineHeight(maxLines: Int): Double {
+    val activeFont = font ?: UIFont.systemFontOfSize(16.0)
+    val fontHeight = activeFont.lineHeight
+
+    // Total vertical internal padding inside the text container
+    val verticalPadding = textContainerInset.useContents { top + bottom }
+
+    return (fontHeight * maxLines) + verticalPadding
+}
+
+class MultiLineTextFieldDelegateBridge(
+    var onBeginEditingAction: (() -> Unit)? = null,
+    var onEndEditingAction: (() -> Unit)? = null
+) : NSObject(), UITextViewDelegateProtocol {
+
+    override fun textViewDidBeginEditing(textView: UITextView) {
+        onBeginEditingAction?.invoke()
+    }
+
+    override fun textViewDidEndEditing(textView: UITextView) {
+        onEndEditingAction?.invoke()
+    }
+}
+
 private val textFieldDelegateKey: COpaquePointer = nativeHeap.alloc<ByteVar>().ptr
 
 @UIKitDsl
 class TextFieldBuilder {
-    val textField: UITextField = UITextField()
+    val singleLineTextField: UITextField = UITextField()
+    val multiLineTextField: UITextView = UITextView()
 
     var text: String? = null
     var placeholder: String? = null
@@ -55,6 +80,7 @@ class TextFieldBuilder {
     var leftPadding: Double? = null
     var rightPadding: Double? = null
 
+    private var isMultiLine = false
     private var textChangedListener: ((String) -> Unit)? = null
     private var returnListener: (() -> Boolean)? = null
     private var beginEditingListener: (() -> Unit)? = null
@@ -70,7 +96,8 @@ class TextFieldBuilder {
 
     fun onReturnDismissKeyboard() {
         this.returnListener = {
-            textField.resignFirstResponder()
+            if (!isMultiLine) singleLineTextField.resignFirstResponder()
+            if (isMultiLine) multiLineTextField.resignFirstResponder()
             true
         }
     }
@@ -83,59 +110,98 @@ class TextFieldBuilder {
         this.endEditingListener = action
     }
 
-    fun build(): UITextField {
-        text?.let { textField.setText(it) }
-        placeholder?.let { textField.setPlaceholder(it) }
-        textField.setTextAlignment(textAlignment)
-        textField.setBorderStyle(borderStyle)
-        textField.setReturnKeyType(returnKeyType)
-        textField.setAutocapitalizationType(autocapitalizationType)
-        textField.setAutocorrectionType(autocorrectionType)
-        textField.setClearButtonMode(clearButtonMode)
-        textField.setEnabled(isEnabled)
+    fun buildSingleLine(): UITextField {
+        text?.let { singleLineTextField.setText(it) }
+        placeholder?.let { singleLineTextField.setPlaceholder(it) }
+        singleLineTextField.setTextAlignment(textAlignment)
+        singleLineTextField.setBorderStyle(borderStyle)
+        singleLineTextField.setReturnKeyType(returnKeyType)
+        singleLineTextField.setAutocapitalizationType(autocapitalizationType)
+        singleLineTextField.setAutocorrectionType(autocorrectionType)
+        singleLineTextField.setClearButtonMode(clearButtonMode)
+        singleLineTextField.setEnabled(isEnabled)
 
         // Left view / padding
         if (leftPadding != null && leftPadding!! > 0.0) {
             val paddingView = UIView(frame = CGRectMake(0.0, 0.0, leftPadding!!, 1.0))
-            textField.setLeftView(paddingView)
-            textField.setLeftViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
+            singleLineTextField.setLeftView(paddingView)
+            singleLineTextField.setLeftViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
         } else if (leftView != null) {
-            textField.setLeftView(leftView)
-            textField.setLeftViewMode(leftViewMode)
+            singleLineTextField.setLeftView(leftView)
+            singleLineTextField.setLeftViewMode(leftViewMode)
         }
 
         // Right view / padding
         if (rightPadding != null && rightPadding!! > 0.0) {
             val paddingView = UIView(frame = CGRectMake(0.0, 0.0, rightPadding!!, 1.0))
-            textField.setRightView(paddingView)
-            textField.setRightViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
+            singleLineTextField.setRightView(paddingView)
+            singleLineTextField.setRightViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
         } else if (rightView != null) {
-            textField.setRightView(rightView)
-            textField.setRightViewMode(rightViewMode)
+            singleLineTextField.setRightView(rightView)
+            singleLineTextField.setRightViewMode(rightViewMode)
         }
 
         // Setup Delegate Bridge if listeners are set
         if (returnListener != null || beginEditingListener != null || endEditingListener != null) {
-            val delegateBridge = TextFieldDelegateBridge(
+            val delegateBridge = SingleLineTextFieldDelegateBridge(
                 onReturnAction = returnListener,
                 onBeginEditingAction = beginEditingListener,
                 onEndEditingAction = endEditingListener
             )
-            textField.setDelegate(delegateBridge)
-            objc_setAssociatedObject(textField, textFieldDelegateKey, delegateBridge, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            singleLineTextField.setDelegate(delegateBridge)
+            objc_setAssociatedObject(
+                singleLineTextField,
+                textFieldDelegateKey,
+                delegateBridge,
+                OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
         }
 
         textChangedListener?.let { listener ->
-            textField.onEvent(UIControlEventEditingChanged) {
-                listener(textField.text ?: "")
+            singleLineTextField.onEvent(UIControlEventEditingChanged) {
+                listener(singleLineTextField.text ?: "")
             }
         }
 
-        return textField
+        return singleLineTextField
+    }
+
+    fun buildMultiLine(): UITextView {
+        text?.let { multiLineTextField.setText(it) }
+        multiLineTextField.setTextAlignment(textAlignment)
+        multiLineTextField.setReturnKeyType(returnKeyType)
+        multiLineTextField.setAutocapitalizationType(autocapitalizationType)
+        multiLineTextField.setAutocorrectionType(autocorrectionType)
+        multiLineTextField.setEditable(isEnabled)
+        multiLineTextField.translatesAutoresizingMaskIntoConstraints = false
+        multiLineTextField.font = UIFont.systemFontOfSize(16.0)
+        multiLineTextField.layer.borderWidth = 1.0
+        multiLineTextField.layer.borderColor = UIColor.systemGray4Color.CGColor
+        multiLineTextField.layer.cornerRadius = 5.0
+        multiLineTextField.scrollEnabled = true
+        multiLineTextField.heightAnchor.constraintLessThanOrEqualToConstant(multiLineTextField.getLineHeight(4)).active = true
+        multiLineTextField.heightAnchor.constraintGreaterThanOrEqualToConstant(multiLineTextField.getLineHeight(2)).active = true
+
+        // Setup Delegate Bridge if listeners are set
+        if (beginEditingListener != null || endEditingListener != null) {
+            val delegateBridge = MultiLineTextFieldDelegateBridge(
+                onBeginEditingAction = beginEditingListener,
+                onEndEditingAction = endEditingListener
+            )
+            multiLineTextField.setDelegate(delegateBridge)
+            objc_setAssociatedObject(
+                multiLineTextField,
+                textFieldDelegateKey,
+                delegateBridge,
+                OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+        }
+
+        return multiLineTextField
     }
 }
 
-inline fun textField(
+inline fun singleLineTextField(
     placeholder: String? = null,
     text: String? = null,
     builder: TextFieldBuilder.() -> Unit = {}
@@ -144,5 +210,17 @@ inline fun textField(
     if (placeholder != null) b.placeholder = placeholder
     if (text != null) b.text = text
     b.builder()
-    return b.build()
+    return b.buildSingleLine()
+}
+
+inline fun multiLineTextField(
+    placeholder: String? = null,
+    text: String? = null,
+    builder: TextFieldBuilder.() -> Unit = {}
+): UITextView {
+    val b = TextFieldBuilder()
+    if (placeholder != null) b.placeholder = placeholder
+    if (text != null) b.text = text
+    b.builder()
+    return b.buildMultiLine()
 }

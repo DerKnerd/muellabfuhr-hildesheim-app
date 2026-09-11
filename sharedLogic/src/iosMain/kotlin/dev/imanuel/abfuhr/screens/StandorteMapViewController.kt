@@ -5,7 +5,10 @@ package dev.imanuel.abfuhr.screens
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.Location
-import dev.imanuel.abfuhr.uikit.dsl.*
+import dev.imanuel.abfuhr.uikit.dsl.AppColors
+import dev.imanuel.abfuhr.uikit.dsl.button
+import dev.imanuel.abfuhr.uikit.dsl.mapView
+import dev.imanuel.abfuhr.uikit.dsl.showAlert
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCSignatureOverride
 import kotlinx.cinterop.useContents
@@ -34,8 +37,7 @@ val Location.dialogText: String
             append(hours)
         }
 
-        val hasContact =
-            fax.isNotBlank() || mail.isNotBlank() || www.isNotBlank() || tel.isNotBlank()
+        val hasContact = fax.isNotBlank() || mail.isNotBlank() || www.isNotBlank() || tel.isNotBlank()
         if (hasContact) {
             if (isNotEmpty()) append("\n\n")
             append("Kontaktdaten")
@@ -94,8 +96,7 @@ val String.markerGlyph: UIImage?
         return when (lowercase()) {
             "deponie", "dump" -> {
                 UIImage.systemImageNamed(
-                    "arrow.3.trianglepath",
-                    config
+                    "arrow.3.trianglepath", config
                 )
             }
 
@@ -134,8 +135,7 @@ class LocationPointAnnotation(
  * MapView delegate bridge handling marker rendering, selection dialogs, and initial user location centering.
  */
 class StandorteMapDelegateBridge(
-    private val onMarkerSelected: (Location) -> Unit,
-    private val onUserLocationFirstDetected: (Double, Double) -> Unit
+    private val onMarkerSelected: (Location) -> Unit, private val onUserLocationFirstDetected: (Double, Double) -> Unit
 ) : NSObject(), MKMapViewDelegateProtocol {
 
     private var hasCenteredOnUser = false
@@ -221,17 +221,18 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         )
     }
 
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val database: AbfallDatabase
+        get() = KoinPlatformTools.defaultContext().get().get()
+
     private lateinit var mapView: MKMapView
     private lateinit var mapDelegateBridge: StandorteMapDelegateBridge
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val locationManager: CLLocationManager = CLLocationManager()
     private var locationManagerDelegateBridge: StandorteLocationManagerDelegateBridge? = null
 
     private var hasCenteredOnUser: Boolean = false
     private val annotations = mutableListOf<LocationPointAnnotation>()
-
-    val database: AbfallDatabase
-        get() = KoinPlatformTools.defaultContext().get().get()
 
     override fun viewDidLoad() {
         super.viewDidLoad()
@@ -337,7 +338,7 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         )
     }
 
-    fun recenterOnUserLocation() {
+    private fun recenterOnUserLocation() {
         val userLoc = mapView.userLocation.location
         if (userLoc != null) {
             userLoc.coordinate.useContents {
@@ -362,7 +363,7 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
     /**
      * Centers the map view on the specified coordinate.
      */
-    fun centerMapOnCoordinate(
+    private fun centerMapOnCoordinate(
         latitude: Double,
         longitude: Double,
         latitudinalMeters: Double = 1500.0,
@@ -382,8 +383,8 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
     /**
      * Loads all locations from the database and creates map markers.
      */
-    fun loadLocations() {
-        scope.launch {
+    private fun loadLocations() {
+        ioScope.launch {
             val locationsList = database.locationQueries.getAllLocations().executeAsList()
             setLocations(locationsList)
         }
@@ -392,9 +393,9 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
     /**
      * Updates map annotations for the given list of locations.
      */
-    fun setLocations(locationsList: List<Location>) {
+    private fun setLocations(locationsList: List<Location>) {
         if (annotations.isNotEmpty()) {
-            scope.launch(Dispatchers.Main) {
+            mainScope.launch {
                 mapView.removeAnnotations(annotations)
                 annotations.clear()
             }
@@ -405,7 +406,7 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         if (validLocations.isEmpty()) {
             // Default center around Hildesheim if no valid locations and no user position yet
             if (!hasCenteredOnUser) {
-                scope.launch(Dispatchers.Main) {
+                mainScope.launch {
                     centerMapOnCoordinate(
                         DEFAULT_HILDESHEIM_LATITUDE,
                         DEFAULT_HILDESHEIM_LONGITUDE,
@@ -420,7 +421,7 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
 
         for (loc in validLocations) {
             val annotation = LocationPointAnnotation(loc)
-            scope.launch(Dispatchers.Main) {
+            mainScope.launch {
                 annotations.add(annotation)
                 mapView.addAnnotation(annotation)
             }
@@ -430,7 +431,7 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         if (!hasCenteredOnUser) {
             val avgLat = validLocations.map { it.latitude }.average()
             val avgLon = validLocations.map { it.longitude }.average()
-            scope.launch(Dispatchers.Main) {
+            mainScope.launch {
                 if (isValidCoordinate(avgLat, avgLon)) {
                     centerMapOnCoordinate(
                         avgLat, avgLon, latitudinalMeters = 6000.0, longitudinalMeters = 6000.0, animated = false
@@ -451,15 +452,13 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
     /**
      * Opens an alert dialog with the details of the selected location.
      */
-    fun showLocationDetailDialog(location: Location) {
+    private fun showLocationDetailDialog(location: Location) {
         showAlert {
             title = location.name.trim().ifBlank { "Standort" }
             message = location.dialogText
             style = UIAlertControllerStyleAlert
             action(
-                title = "Schließen",
-                style = UIAlertActionStyleCancel,
-                handler = null
+                title = "Schließen", style = UIAlertActionStyleCancel, handler = null
             )
         }
     }

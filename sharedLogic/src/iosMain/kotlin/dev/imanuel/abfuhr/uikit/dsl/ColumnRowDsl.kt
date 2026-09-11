@@ -148,12 +148,22 @@ abstract class BaseFlexLayoutBuilder(
         return btn
     }
 
-    fun textField(
+    fun singleLineTextField(
         placeholder: String? = null,
         text: String? = null,
         builder: TextFieldBuilder.() -> Unit = {}
     ): UITextField {
-        val tf = dev.imanuel.abfuhr.uikit.dsl.textField(placeholder, text, builder)
+        val tf = dev.imanuel.abfuhr.uikit.dsl.singleLineTextField(placeholder, text, builder)
+        stackView.addArrangedSubview(tf)
+        return tf
+    }
+
+    fun multiLineTextField(
+        placeholder: String? = null,
+        text: String? = null,
+        builder: TextFieldBuilder.() -> Unit = {}
+    ): UITextView {
+        val tf = dev.imanuel.abfuhr.uikit.dsl.multiLineTextField(placeholder, text, builder)
         stackView.addArrangedSubview(tf)
         return tf
     }
@@ -176,14 +186,6 @@ abstract class BaseFlexLayoutBuilder(
         val tv = dev.imanuel.abfuhr.uikit.dsl.textView(text, placeholder, builder)
         stackView.addArrangedSubview(tv)
         return tv
-    }
-
-    fun pageShell(
-        builder: PageShellBuilder.() -> Unit
-    ): AdaptivePageShellView {
-        val shell = dev.imanuel.abfuhr.uikit.dsl.pageShell(builder)
-        stackView.addArrangedSubview(shell)
-        return shell
     }
 
     fun activityIndicator(

@@ -164,20 +164,6 @@ class IconButtonBuilder {
         tintColor?.let { button.setTintColor(it) }
         backgroundColor?.let { button.setBackgroundColor(it) }
 
-        val computedRadius = if (isCircular) {
-            size / 2.0
-        } else {
-            cornerRadius ?: 0.0
-        }
-
-        if (computedRadius > 0.0) {
-            button.layer.cornerRadius = computedRadius
-            button.layer.masksToBounds = true
-        }
-
-        borderWidth?.let { button.layer.borderWidth = it }
-        borderColor?.let { button.layer.borderColor = it.CGColor }
-
         button.setEnabled(isEnabled)
 
         clickAction?.let { action ->

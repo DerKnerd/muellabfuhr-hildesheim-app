@@ -7,6 +7,7 @@ import dev.imanuel.abfuhr.database.databaseModule
 import dev.imanuel.abfuhr.helper.resolveSystemSymbol
 import dev.imanuel.abfuhr.preferences.firstSyncHappened
 import dev.imanuel.abfuhr.preferences.markFirstSync
+import dev.imanuel.abfuhr.screens.createReportWasteViewController
 import dev.imanuel.abfuhr.screens.createStandorteMapViewController
 import dev.imanuel.abfuhr.search.searchModule
 import dev.imanuel.abfuhr.sync.SyncClient
@@ -88,7 +89,7 @@ class AbfuhrSyncLoadingView : UIView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0)) {
         setTranslatesAutoresizingMaskIntoConstraints(false)
     }
 
-    private val stackView = hStack {
+    private val stackView = column {
         setTranslatesAutoresizingMaskIntoConstraints(false)
         alignment = UIStackViewAlignmentCenter
         distribution = UIStackViewDistributionFill
@@ -244,9 +245,7 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
                 image = AbfuhrNavDestination.ReportWaste.createIcon() ?: UIImage(),
                 tag = 3L
             ) {
-                viewController = UIViewController().apply {
-                    label(title)
-                }
+                viewController = createReportWasteViewController()
             }
         }
     }

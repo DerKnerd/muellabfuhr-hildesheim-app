@@ -108,7 +108,7 @@ class LiquidGlassCardBuilder {
         text: String? = null,
         builder: TextFieldBuilder.() -> Unit = {}
     ): UITextField {
-        val tf = dev.imanuel.abfuhr.uikit.dsl.textField(placeholder, text, builder)
+        val tf = dev.imanuel.abfuhr.uikit.dsl.singleLineTextField(placeholder, text, builder)
         childViews.add(tf)
         return tf
     }

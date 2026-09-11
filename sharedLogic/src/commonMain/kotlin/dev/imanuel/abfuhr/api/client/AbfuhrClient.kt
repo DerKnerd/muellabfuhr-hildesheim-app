@@ -49,14 +49,14 @@ val apiModule = module {
 
 @Serializable
 @XmlSerialName("configuration")
-data class abfallAbcConfiguration(
+data class AbfallAbcConfiguration(
     @XmlElement(true)
     @XmlSerialName("contentFilesURL")
     val contentFilesURL: String
 )
 
 @Serializable
-data class reportWaste(
+data class ReportWaste(
     val subject: String,
     val body: String,
     val attachment: ByteArray? = null
@@ -65,7 +65,7 @@ data class reportWaste(
         if (this === other) return true
         if (other == null || this::class != other::class) return false
 
-        other as reportWaste
+        other as ReportWaste
 
         if (subject != other.subject) return false
         if (body != other.body) return false
@@ -145,7 +145,7 @@ class AbfuhrClient(private val httpClient: HttpClient) {
         }
         val response = httpClient.get("$baseUrl/abfall-abc/configuration/configuration.aspx")
         val body = response.bodyAsText()
-        val config = XML.v1.decodeFromString<abfallAbcConfiguration>(body)
+        val config = XML.v1.decodeFromString<AbfallAbcConfiguration>(body)
         return config.contentFilesURL
     }
 
@@ -250,7 +250,7 @@ class AbfuhrClient(private val httpClient: HttpClient) {
                 "https://zah.351.compra.de/v4.4.0/zahwebservice.asmx/SendMailWithAttachment"
 //                "https://httpbin.org/post"
             ) {
-                val body = reportWaste(
+                val body = ReportWaste(
                     subject = "ZAH App Verschmutzung gemeldet",
                     body = body,
                     attachment = picture
