@@ -112,7 +112,10 @@ class TextFieldBuilder {
 
     fun buildSingleLine(): UITextField {
         text?.let { singleLineTextField.setText(it) }
-        placeholder?.let { singleLineTextField.setPlaceholder(it) }
+        placeholder?.let {
+            singleLineTextField.setPlaceholder(it)
+            singleLineTextField.setAccessibilityLabel(it)
+        }
         singleLineTextField.setTextAlignment(textAlignment)
         singleLineTextField.setBorderStyle(borderStyle)
         singleLineTextField.setReturnKeyType(returnKeyType)
@@ -121,24 +124,64 @@ class TextFieldBuilder {
         singleLineTextField.setClearButtonMode(clearButtonMode)
         singleLineTextField.setEnabled(isEnabled)
 
-        // Left view / padding
-        if (leftPadding != null && leftPadding!! > 0.0) {
+        // Left view / padding (apply padding even when a custom leftView is provided)
+        if (leftView != null) {
+            val accessory: UIView = if (leftPadding != null && leftPadding!! > 0.0) {
+                // Wrap provided view and add spacer on the right to separate from text
+                val stack = UIStackView().apply {
+                    axis = UILayoutConstraintAxisHorizontal
+                    alignment = UIStackViewAlignmentCenter
+                    translatesAutoresizingMaskIntoConstraints = false
+                }
+                stack.addArrangedSubview(UIView().apply {
+                    translatesAutoresizingMaskIntoConstraints = false
+                    widthAnchor.constraintEqualToConstant(leftPadding!!).active = true
+                })
+                stack.addArrangedSubview(leftView!!)
+                stack.addArrangedSubview(UIView().apply {
+                    translatesAutoresizingMaskIntoConstraints = false
+                    widthAnchor.constraintEqualToConstant(leftPadding!!).active = true
+                })
+                stack
+            } else {
+                leftView!!
+            }
+            singleLineTextField.setLeftView(accessory)
+            singleLineTextField.setLeftViewMode(leftViewMode)
+        } else if (leftPadding != null && leftPadding!! > 0.0) {
             val paddingView = UIView(frame = CGRectMake(0.0, 0.0, leftPadding!!, 1.0))
             singleLineTextField.setLeftView(paddingView)
             singleLineTextField.setLeftViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
-        } else if (leftView != null) {
-            singleLineTextField.setLeftView(leftView)
-            singleLineTextField.setLeftViewMode(leftViewMode)
         }
 
-        // Right view / padding
-        if (rightPadding != null && rightPadding!! > 0.0) {
+        // Right view / padding (apply padding even when a custom rightView is provided)
+        if (rightView != null) {
+            val accessory: UIView = if (rightPadding != null && rightPadding!! > 0.0) {
+                // Wrap provided view and add spacer on the left to separate from text
+                val stack = UIStackView().apply {
+                    axis = UILayoutConstraintAxisHorizontal
+                    alignment = UIStackViewAlignmentCenter
+                    translatesAutoresizingMaskIntoConstraints = false
+                }
+                stack.addArrangedSubview(UIView().apply {
+                    translatesAutoresizingMaskIntoConstraints = false
+                    widthAnchor.constraintEqualToConstant(rightPadding!!).active = true
+                })
+                stack.addArrangedSubview(rightView!!)
+                stack.addArrangedSubview(UIView().apply {
+                    translatesAutoresizingMaskIntoConstraints = false
+                    widthAnchor.constraintEqualToConstant(rightPadding!!).active = true
+                })
+                stack
+            } else {
+                rightView!!
+            }
+            singleLineTextField.setRightView(accessory)
+            singleLineTextField.setRightViewMode(rightViewMode)
+        } else if (rightPadding != null && rightPadding!! > 0.0) {
             val paddingView = UIView(frame = CGRectMake(0.0, 0.0, rightPadding!!, 1.0))
             singleLineTextField.setRightView(paddingView)
             singleLineTextField.setRightViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
-        } else if (rightView != null) {
-            singleLineTextField.setRightView(rightView)
-            singleLineTextField.setRightViewMode(rightViewMode)
         }
 
         // Setup Delegate Bridge if listeners are set
@@ -173,14 +216,17 @@ class TextFieldBuilder {
         multiLineTextField.setAutocapitalizationType(autocapitalizationType)
         multiLineTextField.setAutocorrectionType(autocorrectionType)
         multiLineTextField.setEditable(isEnabled)
+        multiLineTextField.borderStyle = UITextViewBorderStyle.UITextViewBorderStyleRoundedRect
         multiLineTextField.translatesAutoresizingMaskIntoConstraints = false
         multiLineTextField.font = UIFont.systemFontOfSize(16.0)
         multiLineTextField.layer.borderWidth = 1.0
         multiLineTextField.layer.borderColor = UIColor.systemGray4Color.CGColor
         multiLineTextField.layer.cornerRadius = 5.0
         multiLineTextField.scrollEnabled = true
-        multiLineTextField.heightAnchor.constraintLessThanOrEqualToConstant(multiLineTextField.getLineHeight(4)).active = true
-        multiLineTextField.heightAnchor.constraintGreaterThanOrEqualToConstant(multiLineTextField.getLineHeight(2)).active = true
+        multiLineTextField.heightAnchor.constraintLessThanOrEqualToConstant(multiLineTextField.getLineHeight(4)).active =
+            true
+        multiLineTextField.heightAnchor.constraintGreaterThanOrEqualToConstant(multiLineTextField.getLineHeight(2)).active =
+            true
 
         // Setup Delegate Bridge if listeners are set
         if (beginEditingListener != null || endEditingListener != null) {

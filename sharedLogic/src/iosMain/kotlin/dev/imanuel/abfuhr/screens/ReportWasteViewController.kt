@@ -5,10 +5,9 @@ package dev.imanuel.abfuhr.screens
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
+import dev.imanuel.abfuhr.helper.notifyDone
 import dev.imanuel.abfuhr.helper.resizeToFit
-import dev.imanuel.abfuhr.helper.showToast
 import dev.imanuel.abfuhr.helper.toJpegByteArray
-import dev.imanuel.abfuhr.uikit.dsl.activityIndicator
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
@@ -27,7 +26,6 @@ class ImagePickerLauncher(
 ) : NSObject(), UIImagePickerControllerDelegateProtocol, UINavigationControllerDelegateProtocol {
 
     fun launchCamera() {
-        // Verify camera hardware is available on the device/simulator
         if (!UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera)) {
             onImageCaptured(null)
             return
@@ -98,8 +96,8 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
     private lateinit var pictureAspectConstraint: NSLayoutConstraint
     private lateinit var sendButton: UIBarButtonItem
     private lateinit var captureButton: UIButton
-    private lateinit var uploadOverlay: UIView
-    private lateinit var uploadIndicator: UIActivityIndicatorView
+    private var sendIconDefault: UIImage? = null
+    private var sendingItem: UIBarButtonItem? = null
     private var pictureView = UIImageView()
 
     @ObjCAction
@@ -125,10 +123,7 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
 
             mainScope.launch {
                 if (result) {
-                    showToast(
-                        message = "Der Müll wurde gemeldet",
-                        isSuccess = true
-                    )
+                    notifyDone(true)
 
                     commentView.text = ""
                     myLocationField.text = ""
@@ -136,26 +131,50 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                     latitude = 0.0
                     longitude = 0.0
                 } else {
-                    showToast(
-                        message = "Leider konnte der Müll nicht gemeldet werden",
-                        isSuccess = false
-                    )
+                    notifyDone(false)
                 }
 
                 setUploading(false)
+                if (result) {
+                    showSendSuccessCheck()
+                }
                 sendButton.enabled = !result
             }
         }
     }
 
+    private fun showSendingSpinner() {
+        if (sendingItem == null) {
+            val spinner = UIActivityIndicatorView().apply {
+                activityIndicatorViewStyle = UIActivityIndicatorViewStyleMedium
+                startAnimating()
+                translatesAutoresizingMaskIntoConstraints = false
+            }
+            sendingItem = UIBarButtonItem(customView = spinner)
+        }
+        navigationItem.rightBarButtonItem = sendingItem
+    }
+
+    private fun restoreSendButton() {
+        navigationItem.rightBarButtonItem = sendButton
+    }
+
     private fun setUploading(uploading: Boolean) {
-        uploadOverlay.hidden = !uploading
         sendButton.enabled = !uploading
 
         if (uploading) {
-            uploadIndicator.startAnimating()
+            showSendingSpinner()
         } else {
-            uploadIndicator.stopAnimating()
+            restoreSendButton()
+        }
+    }
+
+    private fun showSendSuccessCheck() {
+        val checkIcon = UIImage.systemImageNamed("checkmark")
+        sendButton.image = checkIcon
+        mainScope.launch {
+            delay(2000)
+            sendButton.image = sendIconDefault
         }
     }
 
@@ -188,6 +207,7 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
         }
         setupForm()
         val sendIcon = UIImage.systemImageNamed("arrow.up")
+        sendIconDefault = sendIcon
         sendButton = UIBarButtonItem(
             image = sendIcon,
             style = UIBarButtonItemStyle.UIBarButtonItemStyleDone,
@@ -197,8 +217,6 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
             enabled = false
         }
         navigationItem.rightBarButtonItem = sendButton
-
-        setupUploadIndicator()
     }
 
     override fun traitCollectionDidChange(previousTraitCollection: UITraitCollection?) {
@@ -211,46 +229,12 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
         }
     }
 
-    private fun setupUploadIndicator() {
-        uploadOverlay = UIView().apply {
-            translatesAutoresizingMaskIntoConstraints = false
-            backgroundColor = UIColor.systemBackgroundColor
-                .colorWithAlphaComponent(0.75)
-            hidden = true
-        }
-
-        uploadIndicator = activityIndicator {
-            style = UIActivityIndicatorViewStyleMedium
-            indicatorView.translatesAutoresizingMaskIntoConstraints = false
-        }
-
-        view.addSubview(uploadOverlay)
-        uploadOverlay.addSubview(uploadIndicator)
-
-        NSLayoutConstraint.activateConstraints(
-            listOf(
-                uploadOverlay.topAnchor.constraintEqualToAnchor(view.topAnchor),
-                uploadOverlay.bottomAnchor.constraintEqualToAnchor(view.bottomAnchor),
-                uploadOverlay.leadingAnchor.constraintEqualToAnchor(view.leadingAnchor),
-                uploadOverlay.trailingAnchor.constraintEqualToAnchor(view.trailingAnchor),
-
-                uploadIndicator.centerXAnchor.constraintEqualToAnchor(
-                    uploadOverlay.centerXAnchor
-                ),
-                uploadIndicator.centerYAnchor.constraintEqualToAnchor(
-                    uploadOverlay.centerYAnchor
-                )
-            )
-        )
-    }
-
     private fun setupForm() {
         val form = scrollableColumn {
             alignment = UIStackViewAlignmentFill
 
             padding(16.0)
-            label("Meine Position")
-            myLocationField = singleLineTextField {
+            myLocationField = singleLineTextField(placeholder = "Position") {
                 singleLineTextField.delegate = object : NSObject(), UITextFieldDelegateProtocol {
                     override fun textFieldShouldBeginEditing(textField: UITextField): Boolean = false
                 }
@@ -262,6 +246,7 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                 singleLineTextField.addGestureRecognizer(tapGesture)
 
                 rightViewMode = UITextFieldViewMode.UITextFieldViewModeAlways
+                rightPadding = 4.0
                 rightView = dev.imanuel.abfuhr.uikit.dsl.iconButton("location.circle.fill") {
                     isCircular = true
                     onClick {
@@ -272,16 +257,9 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
             label("Kommentar")
             commentView = multiLineTextField("Dein Kommentar")
 
-            val captureRow = UIStackView().apply {
-                axis = UILayoutConstraintAxisHorizontal
-                distribution = UIStackViewDistributionFill
-                spacing = 8.0
-                translatesAutoresizingMaskIntoConstraints = false
-                alignment = UIStackViewAlignmentTop
-
-            }
-            captureButton = button("Foto aufnehmen") {
-                button.configuration = UIButtonConfiguration.tintedButtonConfiguration()
+            captureButton = button("Foto hinzufügen") {
+                systemImage("camera")
+                button.configuration = UIButtonConfiguration.borderedButtonConfiguration()
 
                 onClick {
                     val launcher = ImagePickerLauncher(this@ReportWasteViewController) {
@@ -306,7 +284,7 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                 }
             }
 
-            pictureView.apply {
+            add(pictureView.apply {
                 translatesAutoresizingMaskIntoConstraints = false
                 contentMode = UIViewContentMode.UIViewContentModeScaleAspectFill
                 clipsToBounds = true
@@ -317,16 +295,10 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                 ).apply {
                     active = true
                 }
-            }
-
-            captureRow.addArrangedSubview(pictureView)
-            captureRow.addArrangedSubview(captureButton)
-
+            })
             pictureView.widthAnchor.constraintEqualToAnchor(
                 captureButton.widthAnchor
             ).active = true
-
-            add(captureRow)
         }
 
         pictureView.widthAnchor.constraintEqualToAnchor(
@@ -336,7 +308,7 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
         NSLayoutConstraint.activateConstraints(
             listOf(
                 form.topAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.topAnchor),
-                form.bottomAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.bottomAnchor),
+                form.bottomAnchor.constraintEqualToAnchor(view.bottomAnchor),
                 form.leadingAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.leadingAnchor),
                 form.trailingAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.trailingAnchor),
             )

@@ -4,7 +4,24 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.readValue
 import platform.CoreGraphics.CGAffineTransformIdentity
 import platform.CoreGraphics.CGAffineTransformMakeTranslation
+import platform.AudioToolbox.AudioServicesPlaySystemSound
 import platform.UIKit.*
+
+fun notifyDone(success: Boolean) {
+    val feedbackGenerator = UINotificationFeedbackGenerator()
+    feedbackGenerator.prepare()
+    val feedbackType = if (success) {
+        UINotificationFeedbackType.UINotificationFeedbackTypeSuccess
+    } else {
+        UINotificationFeedbackType.UINotificationFeedbackTypeError
+    }
+    feedbackGenerator.notificationOccurred(feedbackType)
+
+    if (success) {
+        // System sound ID for the iOS Mail Sent sound is 1001
+        AudioServicesPlaySystemSound(1001u)
+    }
+}
 
 @OptIn(ExperimentalForeignApi::class)
 fun UIViewController.showToast(
