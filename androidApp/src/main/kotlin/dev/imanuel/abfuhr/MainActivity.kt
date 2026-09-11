@@ -159,11 +159,11 @@ fun MainComposable(
                         icon = {
                             Icon(
                                 imageVector = if (activeScreen == Screens.WasteAbc) Icons.Filled.Recycling else Icons.Outlined.Recycling,
-                                contentDescription = "Abfall ABC"
+                                contentDescription = "Sortierhilfe"
                             )
                         },
                         label = {
-                            Text("Abfall ABC")
+                            Text("Sortierhilfe")
                         }
                     )
                     NavigationSuiteItem(

@@ -51,7 +51,7 @@ enum class AbfuhrNavDestination(
         primarySymbolName = "calendar",
     ),
     WasteAbc(
-        title = "Abfall ABC",
+        title = "Sortierhilfe",
         primarySymbolName = "arrow.3.trianglepath",
     ),
     Locations(
