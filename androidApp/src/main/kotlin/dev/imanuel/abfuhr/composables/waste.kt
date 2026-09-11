@@ -283,7 +283,7 @@ fun WasteAbcScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         } else {
-                            Text("Abfall ABC")
+                            Text("Sortierhilfe")
                         }
                     },
                     actions = {
