@@ -1,32 +1,15 @@
 package dev.imanuel.abfuhr.api.client
 
-import dev.imanuel.abfuhr.models.AbfallAbcDump
-import dev.imanuel.abfuhr.models.AbfallAbcWaste
-import dev.imanuel.abfuhr.models.AbfuhrDump
-import dev.imanuel.abfuhr.models.AbfuhrLocation
-import dev.imanuel.abfuhr.models.Location
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.html.a
-import kotlinx.html.body
-import kotlinx.html.h4
-import kotlinx.html.head
-import kotlinx.html.meta
-import kotlinx.html.span
+import dev.imanuel.abfuhr.models.*
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
-import kotlinx.html.table
-import kotlinx.html.td
-import kotlinx.html.title
-import kotlinx.html.tr
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import nl.adaptivity.xmlutil.serialization.XML
@@ -166,7 +149,7 @@ class AbfuhrClient(private val httpClient: HttpClient) {
                     }
                     title { +"ZAH App Verschmutzung gemeldet" }
                 }
-                appendHTML()
+            appendHTML()
                 .body {
                     if (picture?.isNotEmpty() == true) {
                         h4 { +"Bitte siehe Bild im Anhang." }
@@ -245,21 +228,25 @@ class AbfuhrClient(private val httpClient: HttpClient) {
             append("</html>")
         }
 
-        val response =
-            httpClient.post(
-                "https://zah.351.compra.de/v4.4.0/zahwebservice.asmx/SendMailWithAttachment"
-//                "https://httpbin.org/post"
-            ) {
-                val body = ReportWaste(
-                    subject = "ZAH App Verschmutzung gemeldet",
-                    body = body,
-                    attachment = picture
-                )
-                setBody(body)
-                header("Content-Type", "application/json")
-                header("Accept", "application/json")
-            }
+        try {
+            val response =
+                httpClient.post(
+//                "https://zah.351.compra.de/v4.4.0/zahwebservice.asmx/SendMailWithAttachment"
+                    "https://httpbin.org/post"
+                ) {
+                    val body = ReportWaste(
+                        subject = "ZAH App Verschmutzung gemeldet",
+                        body = body,
+                        attachment = picture
+                    )
+                    setBody(body)
+                    header("Content-Type", "application/json")
+                    header("Accept", "application/json")
+                }
 
-        return response.status.isSuccess()
+            return response.status.isSuccess()
+        } catch (e: Throwable) {
+            return false
+        }
     }
 }
