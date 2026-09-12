@@ -7,8 +7,10 @@ import dev.imanuel.abfuhr.database.databaseModule
 import dev.imanuel.abfuhr.helper.resolveSystemSymbol
 import dev.imanuel.abfuhr.preferences.firstSyncHappened
 import dev.imanuel.abfuhr.preferences.markFirstSync
+import dev.imanuel.abfuhr.screens.createPickupViewController
 import dev.imanuel.abfuhr.screens.createReportWasteViewController
 import dev.imanuel.abfuhr.screens.createStandorteMapViewController
+import dev.imanuel.abfuhr.screens.createWasteAbcViewController
 import dev.imanuel.abfuhr.search.searchModule
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.sync.syncModule
@@ -217,9 +219,7 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
                 image = AbfuhrNavDestination.Pickup.createIcon() ?: UIImage(),
                 tag = 0L
             ) {
-                viewController = UIViewController().apply {
-                    label(title)
-                }
+                viewController = createPickupViewController()
             }
 
             item(
@@ -227,9 +227,7 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
                 image = AbfuhrNavDestination.WasteAbc.createIcon() ?: UIImage(),
                 tag = 1L
             ) {
-                viewController = UIViewController().apply {
-                    label(title)
-                }
+                viewController = createWasteAbcViewController()
             }
 
             item(

@@ -5,10 +5,12 @@ package dev.imanuel.abfuhr.screens
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
+import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.helper.notifyDone
 import dev.imanuel.abfuhr.helper.resizeToFit
 import dev.imanuel.abfuhr.helper.toJpegByteArray
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
+import dev.imanuel.abfuhr.uikit.dsl.showAlert
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import org.koin.mp.KoinPlatformTools
@@ -17,8 +19,32 @@ import platform.CoreLocation.CLLocationManager
 import platform.CoreLocation.CLLocationManagerDelegateProtocol
 import platform.CoreLocation.kCLLocationAccuracyBest
 import platform.Foundation.NSSelectorFromString
+import platform.SystemConfiguration.SCNetworkReachabilityCreateWithName
+import platform.SystemConfiguration.SCNetworkReachabilityGetFlags
+import platform.SystemConfiguration.kSCNetworkReachabilityFlagsConnectionRequired
+import platform.SystemConfiguration.kSCNetworkReachabilityFlagsReachable
 import platform.UIKit.*
 import platform.darwin.NSObject
+import kotlin.time.Duration.Companion.milliseconds
+
+@OptIn(ExperimentalForeignApi::class)
+fun isNetworkAvailable(): Boolean = memScoped {
+    val reachability = SCNetworkReachabilityCreateWithName(
+        null,
+        "captive.apple.com"
+    ) ?: return@memScoped false
+
+    val flags = alloc<UIntVar>()
+
+    if (!SCNetworkReachabilityGetFlags(reachability, flags.ptr)) {
+        return@memScoped false
+    }
+
+    val value = flags.value
+
+    (value and kSCNetworkReachabilityFlagsReachable) != 0u &&
+            (value and kSCNetworkReachabilityFlagsConnectionRequired) == 0u
+}
 
 class ImagePickerLauncher(
     private val viewController: UIViewController,
@@ -131,6 +157,26 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                     latitude = 0.0
                     longitude = 0.0
                 } else {
+                    ioScope.launch {
+                        val networkAvailable = isNetworkAvailable()
+                        mainScope.launch {
+                            if (networkAvailable) {
+                                showAlert(
+                                    "Müll konnte nicht gemeldet werden",
+                                    "Es ist es nicht möglich, deine Meldung weiterzuleiten. Bitte versuche es nach einiger Zeit noch einmal."
+                                ) {
+                                    okAction("Schließen")
+                                }
+                            } else {
+                                showAlert(
+                                    "Keine Internetverbindung",
+                                    "Dein ${UIDevice.currentDevice.localizedModel} ist nicht mit dem Internet verbunden. Um Müll zu melden brauchst du eine aktive Internetverbindung."
+                                ) {
+                                    okAction("Schließen")
+                                }
+                            }
+                        }
+                    }
                     notifyDone(false)
                 }
 
@@ -173,7 +219,7 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
         val checkIcon = UIImage.systemImageNamed("checkmark")
         sendButton.image = checkIcon
         mainScope.launch {
-            delay(2000)
+            delay(2000.milliseconds)
             sendButton.image = sendIconDefault
         }
     }
@@ -192,16 +238,27 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
         locationManagerDelegateBridge = ReportWasteManagerDelegateBridge { location ->
             locationManager.stopUpdatingLocation()
             location.coordinate.useContents {
-                this@ReportWasteViewController.latitude = latitude
-                this@ReportWasteViewController.longitude = longitude
-                val loc = database.abfuhrQueries.searchByGeolocation(latitude, longitude).executeAsList().firstOrNull()
-                if (loc != null) {
-                    if (loc.locality == "Hildesheim") {
-                        myLocationField.text = "${loc.street} Hildesheim"
-                    } else {
-                        myLocationField.text = "${loc.street} ${loc.district}"
+                if (!checkIfLocationInHildesheim(latitude, longitude)) {
+                    showAlert(
+                        "Nicht in Hildesheim",
+                        "Du scheinst nicht im Landkreis Hildesheim zu sein. Es können nur Meldungen von dort weitergeleitet werden."
+                    ) {
+                        okAction("Schließen")
                     }
-                    sendButton.enabled = true
+                    sendButton.enabled = false
+                } else {
+                    this@ReportWasteViewController.latitude = latitude
+                    this@ReportWasteViewController.longitude = longitude
+                    val loc =
+                        database.abfuhrQueries.searchByGeolocation(latitude, longitude).executeAsList().firstOrNull()
+                    if (loc != null) {
+                        if (loc.locality == "Hildesheim") {
+                            myLocationField.text = "${loc.street} Hildesheim"
+                        } else {
+                            myLocationField.text = "${loc.street} ${loc.district}"
+                        }
+                        sendButton.enabled = true
+                    }
                 }
             }
         }
