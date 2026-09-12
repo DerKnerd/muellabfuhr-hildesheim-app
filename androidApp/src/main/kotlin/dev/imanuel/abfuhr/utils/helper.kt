@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.location.LocationManagerCompat
@@ -134,4 +136,14 @@ fun Context.enqueueRefreshDataWorker() {
         .build()
 
     workManager.enqueue(workRequest)
+}
+
+fun Context.hasInternetConnection(): Boolean {
+    val connectivityManager = getSystemService<ConnectivityManager>()
+
+    val network = connectivityManager?.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
 }

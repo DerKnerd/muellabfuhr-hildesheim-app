@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.LocationSearching
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,11 +47,13 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
+import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.utils.fetchFineLocation
 import dev.imanuel.abfuhr.utils.firstSyncHappened
+import dev.imanuel.abfuhr.utils.hasInternetConnection
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.io.ByteArrayOutputStream
@@ -83,9 +87,19 @@ fun ReportWasteScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var locateMeNow by remember { mutableStateOf(false) }
+    var notInHildesheimMessageOpen by remember { mutableStateOf(false) }
 
     var myLocation by remember { mutableStateOf<AbfuhrLocation?>(null) }
     var coordinates by remember { mutableStateOf<Location?>(null) }
+
+    val inHildesheim by remember {
+        derivedStateOf {
+            if (coordinates != null) checkIfLocationInHildesheim(
+                coordinates!!.latitude,
+                coordinates!!.longitude
+            ) else false
+        }
+    }
 
     var comment by remember { mutableStateOf("") }
     var picture by remember { mutableStateOf<Bitmap?>(null) }
@@ -102,7 +116,7 @@ fun ReportWasteScreen(
 
     val reportWaste = {
         coroutineScope.launch {
-            if (coordinates != null && myLocation != null) {
+            if (inHildesheim && coordinates != null && myLocation != null) {
                 val address = if (myLocation!!.locality == "Hildesheim") {
                     "${myLocation!!.street} Hildesheim"
                 } else {
@@ -117,8 +131,10 @@ fun ReportWasteScreen(
                 )
                 if (result) {
                     snackbarHostState.showSnackbar("Der Müll wurde gemeldet")
-                } else {
+                } else if (context.hasInternetConnection()) {
                     snackbarHostState.showSnackbar("Leider konnte der Müll nicht gemeldet werden")
+                } else {
+                    snackbarHostState.showSnackbar("Du hast kein Internet, ohne kann der Müll nicht gemeldet werden")
                 }
             }
         }
@@ -145,6 +161,7 @@ fun ReportWasteScreen(
                     )
                         .firstOrNull()
             }
+            notInHildesheimMessageOpen = !inHildesheim
             locateMeNow = false
         }
     }
@@ -243,6 +260,18 @@ fun ReportWasteScreen(
                     }
                 }
             }
+        }
+        if (notInHildesheimMessageOpen) {
+            AlertDialog(
+                onDismissRequest = { notInHildesheimMessageOpen = false },
+                title = { Text("Nicht in Hildesheim") },
+                text = { Text("Du bist nicht im Landkreis Hildesheim. Daher kannst du leider keinen Müll melden.") },
+                confirmButton = {
+                    Button(onClick = { notInHildesheimMessageOpen = false }) {
+                        Text("Schließen")
+                    }
+                }
+            )
         }
     }
 }
