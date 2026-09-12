@@ -49,16 +49,20 @@ INSERT OR REPLACE INTO abfuhrLocation(streetId, street, locality, localityId, di
 VALUES ?;
 
 getAllPickups:
-SELECT * FROM abfuhrPickup;
+SELECT *
+FROM abfuhrPickup;
 
 getAllLocations:
-SELECT * FROM abfuhrLocation;
+SELECT *
+FROM abfuhrLocation;
 
 clearPickups:
-DELETE FROM abfuhrPickup;
+DELETE
+FROM abfuhrPickup;
 
 clearLocations:
-DELETE FROM abfuhrLocation;
+DELETE
+FROM abfuhrLocation;
 
 searchAbfuhrLocationByKeyword:
 SELECT l.*

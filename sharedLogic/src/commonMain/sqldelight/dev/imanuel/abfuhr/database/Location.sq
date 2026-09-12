@@ -35,10 +35,12 @@ INSERT OR REPLACE INTO location(type, name, latitude, longitude, description, op
 VALUES ?;
 
 getAllLocations:
-SELECT * FROM location;
+SELECT *
+FROM location;
 
 clearLocations:
-DELETE FROM location;
+DELETE
+FROM location;
 
 searchLocationByKeyword:
 SELECT l.*

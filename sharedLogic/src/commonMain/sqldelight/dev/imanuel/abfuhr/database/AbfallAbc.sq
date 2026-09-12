@@ -109,7 +109,7 @@ INSERT INTO abfallAbcWasteTips(wasteId, tip, language)
 VALUES ?;
 
 insertDisposalRoute:
-INSERT OR REPLACE INTO abfallAbcDisposalRoute(title, description, street, zipcode, city, openingHours, fees, link1, link2, link3, descriptionLink1, descriptionLink2, descriptionLink3, file1, file2, file3, descriptionFile1, descriptionFile2, descriptionFile3)
+INSERT OR REPLACE INTO abfallAbcDisposalRoute(id, title, description, street, zipcode, city, openingHours, fees, link1, link2, link3, descriptionLink1, descriptionLink2, descriptionLink3, file1, file2, file3, descriptionFile1, descriptionFile2, descriptionFile3)
 VALUES ?;
 
 insertDisposalRoutes:
@@ -121,31 +121,41 @@ INSERT OR REPLACE INTO abfallAbcWasteMapping(wasteId, routesId)
 VALUES ?;
 
 getAllWaste:
-SELECT * FROM abfallAbcWaste;
+SELECT *
+FROM abfallAbcWaste
+ORDER BY title;
 
 getAllWasteTips:
-SELECT * FROM abfallAbcWasteTips;
+SELECT *
+FROM abfallAbcWasteTips;
 
 getAllDisposalRoutes:
-SELECT * FROM abfallAbcDisposalRoutes;
+SELECT *
+FROM abfallAbcDisposalRoutes;
 
 getAllWasteMapping:
-SELECT * FROM abfallAbcWasteMapping;
+SELECT *
+FROM abfallAbcWasteMapping;
 
 clearWasteMapping:
-DELETE FROM abfallAbcWasteMapping;
+DELETE
+FROM abfallAbcWasteMapping;
 
 clearWasteTips:
-DELETE FROM abfallAbcWasteTips;
+DELETE
+FROM abfallAbcWasteTips;
 
 clearWaste:
-DELETE FROM abfallAbcWaste;
+DELETE
+FROM abfallAbcWaste;
 
 clearDisposalRoutes:
-DELETE FROM abfallAbcDisposalRoutes;
+DELETE
+FROM abfallAbcDisposalRoutes;
 
 clearDisposalRoute:
-DELETE FROM abfallAbcDisposalRoute;
+DELETE
+FROM abfallAbcDisposalRoute;
 
 lastInsertRowId:
 SELECT last_insert_rowid();
