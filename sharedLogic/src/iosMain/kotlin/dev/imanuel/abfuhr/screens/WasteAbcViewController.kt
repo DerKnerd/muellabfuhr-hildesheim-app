@@ -8,6 +8,7 @@ import dev.imanuel.abfuhr.uikit.dsl.listView
 import kotlinx.coroutines.*
 import org.koin.mp.KoinPlatformTools
 import platform.Foundation.NSLocale
+import platform.Foundation.NSSelectorFromString
 import platform.Foundation.currentLocale
 import platform.Foundation.languageCode
 import platform.UIKit.*
@@ -65,21 +66,23 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
         view.setBackgroundColor(UIColor.systemBackgroundColor())
 
         setupSearchBar()
-        searchResults = database.abfallAbcQueries.getAllWasteByLanguage(currentLanguage).executeAsList()
+        searchResults = database
+            .abfallAbcQueries
+            .getAllWasteByLanguage(currentLanguage)
+            .executeAsList()
+            .map { it.copy(title = it.title.trim()) }
+            .sortedBy { it.title }
         populateList()
     }
 
     private fun populateList() {
-        resultsView?.removeFromSuperview()
-
         val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped) {
             backgroundColor = UIColor.systemBackgroundColor()
             separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension
             estimatedRowHeight = 72.0
 
-            for (waste in searchResults.map { it.copy(title = it.title.trim()) }
-                .sortedBy { it.title }) {
+            for (waste in searchResults.map { it.copy(title = it.title.trim()) }) {
                 item(waste.title) {
                     accessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryDisclosureIndicator
                     onSelect {
@@ -94,6 +97,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
 
         newResultsView.setTranslatesAutoresizingMaskIntoConstraints(false)
 
+        resultsView?.removeFromSuperview()
         resultsView = newResultsView
         view.addSubview(newResultsView)
 

@@ -55,25 +55,25 @@ class SyncClient(
                         database.abfallAbcQueries.insertDisposalRoute(
                             AbfallAbcDisposalRoute(
                                 id = 0L,
-                                title = route.title,
-                                description = route.description,
-                                street = route.street,
-                                zipcode = route.zipcode,
-                                city = route.city,
-                                openingHours = route.openingHours,
-                                fees = route.fees,
-                                link1 = route.link1,
-                                link2 = route.link2,
-                                link3 = route.link3,
-                                descriptionLink1 = route.descriptionLink1,
-                                descriptionLink2 = route.descriptionLink2,
-                                descriptionLink3 = route.descriptionLink3,
-                                file1 = route.file1,
-                                file2 = route.file2,
-                                file3 = route.file3,
-                                descriptionFile1 = route.descriptionFile1,
-                                descriptionFile2 = route.descriptionFile2,
-                                descriptionFile3 = route.descriptionFile3,
+                                title = route.title.trim(),
+                                description = route.description.trim(),
+                                street = route.street.trim(),
+                                zipcode = route.zipcode.trim(),
+                                city = route.city.trim(),
+                                openingHours = route.openingHours.trim(),
+                                fees = route.fees.trim(),
+                                link1 = route.link1?.trim(),
+                                link2 = route.link2?.trim(),
+                                link3 = route.link3?.trim(),
+                                descriptionLink1 = route.descriptionLink1?.trim(),
+                                descriptionLink2 = route.descriptionLink2?.trim(),
+                                descriptionLink3 = route.descriptionLink3?.trim(),
+                                file1 = route.file1?.trim(),
+                                file2 = route.file2?.trim(),
+                                file3 = route.file3?.trim(),
+                                descriptionFile1 = route.descriptionFile1?.trim(),
+                                descriptionFile2 = route.descriptionFile2?.trim(),
+                                descriptionFile3 = route.descriptionFile3?.trim(),
                             )
                         )
                         database.abfallAbcQueries.lastInsertRowId().executeAsOne()
@@ -83,25 +83,25 @@ class SyncClient(
                         database.abfallAbcQueries.insertDisposalRoute(
                             AbfallAbcDisposalRoute(
                                 id = 0L,
-                                title = route.title,
-                                description = route.description,
-                                street = route.street,
-                                zipcode = route.zipcode,
-                                city = route.city,
-                                openingHours = route.openingHours,
-                                fees = route.fees,
-                                link1 = route.link1,
-                                link2 = route.link2,
-                                link3 = route.link3,
-                                descriptionLink1 = route.descriptionLink1,
-                                descriptionLink2 = route.descriptionLink2,
-                                descriptionLink3 = route.descriptionLink3,
-                                file1 = route.file1,
-                                file2 = route.file2,
-                                file3 = route.file3,
-                                descriptionFile1 = route.descriptionFile1,
-                                descriptionFile2 = route.descriptionFile2,
-                                descriptionFile3 = route.descriptionFile3,
+                                title = route.title.trim(),
+                                description = route.description.trim(),
+                                street = route.street.trim(),
+                                zipcode = route.zipcode.trim(),
+                                city = route.city.trim(),
+                                openingHours = route.openingHours.trim(),
+                                fees = route.fees.trim(),
+                                link1 = route.link1?.trim(),
+                                link2 = route.link2?.trim(),
+                                link3 = route.link3?.trim(),
+                                descriptionLink1 = route.descriptionLink1?.trim(),
+                                descriptionLink2 = route.descriptionLink2?.trim(),
+                                descriptionLink3 = route.descriptionLink3?.trim(),
+                                file1 = route.file1?.trim(),
+                                file2 = route.file2?.trim(),
+                                file3 = route.file3?.trim(),
+                                descriptionFile1 = route.descriptionFile1?.trim(),
+                                descriptionFile2 = route.descriptionFile2?.trim(),
+                                descriptionFile3 = route.descriptionFile3?.trim(),
                             )
                         )
                         database.abfallAbcQueries.lastInsertRowId().executeAsOne()
@@ -111,25 +111,25 @@ class SyncClient(
                         database.abfallAbcQueries.insertDisposalRoute(
                             AbfallAbcDisposalRoute(
                                 id = 0L,
-                                title = route.title,
-                                description = route.description,
-                                street = route.street,
-                                zipcode = route.zipcode,
-                                city = route.city,
-                                openingHours = route.openingHours,
-                                fees = route.fees,
-                                link1 = route.link1,
-                                link2 = route.link2,
-                                link3 = route.link3,
-                                descriptionLink1 = route.descriptionLink1,
-                                descriptionLink2 = route.descriptionLink2,
-                                descriptionLink3 = route.descriptionLink3,
-                                file1 = route.file1,
-                                file2 = route.file2,
-                                file3 = route.file3,
-                                descriptionFile1 = route.descriptionFile1,
-                                descriptionFile2 = route.descriptionFile2,
-                                descriptionFile3 = route.descriptionFile3,
+                                title = route.title.trim(),
+                                description = route.description.trim(),
+                                street = route.street.trim(),
+                                zipcode = route.zipcode.trim(),
+                                city = route.city.trim(),
+                                openingHours = route.openingHours.trim(),
+                                fees = route.fees.trim(),
+                                link1 = route.link1?.trim(),
+                                link2 = route.link2?.trim(),
+                                link3 = route.link3?.trim(),
+                                descriptionLink1 = route.descriptionLink1?.trim(),
+                                descriptionLink2 = route.descriptionLink2?.trim(),
+                                descriptionLink3 = route.descriptionLink3?.trim(),
+                                file1 = route.file1?.trim(),
+                                file2 = route.file2?.trim(),
+                                file3 = route.file3?.trim(),
+                                descriptionFile1 = route.descriptionFile1?.trim(),
+                                descriptionFile2 = route.descriptionFile2?.trim(),
+                                descriptionFile3 = route.descriptionFile3?.trim(),
                             )
                         )
                         database.abfallAbcQueries.lastInsertRowId().executeAsOne()
@@ -150,8 +150,8 @@ class SyncClient(
                         AbfallAbcWaste(
                             id = id,
                             language = language,
-                            title = title,
-                            description = description,
+                            title = title.trim(),
+                            description = description.trim(),
                         )
                     )
 
@@ -159,7 +159,7 @@ class SyncClient(
                         database.abfallAbcQueries.insertWasteTip(
                             AbfallAbcWasteTips(
                                 wasteId = id,
-                                tip = tip,
+                                tip = tip.trim(),
                                 language = language
                             )
                         )
@@ -179,9 +179,9 @@ class SyncClient(
                         database.abfuhrQueries.getLocationByStreetId(streetId).executeAsOneOrNull()
                     database.abfuhrQueries.insertLocation(
                         AbfuhrLocation(
-                            street = street,
-                            locality = locality,
-                            district = district,
+                            street = street.trim(),
+                            locality = locality.trim(),
+                            district = district.trim(),
                             streetId = streetId,
                             localityId = localityId,
                             districtId = districtId,
@@ -209,15 +209,15 @@ class SyncClient(
                         Location(
                             id = 0,
                             type = type,
-                            name = name,
+                            name = name.trim(),
                             latitude = parsedLat,
                             longitude = parsedLon,
-                            description = description,
-                            openingHours = openingHours,
-                            mail = mail,
-                            www = www,
-                            tel = tel,
-                            fax = fax,
+                            description = description.trim(),
+                            openingHours = openingHours.trim(),
+                            mail = mail.trim(),
+                            www = www.trim(),
+                            tel = tel.trim(),
+                            fax = fax.trim(),
                         )
                     )
                 }

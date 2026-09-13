@@ -39,15 +39,33 @@ class WasteAbcDetailViewController(
                 .distinct()
                 .mapNotNull { database.abfallAbcQueries.getDisposalRouteById(it).executeAsOneOrNull() }
 
+        val tips = database
+            .abfallAbcQueries
+            .getWasteTipsByWasteId(waste.id, waste.language)
+            .executeAsList()
+
         view.backgroundColor = UIColor.systemBackgroundColor()
 
         val detailsView = scrollableColumn {
             textView(waste.description.trim()) {
-                padding(16.0)
-                isScrollEnabled = false
+                padding(8.0, 16.0)
                 isSelectable = true
-                isEditable = false
                 font = UIFont.systemFontOfSize(UIFont.systemFontSize)
+            }
+            if (tips.isNotEmpty()) {
+                textView("Tipps") {
+                    padding(16.0, 8.0, 0.0, 8.0)
+                    font = UIFont.systemFontOfSize(UIFont.labelFontSize)
+                }
+                textView(tips.joinToString("\n")) {
+                    padding(8.0, 0.0)
+                    isSelectable = true
+                    font = UIFont.systemFontOfSize(UIFont.systemFontSize)
+                }
+            }
+            textView("Entsorgung") {
+                padding(16.0, 8.0, 0.0, 8.0)
+                font = UIFont.systemFontOfSize(UIFont.labelFontSize)
             }
             listView {
                 isScrollEnabled = false

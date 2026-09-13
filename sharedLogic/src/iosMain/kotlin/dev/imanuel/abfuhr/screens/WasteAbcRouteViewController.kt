@@ -94,13 +94,13 @@ class WasteAbcRouteViewController(
 
         val detailsView = scrollableColumn {
             textView(route.description) {
-                padding(16.0, 16.0, 0.0, 16.0)
+                padding(16.0, 8.0, 0.0, 8.0)
                 isSelectable = true
                 font = UIFont.systemFontOfSize(UIFont.systemFontSize)
             }
             if (route.openingHours.isNotBlank()) {
                 textView("Öffnungszeiten") {
-                    padding(16.0, 16.0, 0.0, 16.0)
+                    padding(16.0, 8.0, 0.0, 8.0)
                     font = UIFont.boldSystemFontOfSize(UIFont.labelFontSize)
                 }
                 textView(route.openingHours.trim()) {
@@ -110,7 +110,7 @@ class WasteAbcRouteViewController(
             }
             if (route.street.isNotBlank() || route.city.isNotBlank() || route.zipcode.isNotBlank()) {
                 textView("Adresse") {
-                    padding(16.0, 16.0, 0.0, 16.0)
+                    padding(16.0, 8.0, 0.0, 8.0)
                     font = UIFont.boldSystemFontOfSize(UIFont.labelFontSize)
                 }
                 textView(buildString {
@@ -123,17 +123,17 @@ class WasteAbcRouteViewController(
                     val zipCity = listOf(route.zipcode.trim(), route.city.trim()).filter { it.isNotBlank() }
                     append(zipCity.joinToString(" "))
                 }) {
-                    padding(16.0, 0.0)
+                    padding(8.0, 0.0)
                     font = UIFont.systemFontOfSize(UIFont.systemFontSize)
                 }
             }
             if (route.fees.isNotBlank()) {
                 textView("Gebühren") {
-                    padding(16.0, 16.0, 0.0, 16.0)
+                    padding(16.0, 8.0, 0.0, 8.0)
                     font = UIFont.boldSystemFontOfSize(UIFont.labelFontSize)
                 }
                 textView(route.fees.trim()) {
-                    padding(16.0, 0.0)
+                    padding(8.0, 0.0)
                     font = UIFont.systemFontOfSize(UIFont.systemFontSize)
                 }
             }
