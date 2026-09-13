@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		007CEBFFB468E1344A077577 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		007CEBFFB468E1344A077577 /* Exceptions for "iosApp" folder in "iosApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,21 +24,13 @@
 		819512266900A4D651D23156 /* iosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				007CEBFFB468E1344A077577 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
+				007CEBFFB468E1344A077577 /* Exceptions for "iosApp" folder in "iosApp" target */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
 		};
 		FA01D5EEB28A97CDF159DE07 /* Configuration */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
 			path = Configuration;
 			sourceTree = "<group>";
 		};
@@ -117,7 +109,11 @@
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				de,
 				en,
+				fr,
+				ar,
+				ku,
 				Base,
 			);
 			mainGroup = 0DCC706186EFCFC4AC172CAB;
@@ -186,7 +182,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Müllabfuhr Hildesheim";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein Standort wird verwendet für verschiedene Features verwendet. Du kannst damit Straßen in deiner Nähe suchen für die Abholtermine, dir Container in deiner Nähe anzeigen lassen und Müll in der Landschaft melden.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,7 +282,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Müllabfuhr Hildesheim";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein Standort wird verwendet für verschiedene Features verwendet. Du kannst damit Straßen in deiner Nähe suchen für die Abholtermine, dir Container in deiner Nähe anzeigen lassen und Müll in der Landschaft melden.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

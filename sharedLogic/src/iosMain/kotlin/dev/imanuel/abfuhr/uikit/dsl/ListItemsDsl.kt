@@ -221,6 +221,7 @@ class ListItemsBuilder(
     var estimatedRowHeight: Double = 44.0
     var tableHeaderView: UIView? = null
     var tableFooterView: UIView? = null
+    var height: Double? = null
 
     private val sectionBuilders = mutableListOf<ListSectionBuilder>()
     private val defaultSection = ListSectionBuilder()
@@ -289,6 +290,16 @@ class ListItemsBuilder(
         tableView.setDataSource(bridge)
         tableView.setDelegate(bridge)
         objc_setAssociatedObject(tableView, tableViewBridgeKey, bridge, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+
+        val totalItems = allSections.sumOf { it.items.size }
+        val effectiveHeight = height ?: if (!isScrollEnabled) {
+            val itemHeight = if (rowHeight > 0.0 && rowHeight != UITableViewAutomaticDimension) rowHeight else (if (estimatedRowHeight > 0.0) estimatedRowHeight else 44.0)
+            (totalItems * itemHeight).coerceAtLeast(1.0)
+        } else null
+
+        effectiveHeight?.let {
+            tableView.heightAnchor.constraintEqualToConstant(it).setActive(true)
+        }
 
         return tableView
     }

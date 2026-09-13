@@ -144,6 +144,15 @@ class LiquidGlassCardBuilder {
         return cpi
     }
 
+    fun listView(
+        style: UITableViewStyle = UITableViewStyle.UITableViewStylePlain,
+        builder: ListItemsBuilder.() -> Unit
+    ): UITableView {
+        val lv = dev.imanuel.abfuhr.uikit.dsl.listView(style, builder)
+        childViews.add(lv)
+        return lv
+    }
+
     fun column(
         spacing: Double = 8.0,
         builder: ColumnBuilder.() -> Unit
@@ -177,6 +186,7 @@ class LiquidGlassCardBuilder {
     }
 
     fun build(): UIView {
+        containerView.setTranslatesAutoresizingMaskIntoConstraints(false)
         containerView.setBackgroundColor(backgroundColor ?: UIColor.clearColor)
         tintColor?.let { containerView.setTintColor(it) }
 
@@ -192,6 +202,15 @@ class LiquidGlassCardBuilder {
 
         containerView.addSubview(effectView)
 
+        NSLayoutConstraint.activateConstraints(
+            listOf(
+                effectView.topAnchor.constraintEqualToAnchor(containerView.topAnchor),
+                effectView.leadingAnchor.constraintEqualToAnchor(containerView.leadingAnchor),
+                effectView.trailingAnchor.constraintEqualToAnchor(containerView.trailingAnchor),
+                effectView.bottomAnchor.constraintEqualToAnchor(containerView.bottomAnchor),
+            )
+        )
+
         // Shadow on container layer (outer)
         shadowColor?.let {
             containerView.layer.shadowColor = it.CGColor
@@ -203,8 +222,36 @@ class LiquidGlassCardBuilder {
 
         // Add child views to effectView's contentView
         val contentView = effectView.contentView
-        for (child in childViews) {
+        if (childViews.size == 1) {
+            val child = childViews.first()
+            child.setTranslatesAutoresizingMaskIntoConstraints(false)
             contentView.addSubview(child)
+            NSLayoutConstraint.activateConstraints(
+                listOf(
+                    child.topAnchor.constraintEqualToAnchor(contentView.topAnchor, constant = topPadding),
+                    child.leadingAnchor.constraintEqualToAnchor(contentView.leadingAnchor, constant = leftPadding),
+                    child.trailingAnchor.constraintEqualToAnchor(contentView.trailingAnchor, constant = -rightPadding),
+                    child.bottomAnchor.constraintEqualToAnchor(contentView.bottomAnchor, constant = -bottomPadding),
+                )
+            )
+        } else if (childViews.isNotEmpty()) {
+            for ((index, child) in childViews.withIndex()) {
+                child.setTranslatesAutoresizingMaskIntoConstraints(false)
+                contentView.addSubview(child)
+                val constraints = mutableListOf(
+                    child.leadingAnchor.constraintEqualToAnchor(contentView.leadingAnchor, constant = leftPadding),
+                    child.trailingAnchor.constraintEqualToAnchor(contentView.trailingAnchor, constant = -rightPadding),
+                )
+                if (index == 0) {
+                    constraints.add(child.topAnchor.constraintEqualToAnchor(contentView.topAnchor, constant = topPadding))
+                } else {
+                    constraints.add(child.topAnchor.constraintEqualToAnchor(childViews[index - 1].bottomAnchor, constant = 8.0))
+                }
+                if (index == childViews.lastIndex) {
+                    constraints.add(child.bottomAnchor.constraintEqualToAnchor(contentView.bottomAnchor, constant = -bottomPadding))
+                }
+                NSLayoutConstraint.activateConstraints(constraints)
+            }
         }
 
         // Tap gesture recognizer if onClick provided

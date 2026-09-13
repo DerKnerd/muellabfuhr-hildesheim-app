@@ -32,9 +32,9 @@ class TextViewBuilder {
     var textColor: UIColor? = null
     var font: UIFont? = null
     var textAlignment: NSTextAlignment = NSTextAlignmentNatural
-    var isEditable: Boolean = true
+    var isEditable: Boolean = false
     var isSelectable: Boolean = true
-    var isScrollEnabled: Boolean = true
+    var isScrollEnabled: Boolean = false
     var backgroundColor: UIColor? = null
     var tintColor: UIColor? = null
     var cornerRadius: Double? = null

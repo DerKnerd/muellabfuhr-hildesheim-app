@@ -11,8 +11,6 @@ import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.location.LocationManagerCompat
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequest
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.google.android.gms.location.LocationServices

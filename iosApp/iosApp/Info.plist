@@ -6,7 +6,15 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Dein Standort wird verwendet für verschiedene Features verwendet. Du kannst damit Straßen in deiner Nähe suchen für die Abholtermine, dir Container in deiner Nähe anzeigen lassen und Müll in der Landschaft melden.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>de</string>
+		<string>en</string>
+		<string>fr</string>
+		<string>ar</string>
+		<string>ku</string>
+	</array>
 </dict>
 </plist>

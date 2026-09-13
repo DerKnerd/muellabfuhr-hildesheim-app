@@ -125,6 +125,12 @@ SELECT *
 FROM abfallAbcWaste
 ORDER BY title;
 
+getAllWasteByLanguage:
+SELECT *
+FROM abfallAbcWaste
+WHERE language = :language
+ORDER BY title;
+
 getAllWasteTips:
 SELECT *
 FROM abfallAbcWasteTips;
@@ -132,6 +138,15 @@ FROM abfallAbcWasteTips;
 getAllDisposalRoutes:
 SELECT *
 FROM abfallAbcDisposalRoutes;
+
+getAllDisposalRoutesByLanguage:
+SELECT *
+FROM abfallAbcDisposalRoutes
+WHERE language = :language;
+
+getAllDisposalRoute:
+SELECT *
+FROM abfallAbcDisposalRoute;
 
 getAllWasteMapping:
 SELECT *
@@ -187,3 +202,13 @@ JOIN abfallAbcDisposalRoutes r ON r.id = m.routesId
 WHERE m.wasteId = :wasteId
   AND w.language = :language
   AND r.language = :language;
+
+getDisposalRouteByWasteId:
+SELECT r.*
+FROM abfallAbcWaste w
+JOIN abfallAbcWasteMapping m ON w.id = m.wasteId
+JOIN abfallAbcDisposalRoutes rs ON rs.id = m.routesId
+JOIN abfallAbcDisposalRoute r ON rs.alternativeRouteId = r.id OR rs.collectionId = r.id OR rs.collectionId == r.id
+WHERE m.wasteId = :wasteId
+  AND w.language = :language
+  AND rs.language = :language;
