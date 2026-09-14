@@ -248,8 +248,8 @@ class AbfuhrClient(private val httpClient: HttpClient) {
         try {
             val response =
                 httpClient.post(
-                "https://zah.351.compra.de/v4.4.0/zahwebservice.asmx/SendMailWithAttachment"
-//                    "https://httpbin.org/post"
+//                "https://zah.351.compra.de/v4.4.0/zahwebservice.asmx/SendMailWithAttachment"
+                    "https://httpbin.org/post"
                 ) {
                     val body = ReportWaste(
                         subject = "ZAH App Verschmutzung gemeldet",

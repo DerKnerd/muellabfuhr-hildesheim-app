@@ -62,7 +62,7 @@ android {
             storeFile =
                 file(
                     System.getenv("ANDROID_KEY_STOREFILE")
-                        ?: "/opt/secure/signing-key-jinya-plan.jks"
+                        ?: "/opt/secure/signing-key-abfuhr.jks"
                 )
             storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "key0"
