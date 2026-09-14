@@ -1,6 +1,7 @@
 package dev.imanuel.abfuhr.composables
 
 import android.content.Context
+import android.location.Location
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,8 @@ import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -72,6 +75,7 @@ import dev.imanuel.abfuhr.R
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrPickup
+import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.sync.SyncClient
@@ -424,17 +428,30 @@ fun PickupScreen(
     var locationsWithReminder by remember { mutableStateOf(emptyList<dev.imanuel.abfuhr.database.AbfuhrLocation>()) }
 
     var locationAddressKeyword by remember { mutableStateOf("") }
+    var notInHildesheimMessageOpen by remember { mutableStateOf(false) }
+    var coordinates by remember { mutableStateOf<Location?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
+
+    val inHildesheim by remember {
+        derivedStateOf {
+            coordinates != null && checkIfLocationInHildesheim(
+                coordinates!!.latitude,
+                coordinates!!.longitude
+            )
+        }
+    }
 
     LaunchedEffect(locateMeNow, geolocationPermission.status) {
         if (locateMeNow && geolocationPermission.status.isGranted) {
             loading = true
             val location = context.fetchFineLocation()
+            coordinates = location
             if (location != null) {
                 locations =
                     searchClient.searchAbfuhrByGeolocation(location.latitude, location.longitude)
             }
+            notInHildesheimMessageOpen = !inHildesheim
             locateMeNow = false
             loading = false
             searched = true
@@ -766,6 +783,18 @@ fun PickupScreen(
                     }
                 }
             }
+        }
+        if (notInHildesheimMessageOpen) {
+            AlertDialog(
+                onDismissRequest = { notInHildesheimMessageOpen = false },
+                title = { Text("Nicht in Hildesheim") },
+                text = { Text("Du bist nicht im Landkreis Hildesheim. Bitte benutz die Textsuche um eine Straße zu finden.") },
+                confirmButton = {
+                    Button(onClick = { notInHildesheimMessageOpen = false }) {
+                        Text("Schließen")
+                    }
+                }
+            )
         }
     }
 }

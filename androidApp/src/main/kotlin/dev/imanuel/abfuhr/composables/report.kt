@@ -94,10 +94,10 @@ fun ReportWasteScreen(
 
     val inHildesheim by remember {
         derivedStateOf {
-            if (coordinates != null) checkIfLocationInHildesheim(
+            coordinates != null && checkIfLocationInHildesheim(
                 coordinates!!.latitude,
                 coordinates!!.longitude
-            ) else false
+            )
         }
     }
 
