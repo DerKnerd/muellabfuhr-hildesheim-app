@@ -1,0 +1,32 @@
+default_platform(:android)
+
+def upload(track = "production")
+    upload_to_play_store(
+        track: track,
+        skip_upload_metadata: true,
+        skip_upload_changelogs: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+    )
+end
+
+platform :android do
+    desc "Deploy a new alpha version to the Google Play"
+    lane :alpha do
+        upload("alpha")
+    end
+end
+
+platform :android do
+    desc "Deploy a new beta version to the Google Play"
+    lane :beta do
+        upload("beta")
+    end
+end
+
+platform :android do
+    desc "Deploy a new release version to the Google Play"
+    lane :release do
+        upload
+    end
+end

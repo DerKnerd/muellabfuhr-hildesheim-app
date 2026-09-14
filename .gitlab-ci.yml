@@ -1,0 +1,116 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH
+
+.build-base:
+  image:
+    name: registry.ulbricht.casa/docker-images/android-native-app:latest
+    pull_policy: always
+  before_script:
+    - chmod +x ./gradlew
+    - mkdir -p /opt/secure
+  cache:
+    key: $CI_PROJECT_NAME
+    paths:
+      - .gradle
+  tags:
+    - runner-amd64
+
+.deploy-base:
+  extends:
+    - .build-base
+  script:
+    - bundle update
+    - bundle exec fastlane android ${TRACK}
+
+stages:
+  - lint
+  - build
+  - deploy-android
+
+lint-debug-app:
+  stage: lint
+  extends:
+    - .build-base
+  script:
+    - ./gradlew -Pci --console=plain :androidApp:lintAnalyzeDebug -PbuildDir=build
+
+lint-release-app:
+  stage: lint
+  extends:
+    - .build-base
+  script:
+    - ./gradlew -Pci --console=plain :androidApp:lintAnalyzeRelease -PbuildDir=build
+
+build-android-debug-app:
+  stage: build
+  extends:
+    - .build-base
+  script:
+    - ./gradlew -Pci --console=plain :androidApp:bundleDebug -PbuildDir=build
+
+build-ios:
+  extends: .ios-base
+  stage: build
+  script:
+    - ./gradlew -Pci --console=plain :sharedLogic:build :sharedLogic:iosArm64Binaries -PbuildDir=build
+
+read-secure-files:
+  image: registry.gitlab.com/gitlab-org/cli:latest
+  stage: lint
+  script:
+    - glab auth login --job-token $CI_JOB_TOKEN --hostname $CI_SERVER_FQDN --api-protocol $CI_SERVER_PROTOCOL
+    - glab -R $CI_PROJECT_PATH securefile download --all --output-dir=".secure_files"
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/.secure_files
+
+build-android-release-app:
+  stage: build
+  extends:
+    - .build-base
+  needs:
+    - read-secure-files
+  script:
+    - ./gradlew -Pci --console=plain :androidApp:bundle -PbuildDir=build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+
+deploy-android-alpha-app:
+  extends:
+    - .deploy-base
+  needs:
+    - read-secure-files
+  variables:
+    TRACK: alpha
+  stage: deploy-android
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-android-beta-app:
+  extends:
+    - .deploy-base
+  needs:
+    - read-secure-files
+  variables:
+    TRACK: beta
+  stage: deploy-android
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-android-production-app:
+  extends:
+    - .deploy-base
+  needs:
+    - read-secure-files
+  variables:
+    TRACK: release
+  stage: deploy-android
+  rules:
+    - if: $CI_COMMIT_TAG
