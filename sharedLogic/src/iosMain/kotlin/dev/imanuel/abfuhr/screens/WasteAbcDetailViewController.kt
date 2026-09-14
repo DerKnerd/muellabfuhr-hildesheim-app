@@ -24,20 +24,14 @@ class WasteAbcDetailViewController(
 
     override fun viewDidLoad() {
         super.viewDidLoad()
+        val allRoutes = database.abfallAbcQueries.getAllDisposalRoute().executeAsList()
+        println("Routes in german: ${allRoutes.count()}")
         val routes =
             database
                 .abfallAbcQueries
-                .getDisposalRoutesByWasteId(waste.id, waste.language)
+                .getDisposalRouteByWasteId(waste.id, waste.language)
                 .executeAsList()
-                .flatMap {
-                    listOfNotNull(
-                        it.alternativeRouteId,
-                        it.collectionId,
-                        it.dischargePointId
-                    )
-                }
                 .distinct()
-                .mapNotNull { database.abfallAbcQueries.getDisposalRouteById(it).executeAsOneOrNull() }
 
         val tips = database
             .abfallAbcQueries

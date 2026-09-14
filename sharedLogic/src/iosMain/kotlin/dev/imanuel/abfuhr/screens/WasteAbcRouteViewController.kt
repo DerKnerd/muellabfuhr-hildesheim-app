@@ -104,7 +104,7 @@ class WasteAbcRouteViewController(
                     font = UIFont.boldSystemFontOfSize(UIFont.labelFontSize)
                 }
                 textView(route.openingHours.trim()) {
-                    padding(16.0, 0.0)
+                    padding(8.0, 0.0)
                     font = UIFont.systemFontOfSize(UIFont.systemFontSize)
                 }
             }
@@ -150,7 +150,7 @@ class WasteAbcRouteViewController(
             ).filter { it.isNotBlank() }
             if (files.isNotEmpty() && files.size == fileDescriptions.size) {
                 textView("Downloads") {
-                    padding(16.0, 16.0, 0.0, 16.0)
+                    padding(16.0, 8.0, 0.0, 8.0)
                     font = UIFont.boldSystemFontOfSize(UIFont.labelFontSize)
                 }
                 listView {
@@ -187,7 +187,7 @@ class WasteAbcRouteViewController(
             ).filter { it.isNotBlank() }
             if (links.isNotEmpty() && links.size == linkDescriptions.size) {
                 textView("Links") {
-                    padding(16.0, 16.0, 0.0, 16.0)
+                    padding(16.0, 8.0, 0.0, 8.0)
                     font = UIFont.boldSystemFontOfSize(UIFont.labelFontSize)
                 }
                 listView {

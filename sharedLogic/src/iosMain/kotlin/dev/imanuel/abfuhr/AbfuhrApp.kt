@@ -212,7 +212,6 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
     private fun setupMainNavigation() {
         mainNavigationController = adaptiveNavigation {
             mode = AdaptiveNavigationMode.Auto
-            headerTitle = "Müllabfuhr Hildesheim"
 
             item(
                 title = AbfuhrNavDestination.Pickup.title,

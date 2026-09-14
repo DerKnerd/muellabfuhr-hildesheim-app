@@ -1,15 +1,7 @@
 package dev.imanuel.abfuhr.sync
 
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
-import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute
-import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoutes
-import dev.imanuel.abfuhr.database.AbfallAbcWaste
-import dev.imanuel.abfuhr.database.AbfallAbcWasteMapping
-import dev.imanuel.abfuhr.database.AbfallAbcWasteTips
-import dev.imanuel.abfuhr.database.AbfallDatabase
-import dev.imanuel.abfuhr.database.AbfuhrLocation
-import dev.imanuel.abfuhr.database.AbfuhrPickup
-import dev.imanuel.abfuhr.database.Location
+import dev.imanuel.abfuhr.database.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,6 +47,8 @@ class SyncClient(
                         database.abfallAbcQueries.insertDisposalRoute(
                             AbfallAbcDisposalRoute(
                                 id = 0L,
+                                language = language,
+                                routesId = id,
                                 title = route.title.trim(),
                                 description = route.description.trim(),
                                 street = route.street.trim(),
@@ -83,6 +77,8 @@ class SyncClient(
                         database.abfallAbcQueries.insertDisposalRoute(
                             AbfallAbcDisposalRoute(
                                 id = 0L,
+                                routesId = id,
+                                language = language,
                                 title = route.title.trim(),
                                 description = route.description.trim(),
                                 street = route.street.trim(),
@@ -111,6 +107,8 @@ class SyncClient(
                         database.abfallAbcQueries.insertDisposalRoute(
                             AbfallAbcDisposalRoute(
                                 id = 0L,
+                                routesId = id,
+                                language = language,
                                 title = route.title.trim(),
                                 description = route.description.trim(),
                                 street = route.street.trim(),

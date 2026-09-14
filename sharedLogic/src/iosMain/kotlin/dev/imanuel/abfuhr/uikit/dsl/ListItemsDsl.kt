@@ -22,6 +22,7 @@ class ListItemModel(
     var subtitleFont: UIFont? = null,
     var backgroundColor: UIColor? = null,
     var tintColor: UIColor? = null,
+    var iconTintColor: UIColor? = null,
     var isEnabled: Boolean = true,
     var customCellProvider: ((UITableView, NSIndexPath) -> UITableViewCell)? = null,
     var onSelect: (() -> Unit)? = null
@@ -39,6 +40,7 @@ class ListItemCellBuilder {
     var subtitleFont: UIFont? = null
     var backgroundColor: UIColor? = null
     var tintColor: UIColor? = null
+    var iconTintColor: UIColor? = null
     var isEnabled: Boolean = true
     var cellStyle: UITableViewCellStyle = UITableViewCellStyle.UITableViewCellStyleSubtitle
 
@@ -65,6 +67,7 @@ class ListItemCellBuilder {
             subtitleFont = subtitleFont,
             backgroundColor = backgroundColor,
             tintColor = tintColor,
+            iconTintColor = iconTintColor,
             isEnabled = isEnabled,
             onSelect = selectAction
         )
@@ -74,7 +77,18 @@ class ListItemCellBuilder {
         val cell = UITableViewCell(style = cellStyle, reuseIdentifier = reuseIdentifier)
         cell.textLabel?.setText(title)
         subtitle?.let { cell.detailTextLabel?.setText(it) }
-        icon?.let { cell.imageView?.setImage(it) }
+        icon?.let {
+            cell.imageView?.apply {
+                if (iconTintColor != null) {
+                    image = icon?.imageWithRenderingMode(
+                        UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate
+                    )
+                    tintColor = iconTintColor!!
+                } else {
+                    image = icon
+                }
+            }
+        }
         cell.setAccessoryType(accessoryType)
         titleColor?.let { cell.textLabel?.setTextColor(it) }
         subtitleColor?.let { cell.detailTextLabel?.setTextColor(it) }
@@ -172,7 +186,16 @@ class TableViewBridge(
 
         cell.textLabel?.setText(item.title)
         cell.detailTextLabel?.setText(item.subtitle ?: "")
-        cell.imageView?.setImage(item.icon)
+        cell.imageView?.apply {
+            if (item.iconTintColor != null) {
+                image = item.icon?.imageWithRenderingMode(
+                    UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate
+                )
+                tintColor = item.iconTintColor!!
+            } else {
+                image = item.icon
+            }
+        }
         cell.setAccessoryType(item.accessoryType)
         item.titleColor?.let { cell.textLabel?.setTextColor(it) }
         item.subtitleColor?.let { cell.detailTextLabel?.setTextColor(it) }
@@ -293,7 +316,8 @@ class ListItemsBuilder(
 
         val totalItems = allSections.sumOf { it.items.size }
         val effectiveHeight = height ?: if (!isScrollEnabled) {
-            val itemHeight = if (rowHeight > 0.0 && rowHeight != UITableViewAutomaticDimension) rowHeight else (if (estimatedRowHeight > 0.0) estimatedRowHeight else 44.0)
+            val itemHeight =
+                if (rowHeight > 0.0 && rowHeight != UITableViewAutomaticDimension) rowHeight else (if (estimatedRowHeight > 0.0) estimatedRowHeight else 44.0)
             (totalItems * itemHeight).coerceAtLeast(1.0)
         } else null
 

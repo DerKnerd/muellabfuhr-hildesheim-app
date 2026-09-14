@@ -8,6 +8,10 @@
 	<string>Dein Standort wird verwendet für verschiedene Features verwendet. Du kannst damit Straßen in deiner Nähe suchen für die Abholtermine, dir Container in deiner Nähe anzeigen lassen und Müll in der Landschaft melden.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.</string>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>dev.imanuel.abfuhr.sync</string>
+    </array>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>de</string>

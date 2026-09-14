@@ -9,6 +9,8 @@ CREATE TABLE abfallAbcWaste (
 
 CREATE TABLE abfallAbcDisposalRoute (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    routesId INTEGER NOT NULL,
+    language TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     street TEXT NOT NULL,
@@ -109,7 +111,7 @@ INSERT INTO abfallAbcWasteTips(wasteId, tip, language)
 VALUES ?;
 
 insertDisposalRoute:
-INSERT OR REPLACE INTO abfallAbcDisposalRoute(id, title, description, street, zipcode, city, openingHours, fees, link1, link2, link3, descriptionLink1, descriptionLink2, descriptionLink3, file1, file2, file3, descriptionFile1, descriptionFile2, descriptionFile3)
+INSERT OR REPLACE INTO abfallAbcDisposalRoute(routesId, language, title, description, street, zipcode, city, openingHours, fees, link1, link2, link3, descriptionLink1, descriptionLink2, descriptionLink3, file1, file2, file3, descriptionFile1, descriptionFile2, descriptionFile3)
 VALUES ?;
 
 insertDisposalRoutes:
@@ -205,10 +207,7 @@ WHERE m.wasteId = :wasteId
 
 getDisposalRouteByWasteId:
 SELECT r.*
-FROM abfallAbcWaste w
-JOIN abfallAbcWasteMapping m ON w.id = m.wasteId
-JOIN abfallAbcDisposalRoutes rs ON rs.id = m.routesId
-JOIN abfallAbcDisposalRoute r ON rs.alternativeRouteId = r.id OR rs.collectionId = r.id OR rs.collectionId == r.id
+FROM abfallAbcWasteMapping m
+JOIN abfallAbcDisposalRoute r ON m.routesId == r.routesId
 WHERE m.wasteId = :wasteId
-  AND w.language = :language
-  AND rs.language = :language;
+  AND r.language = :language;

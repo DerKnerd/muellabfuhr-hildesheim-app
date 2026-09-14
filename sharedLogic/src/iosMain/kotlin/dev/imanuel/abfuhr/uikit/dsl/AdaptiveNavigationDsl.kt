@@ -1,9 +1,8 @@
-@file:OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+@file:OptIn(ExperimentalForeignApi::class)
 
 package dev.imanuel.abfuhr.uikit.dsl
 
 import kotlinx.cinterop.*
-import platform.Foundation.NSIndexPath
 import platform.UIKit.*
 import platform.darwin.NSObject
 import platform.objc.OBJC_ASSOCIATION_RETAIN_NONATOMIC
@@ -15,6 +14,7 @@ import platform.objc.objc_setAssociatedObject
 enum class AdaptiveNavigationMode {
     /**
      * Automatically adapts based on the device user interface idiom.
+     * Uses the system convertible TabBar / Sidebar on iPadOS where available.
      */
     Auto,
 
@@ -22,11 +22,6 @@ enum class AdaptiveNavigationMode {
      * Forces standard iPhone layout (Bottom TabBar / UITabBarController).
      */
     PhoneTabBar,
-
-    /**
-     * Forces iPadOS layout (Sidebar / UISplitViewController).
-     */
-    PadSidebar,
 
     /**
      * Dynamically adapts when the trait collection / size class changes.
@@ -83,7 +78,7 @@ class AdaptiveNavigationItem(
 }
 
 /**
- * Section for grouping items in iPad sidebar navigation.
+ * Section for grouping adaptive navigation items.
  */
 class AdaptiveNavigationSection(
     val title: String?,
@@ -205,133 +200,20 @@ private class AdaptiveTabBarControllerDelegateBridge(
         val index = viewControllers.indexOf(didSelectViewController)
         if (index >= 0 && index < items.size) {
             val item = items[index]
-            item.onSelect?.invoke()
             onItemSelected?.invoke(index, item)
         }
     }
 }
 
-// Native iPadOS Sidebar Controller using UICollectionView + UICollectionLayoutListAppearanceSidebar
-private class SidebarCollectionViewController(
-    private val sections: List<AdaptiveNavigationSection>,
-    private val headerTitle: String?,
-    private val onItemSelected: (Int, AdaptiveNavigationItem) -> Unit
-) : UIViewController(nibName = null, bundle = null) {
-
-    private var collectionView: UICollectionView? = null
-
-    override fun viewDidLoad() {
-        super.viewDidLoad()
-
-        navigationItem.title = headerTitle ?: ""
-        navigationItem.largeTitleDisplayMode =
-            UINavigationItemLargeTitleDisplayMode.UINavigationItemLargeTitleDisplayModeAutomatic
-
-        val config =
-            UICollectionLayoutListConfiguration(
-                UICollectionLayoutListAppearance.UICollectionLayoutListAppearanceSidebar
-            )
-
-        val layout =
-            UICollectionViewCompositionalLayout.layoutWithListConfiguration(config)
-
-        collectionView = UICollectionView(
-            frame = view.bounds,
-            collectionViewLayout = layout
-        ).apply {
-            autoresizingMask =
-                UIViewAutoresizingFlexibleWidth or
-                        UIViewAutoresizingFlexibleHeight
-
-            registerClass(
-                UICollectionViewListCell.`class`(),
-                forCellWithReuseIdentifier = "SidebarCell"
-            )
-
-            delegate = SidebarDelegate()
-            dataSource = SidebarDataSource()
-        }
-
-        view.addSubview(collectionView!!)
-    }
-
-    fun selectItem(index: Int) {
-        var count = 0
-        for (secIdx in sections.indices) {
-            val sec = sections[secIdx]
-            if (index < count + sec.items.size) {
-                val itemIdx = index - count
-                val indexPath = NSIndexPath.indexPathForItem(itemIdx.toLong(), inSection = secIdx.toLong())
-                collectionView?.selectItemAtIndexPath(
-                    indexPath,
-                    animated = false,
-                    scrollPosition = UICollectionViewScrollPositionNone
-                )
-                break
-            }
-            count += sec.items.size
-        }
-    }
-
-    private inner class SidebarDataSource : NSObject(), UICollectionViewDataSourceProtocol {
-        override fun numberOfSectionsInCollectionView(collectionView: UICollectionView): Long {
-            return sections.size.toLong()
-        }
-
-        override fun collectionView(collectionView: UICollectionView, numberOfItemsInSection: Long): Long {
-            return sections[numberOfItemsInSection.toInt()].items.size.toLong()
-        }
-
-        override fun collectionView(
-            collectionView: UICollectionView,
-            cellForItemAtIndexPath: NSIndexPath
-        ): UICollectionViewCell {
-            val item = sections[cellForItemAtIndexPath.section.toInt()].items[cellForItemAtIndexPath.item.toInt()]
-
-            val cell = collectionView.dequeueReusableCellWithReuseIdentifier(
-                identifier = "SidebarCell",
-                forIndexPath = cellForItemAtIndexPath
-            )
-
-            val contentConfig = UIListContentConfiguration.sidebarCellConfiguration().apply {
-                setText(item.title)
-                setSecondaryText(item.subtitle)
-                setImage(item.image)
-            }
-
-            cell.setContentConfiguration(contentConfig)
-            return cell
-        }
-    }
-
-    private inner class SidebarDelegate : NSObject(), UICollectionViewDelegateProtocol {
-        override fun collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath: NSIndexPath) {
-            var globalIndex = 0
-            val targetSection = didSelectItemAtIndexPath.section.toInt()
-            val targetItem = didSelectItemAtIndexPath.item.toInt()
-
-            for (s in 0 until targetSection) {
-                globalIndex += sections[s].items.size
-            }
-            globalIndex += targetItem
-
-            val item = sections[targetSection].items[targetItem]
-            onItemSelected(globalIndex, item)
-        }
-    }
-}
-
 /**
- * Controller managing adaptive navigation across iPhone (TabBar) and iPad (Sidebar / SplitView).
+ * Controller managing adaptive navigation across iPhone (TabBar) and iPad (convertible TabBar / Sidebar).
  */
 class AdaptiveNavigationController(
     val mode: AdaptiveNavigationMode = AdaptiveNavigationMode.Auto,
     val sections: List<AdaptiveNavigationSection>,
-    val headerTitle: String? = "Menu",
     val tabBarTintColor: UIColor? = null,
     val tabBarBackgroundColor: UIColor? = null,
     val tabBarUnselectedItemTintColor: UIColor? = null,
-    val showsDisplayModeButtonItem: Boolean = true,
     var onItemSelectedCallback: ((Int, AdaptiveNavigationItem) -> Unit)? = null
 ) : UIViewController(nibName = null, bundle = null) {
 
@@ -342,17 +224,11 @@ class AdaptiveNavigationController(
 
     var tabBarController: UITabBarController? = null
         private set
-
-    var splitViewController: UISplitViewController? = null
-        private set
-
-    private var sidebarController: SidebarCollectionViewController? = null
     var currentChildViewController: UIViewController? = null
         private set
 
     val isPadLayout: Boolean
         get() = when (mode) {
-            AdaptiveNavigationMode.PadSidebar -> true
             AdaptiveNavigationMode.PhoneTabBar -> false
             AdaptiveNavigationMode.Auto -> UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad
             AdaptiveNavigationMode.TraitBased -> traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassCompact
@@ -382,15 +258,22 @@ class AdaptiveNavigationController(
             it.removeFromParentViewController()
         }
 
-        if (isPadLayout) {
-            setupSplitViewController()
-        } else {
-            setupTabBarController()
-        }
+        setupTabBarController(prefersConvertibleSidebar = isPadLayout)
     }
 
-    private fun setupTabBarController() {
+    private fun setupTabBarController(prefersConvertibleSidebar: Boolean = false) {
         val tabController = UITabBarController()
+        if (prefersConvertibleSidebar) {
+            tabController.configureAsConvertibleTabBar()
+        }
+
+        val appearance = UITabBarAppearance().apply {
+            configureWithDefaultBackground()
+            tabBarBackgroundColor?.let { backgroundColor = it }
+        }
+        tabController.tabBar.standardAppearance = appearance
+        tabController.tabBar.scrollEdgeAppearance = appearance
+
         tabBarTintColor?.let { tabController.tabBar.setTintColor(it) }
         tabBarBackgroundColor?.let { tabController.tabBar.setBackgroundColor(it) }
         tabBarUnselectedItemTintColor?.let { tabController.tabBar.setUnselectedItemTintColor(it) }
@@ -417,59 +300,21 @@ class AdaptiveNavigationController(
         }
 
         this.tabBarController = tabController
-        this.splitViewController = null
         embedChild(tabController)
     }
 
-    private fun setupSplitViewController() {
-        val splitVc = UISplitViewController(style = UISplitViewControllerStyle.UISplitViewControllerStyleDoubleColumn)
-        splitVc.view.backgroundColor = UIColor.systemBackgroundColor
-        splitVc.setPrimaryBackgroundStyle(
-            UISplitViewControllerBackgroundStyle.UISplitViewControllerBackgroundStyleSidebar
-        )
-
-        val sidebarVc = SidebarCollectionViewController(
-            sections = sections,
-            headerTitle = headerTitle,
-            onItemSelected = { idx, _ ->
-                this.selectedIndex = idx
-                selectItem(idx, notify = true)
-            }
-        )
-        this.sidebarController = sidebarVc
-
-        val sidebarNav = UINavigationController(rootViewController = sidebarVc).apply {
-            navigationBar.prefersLargeTitles = true
-        }
-        val targetItem = allItems.getOrNull(selectedIndex) ?: allItems.firstOrNull()
-
-        val initialDetailVc = targetItem?.resolveViewController() ?: UIViewController()
-
-        initialDetailVc.view.backgroundColor = UIColor.systemBackgroundColor
-
-        val detailNav = UINavigationController(rootViewController = initialDetailVc)
-        detailNav.view.backgroundColor = UIColor.systemBackgroundColor
-        detailNav.navigationBar.backgroundColor = UIColor.systemBackgroundColor
-
-        if (showsDisplayModeButtonItem) {
-            detailNav.topViewController?.navigationItem?.leftBarButtonItem = splitVc.displayModeButtonItem()
+    private fun UITabBarController.configureAsConvertibleTabBar() {
+        if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPad || !UIDevice.currentDevice.isAtLeastIOS18()) {
+            return
         }
 
-        splitVc.setViewController(
-            sidebarNav,
-            forColumn = UISplitViewControllerColumn.UISplitViewControllerColumnPrimary
-        )
-        splitVc.setViewController(
-            detailNav,
-            forColumn = UISplitViewControllerColumn.UISplitViewControllerColumnSecondary
-        )
-        splitVc.setPrimaryBackgroundStyle(UISplitViewControllerBackgroundStyle.UISplitViewControllerBackgroundStyleSidebar)
+        mode = UITabBarControllerModeTabSidebar
+        tabBarMinimizeBehavior = UITabBarMinimizeBehaviorNever
+    }
 
-        this.splitViewController = splitVc
-        this.tabBarController = null
-        embedChild(splitVc)
-
-        sidebarVc.selectItem(selectedIndex)
+    private fun UIDevice.isAtLeastIOS18(): Boolean {
+        val majorVersion = systemVersion.substringBefore('.').toIntOrNull() ?: return false
+        return majorVersion >= 18
     }
 
     private fun embedChild(child: UIViewController) {
@@ -495,23 +340,6 @@ class AdaptiveNavigationController(
 
         tabBarController?.setSelectedIndex(index.toULong())
 
-        splitViewController?.let { splitVc ->
-            val resolved = item.resolveViewController()
-            resolved.view.backgroundColor = UIColor.systemBackgroundColor
-
-            val secondaryNav = UINavigationController(rootViewController = resolved)
-            secondaryNav.view.backgroundColor = UIColor.systemBackgroundColor
-            secondaryNav.navigationBar.backgroundColor = UIColor.systemBackgroundColor
-            if (showsDisplayModeButtonItem) {
-                secondaryNav.topViewController?.navigationItem?.leftBarButtonItem = splitVc.displayModeButtonItem()
-            }
-            splitVc.setViewController(
-                secondaryNav,
-                forColumn = UISplitViewControllerColumn.UISplitViewControllerColumnSecondary
-            )
-            sidebarController?.selectItem(index)
-        }
-
         if (notify) {
             item.onSelect?.invoke()
             onItemSelectedCallback?.invoke(index, item)
@@ -529,12 +357,10 @@ class AdaptiveNavigationController(
 @UIKitDsl
 class AdaptiveNavigationBuilder {
     var mode: AdaptiveNavigationMode = AdaptiveNavigationMode.Auto
-    var headerTitle: String? = "Menu"
     var selectedIndex: Int = 0
     var tabBarTintColor: UIColor? = null
     var tabBarBackgroundColor: UIColor? = null
     var tabBarUnselectedItemTintColor: UIColor? = null
-    var showsDisplayModeButtonItem: Boolean = true
 
     private val sectionsList = mutableListOf<AdaptiveNavigationSection>()
     private val defaultItems = mutableListOf<AdaptiveNavigationItem>()
@@ -598,11 +424,9 @@ class AdaptiveNavigationBuilder {
         val controller = AdaptiveNavigationController(
             mode = mode,
             sections = allSections,
-            headerTitle = headerTitle,
             tabBarTintColor = tabBarTintColor,
             tabBarBackgroundColor = tabBarBackgroundColor,
             tabBarUnselectedItemTintColor = tabBarUnselectedItemTintColor,
-            showsDisplayModeButtonItem = showsDisplayModeButtonItem,
             onItemSelectedCallback = itemSelectedListener
         )
 
@@ -615,7 +439,7 @@ class AdaptiveNavigationBuilder {
 }
 
 /**
- * Creates an adaptive navigation controller that automatically switches between iPhone TabBar and iPad Sidebar.
+ * Creates an adaptive navigation controller that automatically switches between iPhone TabBar and iPad convertible TabBar.
  */
 inline fun adaptiveNavigation(
     builder: AdaptiveNavigationBuilder.() -> Unit

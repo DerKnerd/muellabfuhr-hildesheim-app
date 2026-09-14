@@ -276,10 +276,10 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
 
         NSLayoutConstraint.activateConstraints(
             listOf(
-                mapView.topAnchor.constraintEqualToAnchor(view.topAnchor),
+                mapView.topAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.topAnchor),
                 mapView.bottomAnchor.constraintEqualToAnchor(view.bottomAnchor),
-                mapView.leadingAnchor.constraintEqualToAnchor(view.leadingAnchor),
-                mapView.trailingAnchor.constraintEqualToAnchor(view.trailingAnchor)
+                mapView.leadingAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.leadingAnchor),
+                mapView.trailingAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.trailingAnchor),
             )
         )
     }
