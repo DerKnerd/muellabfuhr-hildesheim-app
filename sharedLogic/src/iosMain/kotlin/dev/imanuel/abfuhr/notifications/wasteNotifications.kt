@@ -2,7 +2,6 @@ package dev.imanuel.abfuhr.notifications
 
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import kotlinx.datetime.*
-import kotlinx.datetime.LocalDate
 import org.koin.mp.KoinPlatformTools
 import kotlin.time.Clock
 import kotlin.time.Instant

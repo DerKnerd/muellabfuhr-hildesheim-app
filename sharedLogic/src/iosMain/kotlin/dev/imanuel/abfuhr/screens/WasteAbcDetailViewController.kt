@@ -24,8 +24,6 @@ class WasteAbcDetailViewController(
 
     override fun viewDidLoad() {
         super.viewDidLoad()
-        val allRoutes = database.abfallAbcQueries.getAllDisposalRoute().executeAsList()
-        println("Routes in german: ${allRoutes.count()}")
         val routes =
             database
                 .abfallAbcQueries
