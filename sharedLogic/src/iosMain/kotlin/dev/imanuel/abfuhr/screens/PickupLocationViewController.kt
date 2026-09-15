@@ -128,6 +128,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                                     nextPickups = locations.map { NextPickup(it.date!!, it.type) }
                                 )
                             }
+                            .take(5)
                     populateSearchList()
                 }
             }
@@ -388,10 +389,13 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
         if (!::searchController.isInitialized) {
             searchUpdater = PickupSearchUpdaterBridge { query ->
                 filteredLocations = if (query.isNotBlank()) {
-                    database.abfuhrQueries.searchLocationWithNextPickupsByKeyword(
-                        query,
-                        Clock.System.now().toEpochMilliseconds()
-                    ).executeAsList()
+                    database
+                        .abfuhrQueries
+                        .searchLocationWithNextPickupsByKeyword(
+                            query,
+                            Clock.System.now().toEpochMilliseconds()
+                        )
+                        .executeAsList()
                         .groupBy {
                             it.streetId
                         }
@@ -412,7 +416,9 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                             )
                         }
                 } else {
-                    database.abfuhrQueries.getAllLocationWithNextPickups(Clock.System.now().toEpochMilliseconds())
+                    database
+                        .abfuhrQueries
+                        .getAllLocationWithNextPickups(Clock.System.now().toEpochMilliseconds())
                         .executeAsList()
                         .groupBy {
                             it.streetId
@@ -434,6 +440,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                             )
                         }
                 }
+                println("Locations: ${filteredLocations.size}")
                 populateSearchList()
             }
 

@@ -136,8 +136,7 @@ SELECT *, ((l.streetLatitude - :lat) * (l.streetLatitude - :lat) + (l.streetLong
 FROM abfuhrLocation l
 JOIN nextPickup p ON l.streetId = p.streetId
 WHERE p.date >= :today
-ORDER BY distance ASC
-LIMIT 5;
+ORDER BY distance ASC;
 
 searchLocationWithNextPickupsByKeyword:
 SELECT l.*, p.date, p.type
@@ -146,5 +145,4 @@ JOIN abfuhrLocation l ON l.streetId = f.rowid
 JOIN nextPickup p ON l.streetId = p.streetId
 WHERE abfuhrLocation_fts MATCH :keyword
   AND p.date >= :today
-ORDER BY l.locality, l.district, l.street
-LIMIT 5;
+ORDER BY l.locality, l.district, l.street;
