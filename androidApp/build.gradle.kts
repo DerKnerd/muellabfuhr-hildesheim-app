@@ -8,11 +8,11 @@ plugins {
 }
 
 fun computeVersionName(): String {
-    return System.getenv("CI_COMMIT_TAG") ?: "0.0.0"
+    return System.getenv("CI_COMMIT_TAG") ?: "1.0.0"
 }
 
 fun computeVersionCode(): Int {
-    val versionSplit = (System.getenv("CI_COMMIT_TAG") ?: "0.0.0").split(".")
+    val versionSplit = (System.getenv("CI_COMMIT_TAG") ?: "1.0.0").split(".")
     if (versionSplit.size != 3) {
         throw IllegalArgumentException("The version tag needs to be in the format major.minor.patch")
     }
@@ -25,7 +25,7 @@ fun computeVersionCode(): Int {
         buildString {
             append("10")
             append(
-                ((major.toInt() * 100000) + (minor.toInt() * 10000) + patch.toInt()).toString(
+                ((major.toInt() * 100000) + (minor.toInt() * 10000) + patch.toInt() + System.getenv("CI_PIPELINE_IID").toInt()).toString(
                     10
                 )
             )
@@ -49,8 +49,8 @@ android {
         targetSdk {
             version = release(37)
         }
-        versionCode = 101//computeVersionCode()
-        versionName = "1.0.0"//computeVersionName()
+        versionCode = computeVersionCode()
+        versionName = computeVersionName()
 
         vectorDrawables {
             useSupportLibrary = true

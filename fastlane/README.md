@@ -15,21 +15,29 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## Android
 
-### android android
+### android alpha
 
 ```sh
-[bundle exec] fastlane android android
+[bundle exec] fastlane android alpha
 ```
 
-Deploy a new version to the Google Play
+Deploy a new alpha version to the Google Play
 
-### android wear
+### android beta
 
 ```sh
-[bundle exec] fastlane android wear
+[bundle exec] fastlane android beta
 ```
 
-Deploy a new version to the Google Play
+Deploy a new beta version to the Google Play
+
+### android release
+
+```sh
+[bundle exec] fastlane android release
+```
+
+Deploy a new release version to the Google Play
 
 ----
 
