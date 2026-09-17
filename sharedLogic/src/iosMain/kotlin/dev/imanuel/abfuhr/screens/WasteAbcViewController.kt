@@ -4,6 +4,7 @@ import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.database.AbfallAbcWaste
 import dev.imanuel.abfuhr.database.AbfallDatabase
+import dev.imanuel.abfuhr.database.searchAbfallAbcByKeyword
 import dev.imanuel.abfuhr.uikit.dsl.listView
 import kotlinx.coroutines.*
 import org.koin.mp.KoinPlatformTools
@@ -118,7 +119,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
             searchResults = if (trimmed.isEmpty()) {
                 database.abfallAbcQueries.getAllWasteByLanguage(currentLanguage).executeAsList()
             } else {
-                database.abfallAbcQueries.searchAbfallAbcByKeyword(currentLanguage, trimmed).executeAsList()
+                database.searchAbfallAbcByKeyword(currentLanguage, trimmed)
             }
             mainScope.launch {
                 populateList()

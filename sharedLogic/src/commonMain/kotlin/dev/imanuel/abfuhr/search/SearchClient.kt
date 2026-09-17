@@ -2,6 +2,8 @@ package dev.imanuel.abfuhr.search
 
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
+import dev.imanuel.abfuhr.database.searchAbfallAbcByKeyword
+import dev.imanuel.abfuhr.database.searchAddressByKeyword
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoutes
 import dev.imanuel.abfuhr.models.AbfallAbcWaste
@@ -27,10 +29,10 @@ class SearchClient(
             return client.searchAbfallAbc(keyword = keyword, language = language)
         }
 
-        val wastes = database.abfallAbcQueries.searchAbfallAbcByKeyword(
+        val wastes = database.searchAbfallAbcByKeyword(
             language = language,
             keyword = keyword,
-        ).executeAsList()
+        )
 
         return wastes.map { waste ->
             val tips = database.abfallAbcQueries.getWasteTipsByWasteId(waste.id, waste.language)
@@ -77,9 +79,7 @@ class SearchClient(
             return client.searchAbfuhr(keyword = keyword)
         }
 
-        val locations =
-            database.abfuhrQueries.searchAbfuhrLocationByKeyword(keyword = keyword)
-                .executeAsList()
+        val locations = database.searchAddressByKeyword(keyword = keyword)
 
         return locations.map { location ->
             val pickups =
@@ -136,32 +136,6 @@ class SearchClient(
                 districtId = location.districtId,
                 streetLatitude = location.streetLatitude,
                 streetLongitude = location.streetLongitude,
-            )
-        }
-    }
-
-    suspend fun searchLocations(keyword: String? = null, type: String? = null): List<Location> {
-        if (!isSyncCompletedAndSuccessful) {
-            return client.searchLocations(keyword = keyword, type = type)
-        }
-
-        val locations = database.locationQueries.searchLocationByKeyword(
-            locationType = type ?: "",
-            keyword = keyword ?: "",
-        ).executeAsList()
-
-        return locations.map { loc ->
-            Location(
-                type = loc.type,
-                name = loc.name,
-                latitude = loc.latitude.toString(),
-                longitude = loc.longitude.toString(),
-                description = loc.description,
-                openingHours = loc.openingHours,
-                mail = loc.mail,
-                www = loc.www,
-                tel = loc.tel,
-                fax = loc.fax,
             )
         }
     }

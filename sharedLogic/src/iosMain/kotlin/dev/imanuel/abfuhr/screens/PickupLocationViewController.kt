@@ -5,6 +5,7 @@ package dev.imanuel.abfuhr.screens
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrLocation
+import dev.imanuel.abfuhr.database.fts5PrefixQuery
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.uikit.dsl.column
 import dev.imanuel.abfuhr.uikit.dsl.listView
@@ -392,7 +393,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                     database
                         .abfuhrQueries
                         .searchLocationWithNextPickupsByKeyword(
-                            query,
+                            fts5PrefixQuery(query),
                             Clock.System.now().toEpochMilliseconds()
                         )
                         .executeAsList()
