@@ -1,24 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Dein Standort wird verwendet für verschiedene Features verwendet. Du kannst damit Straßen in deiner Nähe suchen für die Abholtermine, dir Container in deiner Nähe anzeigen lassen und Müll in der Landschaft melden.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.</string>
-    <key>BGTaskSchedulerPermittedIdentifiers</key>
-    <array>
-        <string>dev.imanuel.abfuhr.sync</string>
-    </array>
-	<key>CFBundleLocalizations</key>
-	<array>
-		<string>de</string>
-		<string>en</string>
-		<string>fr</string>
-		<string>ar</string>
-		<string>ku</string>
-	</array>
-</dict>
+    <dict>
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Dein Standort wird verwendet für verschiedene Features verwendet. Du kannst damit Straßen in deiner Nähe
+            suchen für die Abholtermine, dir Container in deiner Nähe anzeigen lassen und Müll in der Landschaft melden.
+        </string>
+        <key>NSCameraUsageDescription</key>
+        <string>Die Kamera wird verwendet um ein Foto von dem Müll aufzunehmen den du melden möchtest.</string>
+        <key>BGTaskSchedulerPermittedIdentifiers</key>
+        <array>
+            <string>dev.imanuel.abfuhr.sync</string>
+        </array>
+        <key>CFBundleLocalizations</key>
+        <array>
+            <string>de</string>
+            <string>en</string>
+            <string>fr</string>
+            <string>ar</string>
+            <string>ku</string>
+        </array>
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+
+        <key>ITSAppUsesNonExemptEncryption</key>
+        <false/>
+    </dict>
 </plist>

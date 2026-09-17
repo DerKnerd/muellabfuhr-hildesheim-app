@@ -1,6 +1,37 @@
 default_platform(:android)
 
-def upload(track = "production")
+def notify_telegram(message)
+    telegram(
+        token: ENV['TG_BOT_TOKEN'],
+        chat_id: ENV['TG_CHAT_ID'],
+        text: message
+    )
+end
+
+def build_ios_app()
+    app_store_connect_api_key(
+        key_id: ENV["APPSTORE_KEY_ID"],
+        issuer_id: ENV["APPSTORE_ISSUER_ID"],
+        key_filepath: ENV["AUTH_KEY_FILE"]
+    )
+    get_certificates
+    get_provisioning_profile(
+        app_identifier: "dev.imanuel.abfuhr"
+    )
+    increment_version_number(
+        version_number: ENV["APP_VERSION"],
+        xcodeproj: "iosApp/iosApp.xcodeproj"
+    )
+    increment_build_number(
+        xcodeproj: "iosApp/iosApp.xcodeproj"
+    )
+    build_app(
+        scheme: "iosApp",
+        workspace: "iosApp/iosApp.xcodeproj/project.xcworkspace"
+    )
+end
+
+def uploadToPlayStore(track = "production")
     gradle(task: ":androidApp:clean :androidApp:bundle", build_type: "release")
     upload_to_play_store(
         track: track,
@@ -9,25 +40,44 @@ def upload(track = "production")
         skip_upload_images: true,
         skip_upload_screenshots: true
     )
+    notify_telegram(message: "dev.imanuel.abfuhr: New android version on " + track)
 end
 
 platform :android do
     desc "Deploy a new alpha version to the Google Play"
     lane :alpha do
-        upload("alpha")
+        uploadToPlayStore("alpha")
     end
-endbundle
+end
 
 platform :android do
     desc "Deploy a new beta version to the Google Play"
     lane :beta do
-        upload("beta")
+        uploadToPlayStore("beta")
     end
 end
 
 platform :android do
     desc "Deploy a new release version to the Google Play"
     lane :release do
-        upload
+        uploadToPlayStore
+    end
+end
+
+platform :ios do
+    desc "Deploy the ios app to Appstore Connect Testflight"
+    lane :beta do
+        build_ios_app
+        upload_to_testflight
+        notify_telegram("dev.imanuel.abfuhr: New ios testflight version")
+    end
+end
+
+platform :ios do
+    desc "Deploy the ios app to Appstore Connect Testflight"
+    lane :production do
+        build_ios_app
+        upload_to_app_store
+        notify_telegram("dev.imanuel.abfuhr: New ios appstore version")
     end
 end

@@ -20,7 +20,18 @@ workflow:
   tags:
     - runner-amd64
 
-.deploy-base:
+.ios-base:
+  variables:
+    PATH: /opt/homebrew/lib/ruby/gems/3.2.0/bin:/opt/homebrew/opt/ruby@3.2/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pmk/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin
+    KEYCHAIN_NAME: "login.keychain-db"
+  tags:
+    - runner-macos
+  before_script:
+    - security list-keychains
+    - security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+    - security set-keychain-settings -lut 3600 "$KEYCHAIN_NAME"
+
+.android-base:
   extends:
     - .build-base
   script:
@@ -31,27 +42,28 @@ stages:
   - lint
   - build
   - deploy-android
+  - deploy-ios
 
 lint-debug-app:
   stage: lint
   extends:
     - .build-base
   script:
-    - ./gradlew -Pci --console=plain :androidApp:lintAnalyzeDebug -PbuildDir=build
+    - ./gradlew -Pci --console=plain :androidApp:lintAnalyzeDebug -PbuildDir=build --no-daemon
 
 lint-release-app:
   stage: lint
   extends:
     - .build-base
   script:
-    - ./gradlew -Pci --console=plain :androidApp:lintAnalyzeRelease -PbuildDir=build
+    - ./gradlew -Pci --console=plain :androidApp:lintAnalyzeRelease -PbuildDir=build --no-daemon
 
 build-android-debug-app:
   stage: build
   extends:
     - .build-base
   script:
-    - ./gradlew -Pci --console=plain :androidApp:bundleDebug -PbuildDir=build
+    - ./gradlew -Pci --console=plain :androidApp:bundleDebug -PbuildDir=build --no-daemon
 
 read-secure-files:
   image: registry.gitlab.com/gitlab-org/cli:latest
@@ -68,9 +80,10 @@ build-android-release-app:
   extends:
     - .build-base
   needs:
+    - lint-release-app
     - read-secure-files
   script:
-    - ./gradlew -Pci --console=plain :androidApp:bundle -PbuildDir=build
+    - ./gradlew -Pci --console=plain :androidApp:bundle -PbuildDir=build --no-daemon
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG
@@ -79,8 +92,9 @@ build-android-release-app:
 
 deploy-android-alpha-app:
   extends:
-    - .deploy-base
+    - .android-base
   needs:
+    - lint-release-app
     - read-secure-files
   variables:
     TRACK: alpha
@@ -90,8 +104,9 @@ deploy-android-alpha-app:
 
 deploy-android-beta-app:
   extends:
-    - .deploy-base
+    - .android-base
   needs:
+    - lint-release-app
     - read-secure-files
   variables:
     TRACK: beta
@@ -101,11 +116,44 @@ deploy-android-beta-app:
 
 deploy-android-production-app:
   extends:
-    - .deploy-base
+    - .android-base
   needs:
+    - lint-release-app
     - read-secure-files
   variables:
     TRACK: release
   stage: deploy-android
+  rules:
+    - if: $CI_COMMIT_TAG
+
+deploy-testflight:
+  stage: deploy-ios
+  extends:
+    - .ios-base
+  variables:
+    FL_BUILD_NUMBER_BUILD_NUMBER: $CI_PIPELINE_IID
+    APP_VERSION: 1.0.0
+  needs:
+    - lint-release-app
+    - read-secure-files
+  script:
+    - bundle update
+    - bundle exec fastlane ios beta
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-appstore:
+  stage: deploy-ios
+  extends:
+    - .ios-base
+  variables:
+    FL_BUILD_NUMBER_BUILD_NUMBER: $CI_PIPELINE_IID
+    APP_VERSION: $CI_COMMIT_TAG
+  needs:
+    - lint-release-app
+    - read-secure-files
+  script:
+    - bundle update
+    - bundle exec fastlane ios production
   rules:
     - if: $CI_COMMIT_TAG
