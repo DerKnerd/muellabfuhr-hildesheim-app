@@ -65,7 +65,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
 import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -221,7 +220,6 @@ fun PickupCalendarDialog(
                         .abfuhrQueries
                         .getPickupsByStreetId(location.streetId)
                         .executeAsList()
-                        .filter { listOf("B", "G", "R", "P").contains(it.type) }
                 location = abfallDatabase
                     .abfuhrQueries
                     .getLocationByStreetId(location.streetId)
@@ -319,6 +317,7 @@ fun PickupCalendarDialog(
                             val trashCan = when (pickup.type) {
                                 "B" -> "Biotonne"
                                 "R" -> "Restmülltonne"
+                                "S" -> "Restmülltonne (14-tägige Abfuhr)"
                                 "P" -> "Papiertonne"
                                 "G" -> "Gelbe Tonne"
                                 else -> ""
@@ -327,7 +326,7 @@ fun PickupCalendarDialog(
                                 if (pickup.date > today.toEpochMilliseconds()) {
                                     when (pickup.type) {
                                         "B" -> Color(0xFF388E3C)
-                                        "R" -> Color(0xFF2D2D2D)
+                                        "R", "S" -> Color(0xFF2D2D2D)
                                         "P" -> Color(0xFF2196F3)
                                         "G" -> Color(0xFFFFEB3B)
                                         else -> Color(0x00000000)
@@ -335,7 +334,7 @@ fun PickupCalendarDialog(
                                 } else {
                                     when (pickup.type) {
                                         "B" -> Color(0x80388E3C)
-                                        "R" -> Color(0x802D2D2D)
+                                        "R", "S" -> Color(0x802D2D2D)
                                         "P" -> Color(0x802196F3)
                                         "G" -> Color(0x80FFEB3B)
                                         else -> Color(0x00000000)
@@ -619,7 +618,7 @@ fun PickupScreen(
                                     if (nextPickup != null) {
                                         val trashCan = when (nextPickup.type) {
                                             "B" -> "die Biotonne"
-                                            "R" -> "die Restmülltonne"
+                                            "R", "S" -> "die Restmülltonne"
                                             "P" -> "die Papiertonne"
                                             "G" -> "die gelbe Tonne"
                                             else -> return@SegmentedListItem
@@ -733,7 +732,7 @@ fun PickupScreen(
                                     if (nextPickup != null) {
                                         val trashCan = when (nextPickup.type) {
                                             "B" -> "die Biotonne"
-                                            "R" -> "die Restmülltonne"
+                                            "R", "S" -> "die Restmülltonne"
                                             "P" -> "die Papiertonne"
                                             "G" -> "die gelbe Tonne"
                                             else -> return@SegmentedListItem

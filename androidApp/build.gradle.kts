@@ -49,8 +49,8 @@ android {
         targetSdk {
             version = release(37)
         }
-        versionCode = computeVersionCode()
-        versionName = computeVersionName()
+        versionCode = 101//computeVersionCode()
+        versionName = "1.0.0"//computeVersionName()
 
         vectorDrawables {
             useSupportLibrary = true
