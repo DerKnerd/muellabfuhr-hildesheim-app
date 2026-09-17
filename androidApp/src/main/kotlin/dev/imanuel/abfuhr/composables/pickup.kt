@@ -133,16 +133,7 @@ fun PickupCalendarDialog(
 
     var loading by remember { mutableStateOf(false) }
 
-    var pickups by remember {
-        mutableStateOf(pickups.filter {
-            listOf(
-                "B",
-                "G",
-                "R",
-                "P"
-            ).contains(it.type)
-        })
-    }
+    var pickups by remember { mutableStateOf(pickups) }
     var location by remember { mutableStateOf(location) }
 
     val snackbarHostState = remember { SnackbarHostState() }

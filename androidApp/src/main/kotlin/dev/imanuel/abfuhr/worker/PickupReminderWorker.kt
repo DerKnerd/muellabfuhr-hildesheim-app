@@ -18,44 +18,65 @@ class PickupReminderWorker(
     override suspend fun doWork(): Result {
         val streetId = inputData.getLong("streetId", -1)
         val date = inputData.getLong("date", -1)
-        val type = inputData.getString("type") ?: ""
 
-        val trashCan = when (type) {
-            "B" -> "Biotonne"
-            "R" -> "Restmülltonne"
-            "P" -> "Papiertonne"
-            "G" -> "Gelbe Tonne"
-            else -> ""
-        }
-        val trashCanIcon = when (type) {
-            "B" -> R.drawable.trashcan_b
-            "R" -> R.drawable.trashcan_r
-            "P" -> R.drawable.trashcan_p
-            "G" -> R.drawable.trashcan_g
-            else -> 0
-        }
+        if (streetId == -1L || date == -1L) return Result.success()
 
-        if (streetId == -1L || date == -1L || trashCan.isEmpty()) return Result.success()
+        val pickups =
+            abfallDatabase.abfuhrQueries.getPickupByStreetAndDate(streetId, date).executeAsList()
 
         val notificationManager = applicationContext.getSystemService<NotificationManager>()
-        val notification = Notification
-            .Builder(applicationContext, "trash-reminder")
-            .setContentTitle("Erinnerung an die $trashCan")
-            .setContentText("Morgen ist die $trashCan dran, denk daran sie bis um 6 Uhr morgens rauszustellen.")
-            .setSmallIcon(trashCanIcon)
-            .setLargeIcon(
-                BitmapFactory.decodeResource(
-                    applicationContext.resources,
-                    trashCanIcon
+        val has14DayTrash = pickups.any { it.type == "R" }
+        for (pickup in pickups) {
+            if (has14DayTrash && pickup.type == "S") {
+                continue
+            }
+            val trashCan = when (pickup.type) {
+                "B" -> "Biotonne"
+                "R" -> "Restmülltonne"
+                "S" -> "Restmülltonne (14-tägige Abfuhr)"
+                "P" -> "Papiertonne"
+                "G" -> "Gelbe Tonne"
+                else -> ""
+            }
+            val trashCanIcon = when (pickup.type) {
+                "B" -> R.drawable.trashcan_b
+                "R" -> R.drawable.trashcan_r
+                "S" -> R.drawable.trashcan_r
+                "P" -> R.drawable.trashcan_p
+                "G" -> R.drawable.trashcan_g
+                else -> 0
+            }
+            val trashCanColor = when (pickup.type) {
+                "B" -> R.color.trashcan_b
+                "R" -> R.color.trashcan_r
+                "S" -> R.color.trashcan_r
+                "P" -> R.color.trashcan_p
+                "G" -> R.color.trashcan_g
+                else -> 0
+            }
+
+            if (trashCan.isEmpty()) {
+                continue
+            }
+
+            val notification = Notification
+                .Builder(applicationContext, "trash-reminder")
+                .setContentTitle("Erinnerung an die $trashCan")
+                .setContentText("Morgen ist die $trashCan dran, denk daran sie bis um 6 Uhr morgens rauszustellen.")
+                .setSmallIcon(trashCanIcon)
+                .setLargeIcon(
+                    BitmapFactory.decodeResource(
+                        applicationContext.resources,
+                        trashCanIcon
+                    )
                 )
-            )
-            .setAutoCancel(true)
-            .build()
+                .setColor(trashCanColor)
+                .setColorized(true)
+                .setAutoCancel(true)
+                .build()
 
-        val locationPickup =
-            abfallDatabase.abfuhrQueries.getPickupByStreetDateAndType(streetId, date, type)
-
-        notificationManager?.notify(locationPickup.hashCode(), notification)
+            notificationManager?.notify(pickup.hashCode(), notification)
+        }
 
         return Result.success()
     }

@@ -5,4 +5,8 @@
     <color name="marker_background">#388E3C</color>
     <color name="icon_background">#388E3C</color>
     <color name="icon_foreground">#DCEDC8</color>
+    <color name="trashcan_b">#388E3C</color>
+    <color name="trashcan_r">#2D2D2D</color>
+    <color name="trashcan_p">#2196F3</color>
+    <color name="trashcan_g">#FFEB3B</color>
 </resources>

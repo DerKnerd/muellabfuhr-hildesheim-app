@@ -91,8 +91,8 @@ fun Context.createAbfuhrNotifications(
                 val targetInstant = Instant.ofEpochMilli(it.date)
                     .atZone(ZoneId.systemDefault())
                     .minusDays(1)
-                    .withHour(18)
-                    .withMinute(0)
+                    .withHour(21)
+                    .withMinute(2)
                     .withSecond(0)
                     .withNano(0)
                     .toInstant()
@@ -105,7 +105,6 @@ fun Context.createAbfuhrNotifications(
                     .setInputData(
                         workDataOf(
                             "streetId" to location.streetId,
-                            "type" to it.type,
                             "date" to it.date
                         )
                     )

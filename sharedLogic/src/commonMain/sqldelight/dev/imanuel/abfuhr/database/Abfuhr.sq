@@ -120,6 +120,12 @@ WHERE streetId = :streetId
   AND date = :date
   AND type = :type;
 
+getPickupByStreetAndDate:
+SELECT *
+FROM abfuhrPickup
+WHERE streetId = :streetId
+  AND date = :date;
+
 getAllLocationWithNextPickups:
 SELECT *
 FROM abfuhrLocation l
