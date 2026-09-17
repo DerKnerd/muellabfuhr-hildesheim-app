@@ -210,7 +210,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                     val cans = location.nextPickups.map {
                         when (it.type) {
                             "B" -> "die Biotonne"
-                            "R" -> "die Restmülltonne"
+                            "R", "S" -> "die Restmülltonne"
                             "G" -> "die gelbe Tonne"
                             "P" -> "die Papiertonne"
                             else -> return@map ""
@@ -220,7 +220,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 } else {
                     val trashCan = when (location.nextPickups.first().type) {
                         "B" -> "Biotonne"
-                        "R" -> "Restmülltonne"
+                        "R", "S" -> "Restmülltonne"
                         "G" -> "gelbe Tonne"
                         "P" -> "Papiertonne"
                         else -> ""

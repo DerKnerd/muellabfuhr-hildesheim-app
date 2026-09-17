@@ -78,13 +78,14 @@ class PickupDetailViewController(
                 val trashCan = when (pickup.type) {
                     "B" -> "Biotonne"
                     "R" -> "Restmülltonne"
+                    "S" -> "Restmülltonne (14-tägige Abfuhr)"
                     "G" -> "Gelbe Tonne"
                     "P" -> "Papiertonne"
                     else -> continue
                 }
                 val tintColor = when (pickup.type) {
                     "B" -> UIColor.systemGreenColor
-                    "R" -> UIColor.darkGrayColor
+                    "R", "S" -> UIColor.darkGrayColor
                     "G" -> UIColor.systemYellowColor
                     "P" -> UIColor.systemBlueColor
                     else -> continue
