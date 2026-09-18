@@ -109,6 +109,7 @@ deploy-android-beta-app:
   needs:
     - lint-release-app
     - read-secure-files
+    - deploy-android-alpha-app
   variables:
     TRACK: beta
   stage: deploy-android
