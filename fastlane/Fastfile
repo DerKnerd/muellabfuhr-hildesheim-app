@@ -40,7 +40,7 @@ def uploadToPlayStore(track = "production")
         skip_upload_images: true,
         skip_upload_screenshots: true
     )
-    notify_telegram(message: "dev.imanuel.abfuhr: New android version on " + track)
+    notify_telegram("dev.imanuel.abfuhr: New android version on " + track)
 end
 
 platform :android do

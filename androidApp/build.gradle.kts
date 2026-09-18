@@ -25,7 +25,7 @@ fun computeVersionCode(): Int {
         buildString {
             append("10")
             append(
-                ((major.toInt() * 100000) + (minor.toInt() * 10000) + patch.toInt() + (System.getenv("CI_PIPELINE_IID") ?: "1").toInt()).toString(
+                ((major.toInt() * 100000) + (minor.toInt() * 10000) + patch.toInt() + (System.getenv("CI_JOB_ID") ?: "1").toInt()).toString(
                     10
                 )
             )

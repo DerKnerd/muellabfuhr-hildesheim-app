@@ -131,7 +131,7 @@ deploy-testflight:
   extends:
     - .ios-base
   variables:
-    FL_BUILD_NUMBER_BUILD_NUMBER: $CI_PIPELINE_IID
+    FL_BUILD_NUMBER_BUILD_NUMBER: $CI_JOB_ID
     APP_VERSION: 1.0.0
   needs:
     - lint-release-app
@@ -147,7 +147,7 @@ deploy-appstore:
   extends:
     - .ios-base
   variables:
-    FL_BUILD_NUMBER_BUILD_NUMBER: $CI_PIPELINE_IID
+    FL_BUILD_NUMBER_BUILD_NUMBER: $CI_JOB_ID
     APP_VERSION: $CI_COMMIT_TAG
   needs:
     - lint-release-app
