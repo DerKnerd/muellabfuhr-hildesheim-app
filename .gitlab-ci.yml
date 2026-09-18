@@ -27,6 +27,7 @@ workflow:
   tags:
     - runner-macos
   before_script:
+    - touch $CI_PROJECT_DIR/local.properties
     - security list-keychains
     - security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
     - security set-keychain-settings -lut 3600 "$KEYCHAIN_NAME"
