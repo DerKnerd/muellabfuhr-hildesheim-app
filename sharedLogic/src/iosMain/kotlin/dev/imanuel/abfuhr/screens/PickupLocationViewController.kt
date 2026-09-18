@@ -4,13 +4,17 @@ package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.database.AbfallDatabase
-import dev.imanuel.abfuhr.database.AbfuhrLocation
-import dev.imanuel.abfuhr.database.fts5PrefixQuery
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
+import dev.imanuel.abfuhr.models.AbfuhrLocation
+import dev.imanuel.abfuhr.models.AbfuhrPickup
+import dev.imanuel.abfuhr.search.SearchClient
+import dev.imanuel.abfuhr.uikit.dsl.ProgressIndicatorStyle
+import dev.imanuel.abfuhr.uikit.dsl.activityIndicator
 import dev.imanuel.abfuhr.uikit.dsl.column
 import dev.imanuel.abfuhr.uikit.dsl.listView
 import dev.imanuel.abfuhr.uikit.dsl.showAlert
 import kotlinx.cinterop.*
+import kotlinx.coroutines.*
 import kotlinx.datetime.toNSDate
 import org.koin.mp.KoinPlatformTools
 import platform.CoreLocation.CLLocation
@@ -65,6 +69,10 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
     private val locationManager: CLLocationManager = CLLocationManager()
     private var resultsView: UIView? = null
     private var pageView: UIStackView? = null
+    private var loader: UIActivityIndicatorView = activityIndicator {
+        startAnimating()
+        style = UIActivityIndicatorViewStyleLarge
+    }
 
     private lateinit var searchController: UISearchController
     private lateinit var searchUpdater: PickupSearchUpdaterBridge
@@ -72,23 +80,26 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
 
     private var selectedSegmentIndex = 0L
 
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    private var searchJob: Job? = null
+    private val searchClient: SearchClient
+        get() = KoinPlatformTools.defaultContext().get().get()
     private val database: AbfallDatabase
         get() = KoinPlatformTools.defaultContext().get().get()
 
-    private var locationsWithReminder: List<AbfuhrLocation> = emptyList()
-    private var filteredLocations: List<LocationWithNextPickups> = emptyList()
+    private var locationsWithReminder: List<dev.imanuel.abfuhr.database.AbfuhrLocation> = emptyList()
+    private var filteredLocations: List<AbfuhrLocation> = emptyList()
 
     override fun viewWillAppear(animated: Boolean) {
         super.viewWillAppear(animated)
-        reloadReminder()
         setupPageView()
     }
 
     override fun viewDidLoad() {
         super.viewDidLoad()
         view.setBackgroundColor(UIColor.systemBackgroundColor())
-
-        reloadReminder()
 
         locationManagerDelegateBridge = PickupManagerDelegateBridge { location ->
             locationManager.stopUpdatingLocation()
@@ -101,36 +112,13 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                         okAction("Schließen")
                     }
                 } else {
-                    filteredLocations =
-                        database
-                            .abfuhrQueries
-                            .searchLocationWithNextPickupsByGeolocation(
-                                latitude,
-                                longitude,
-                                Clock.System.now().toEpochMilliseconds()
-                            )
-                            .executeAsList()
-                            .groupBy {
-                                it.streetId
-                            }
-                            .map { (key, value) ->
-                                val locations = value.groupBy { it.date }.minBy { it.key ?: Long.MAX_VALUE }.value
-                                val first = value.first()
-                                LocationWithNextPickups(
-                                    streetId = first.streetId,
-                                    street = first.street,
-                                    locality = first.locality,
-                                    localityId = first.localityId,
-                                    district = first.district,
-                                    districtId = first.districtId,
-                                    streetLatitude = first.streetLatitude,
-                                    streetLongitude = first.streetLongitude,
-                                    hasReminder = first.hasReminder,
-                                    nextPickups = locations.map { NextPickup(it.date!!, it.type) }
-                                )
-                            }
-                            .take(5)
-                    populateSearchList()
+                    searchJob?.cancel()
+                    searchJob = ioScope.launch {
+                        filteredLocations = searchClient.searchAbfuhrByGeolocation(latitude, longitude)
+                        mainScope.launch {
+                            populateSearchList()
+                        }
+                    }
                 }
             }
         }
@@ -162,29 +150,10 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
 
     private fun reloadReminder() {
         locationsWithReminder = database.abfuhrQueries.getLocationsWithReminder().executeAsList()
-        filteredLocations = database.abfuhrQueries
-            .getAllLocationWithNextPickups(Clock.System.now().toEpochMilliseconds())
-            .executeAsList()
-            .groupBy {
-                it.streetId
-            }
-            .map { (key, value) ->
-                val locations = value.groupBy { it.date }.minBy { it.key ?: Long.MAX_VALUE }.value
-                val first = value.first()
-                LocationWithNextPickups(
-                    streetId = first.streetId,
-                    street = first.street,
-                    locality = first.locality,
-                    localityId = first.localityId,
-                    district = first.district,
-                    districtId = first.districtId,
-                    streetLatitude = first.streetLatitude,
-                    streetLongitude = first.streetLongitude,
-                    hasReminder = first.hasReminder,
-                    nextPickups = locations.map { NextPickup(it.date!!, it.type) }
-                )
-            }
-
+        searchJob?.cancel()
+        searchJob = ioScope.launch {
+            filteredLocations = searchClient.searchAbfuhr("")
+        }
     }
 
     private fun populateSearchList() {
@@ -202,12 +171,11 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             }
 
             loop@ for (location in filteredLocations) {
-                val date = formatter.stringFromDate(
-                    Instant.fromEpochMilliseconds(location.nextPickups.first().date).toNSDate()
-                )
+                val nextPickups = location.pickups.filter { it.date >= Clock.System.now() }
+                val date = formatter.stringFromDate(nextPickups.first().date.toNSDate())
 
-                val nextPickupLine = if (location.nextPickups.size > 1) {
-                    val cans = location.nextPickups.map {
+                val nextPickupLine = if (nextPickups.size > 1) {
+                    val cans = nextPickups.map {
                         when (it.type) {
                             "B" -> "die Biotonne"
                             "R", "S" -> "die Restmülltonne"
@@ -218,7 +186,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                     }
                     "Als nächstes sind ${cans.joinToString(" und ")} am $date dran"
                 } else {
-                    val trashCan = when (location.nextPickups.first().type) {
+                    val trashCan = when (nextPickups.first().type) {
                         "B" -> "Biotonne"
                         "R", "S" -> "Restmülltonne"
                         "G" -> "gelbe Tonne"
@@ -242,7 +210,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                     accessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryDisclosureIndicator
                     onSelect {
                         navigationController?.pushViewController(
-                            createPickupDetailViewController(location.streetId),
+                            createPickupDetailViewController(location),
                             true
                         )
                     }
@@ -273,10 +241,11 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             }
 
             loop@ for (location in locationsWithReminder) {
-                val nextPickups = database.abfuhrQueries.getNextPickupsByStreet(location.streetId).executeAsList()
+                val nextPickups = database.abfuhrQueries.getPickupsByStreetId(location.streetId).executeAsList()
+                    .filter { it.date >= Clock.System.now().toEpochMilliseconds() }
 
                 val date = formatter.stringFromDate(
-                    Instant.fromEpochMilliseconds(nextPickups.first().date!!).toNSDate()
+                    Instant.fromEpochMilliseconds(nextPickups.first().date).toNSDate()
                 )
 
                 val nextPickupLine = if (nextPickups.size > 1) {
@@ -316,7 +285,24 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                     onSelect {
                         navigationController?.pushViewController(
                             createPickupDetailViewController(
-                                location.streetId
+                                AbfuhrLocation(
+                                    street = location.street,
+                                    streetId = location.streetId,
+                                    locality = location.locality,
+                                    localityId = location.localityId,
+                                    district = location.district,
+                                    districtId = location.districtId,
+                                    streetLatitude = location.streetLatitude,
+                                    streetLongitude = location.streetLongitude,
+                                    pickups = nextPickups.map {
+                                        AbfuhrPickup(
+                                            streetId = it.streetId,
+                                            date = Instant.fromEpochMilliseconds(it.date),
+                                            isPostponed = it.isPostponed == 1L,
+                                            type = it.type,
+                                        )
+                                    },
+                                )
                             ),
                             true,
                         )
@@ -338,6 +324,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             selectedSegmentIndex = 0L
         }
 
+        reloadReminder()
         val newPageView = column {
             if (locationsWithReminder.isNotEmpty()) {
                 column {
@@ -366,9 +353,25 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             )
         )
 
+        pageView!!.addArrangedSubview(loader)
+        NSLayoutConstraint.activateConstraints(
+            listOf(
+                loader.centerXAnchor.constraintEqualToAnchor(pageView!!.centerXAnchor),
+                loader.centerYAnchor.constraintEqualToAnchor(pageView!!.centerYAnchor),
+            )
+        )
+
         if (selectedSegmentIndex == 0L || locationsWithReminder.isEmpty()) {
-            populateSearchList()
-            showSearchBar()
+            searchJob?.cancel()
+            searchJob = ioScope.launch {
+                filteredLocations = searchClient.searchAbfuhr("")
+                mainScope.launch {
+                    loader.stopAnimating()
+                    loader.removeFromSuperview()
+                    populateSearchList()
+                    showSearchBar()
+                }
+            }
         } else {
             populateReminderList()
             hideSearchBar()
@@ -389,60 +392,13 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
     private fun showSearchBar() {
         if (!::searchController.isInitialized) {
             searchUpdater = PickupSearchUpdaterBridge { query ->
-                filteredLocations = if (query.isNotBlank()) {
-                    database
-                        .abfuhrQueries
-                        .searchLocationWithNextPickupsByKeyword(
-                            fts5PrefixQuery(query),
-                            Clock.System.now().toEpochMilliseconds()
-                        )
-                        .executeAsList()
-                        .groupBy {
-                            it.streetId
-                        }
-                        .map { (key, value) ->
-                            val locations = value.groupBy { it.date }.minBy { it.key ?: Long.MAX_VALUE }.value
-                            val first = value.first()
-                            LocationWithNextPickups(
-                                streetId = first.streetId,
-                                street = first.street,
-                                locality = first.locality,
-                                localityId = first.localityId,
-                                district = first.district,
-                                districtId = first.districtId,
-                                streetLatitude = first.streetLatitude,
-                                streetLongitude = first.streetLongitude,
-                                hasReminder = first.hasReminder,
-                                nextPickups = locations.map { NextPickup(it.date!!, it.type) }
-                            )
-                        }
-                } else {
-                    database
-                        .abfuhrQueries
-                        .getAllLocationWithNextPickups(Clock.System.now().toEpochMilliseconds())
-                        .executeAsList()
-                        .groupBy {
-                            it.streetId
-                        }
-                        .map { (key, value) ->
-                            val locations = value.groupBy { it.date }.minBy { it.key ?: Long.MAX_VALUE }.value
-                            val first = value.first()
-                            LocationWithNextPickups(
-                                streetId = first.streetId,
-                                street = first.street,
-                                locality = first.locality,
-                                localityId = first.localityId,
-                                district = first.district,
-                                districtId = first.districtId,
-                                streetLatitude = first.streetLatitude,
-                                streetLongitude = first.streetLongitude,
-                                hasReminder = first.hasReminder,
-                                nextPickups = locations.map { NextPickup(it.date!!, it.type) }
-                            )
-                        }
+                searchJob?.cancel()
+                searchJob = ioScope.launch {
+                    filteredLocations = searchClient.searchAbfuhr(query)
+                    mainScope.launch {
+                        populateSearchList()
+                    }
                 }
-                println("Locations: ${filteredLocations.size}")
-                populateSearchList()
             }
 
             searchController = UISearchController(searchResultsController = null).apply {

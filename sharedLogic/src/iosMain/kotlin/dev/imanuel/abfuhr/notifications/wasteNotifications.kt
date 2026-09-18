@@ -20,7 +20,7 @@ fun enqueueNextPickups(streetId: Long) {
     for ((_, date, _, type) in pickups) {
         val trashCan = when (type) {
             "B" -> "Biotonne"
-            "R" -> "Restmülltonne"
+            "R", "S" -> "Restmülltonne"
             "P" -> "Papiertonne"
             "G" -> "Gelbe Tonne"
             else -> ""

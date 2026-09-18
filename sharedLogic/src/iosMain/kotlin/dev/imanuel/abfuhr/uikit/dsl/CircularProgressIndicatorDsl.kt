@@ -25,7 +25,7 @@ class ActivityIndicatorBuilder(
 ) {
     val indicatorView: UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle = style)
 
-    var color: UIColor? = UIColor.blueColor
+    var color: UIColor? = null
     var hidesWhenStopped: Boolean = true
     var isAnimating: Boolean = true
     var scale: Double? = null

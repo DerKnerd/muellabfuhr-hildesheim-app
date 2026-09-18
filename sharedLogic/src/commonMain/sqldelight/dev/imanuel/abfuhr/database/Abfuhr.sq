@@ -25,14 +25,6 @@ CREATE VIRTUAL TABLE abfuhrLocation_fts USING fts5(
     tokenize = 'trigram'
 );
 
-CREATE VIEW nextPickup AS
-SELECT p.streetId, MIN(p.date) AS date, p.type
-FROM abfuhrLocation l
-JOIN abfuhrPickup p ON l.streetId = p.streetId
-WHERE p.type <> 'S' AND p.date >= unixepoch('now', 'subsec') * 1000
-GROUP BY p.streetId, p.type
-ORDER BY p.streetId, date;
-
 CREATE TRIGGER abfuhrLocation_ai AFTER INSERT ON abfuhrLocation BEGIN
   INSERT INTO abfuhrLocation_fts(rowid, locality, street, district)
   VALUES (new.streetId, new.locality, new.street, new.district);
@@ -125,30 +117,3 @@ SELECT *
 FROM abfuhrPickup
 WHERE streetId = :streetId
   AND date = :date;
-
-getAllLocationWithNextPickups:
-SELECT *
-FROM abfuhrLocation l
-JOIN nextPickup p ON l.streetId = p.streetId
-WHERE p.date >= :today;
-
-getNextPickupsByStreet:
-SELECT *
-FROM nextPickup p
-WHERE p.streetId = :streetId;
-
-searchLocationWithNextPickupsByGeolocation:
-SELECT *, ((l.streetLatitude - :lat) * (l.streetLatitude - :lat) + (l.streetLongitude - :lon) * (l.streetLongitude - :lon)) AS distance
-FROM abfuhrLocation l
-JOIN nextPickup p ON l.streetId = p.streetId
-WHERE p.date >= :today
-ORDER BY distance ASC;
-
-searchLocationWithNextPickupsByKeyword:
-SELECT l.*, p.date, p.type
-FROM abfuhrLocation_fts f
-JOIN abfuhrLocation l ON l.streetId = f.rowid
-JOIN nextPickup p ON l.streetId = p.streetId
-WHERE abfuhrLocation_fts MATCH :keyword
-  AND p.date >= :today
-ORDER BY l.locality, l.district, l.street;

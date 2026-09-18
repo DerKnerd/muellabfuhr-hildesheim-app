@@ -4,8 +4,8 @@ package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.database.AbfallDatabase
-import dev.imanuel.abfuhr.database.AbfuhrLocation
-import dev.imanuel.abfuhr.database.AbfuhrPickup
+import dev.imanuel.abfuhr.models.AbfuhrLocation
+import dev.imanuel.abfuhr.models.AbfuhrPickup
 import dev.imanuel.abfuhr.notifications.IosNotificationManager
 import dev.imanuel.abfuhr.notifications.dequeuePickups
 import dev.imanuel.abfuhr.notifications.enqueueNextPickups
@@ -19,12 +19,9 @@ import org.koin.mp.KoinPlatformTools
 import platform.Foundation.*
 import platform.UIKit.*
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Instant
 
 class PickupDetailViewController(
-    private val streetId: Long
+    private val location: AbfuhrLocation
 ) : UIViewController(nibName = null, bundle = null) {
 
     init {
@@ -38,8 +35,8 @@ class PickupDetailViewController(
     private val database: AbfallDatabase
         get() = KoinPlatformTools.defaultContext().get().get()
 
-    private lateinit var location: AbfuhrLocation
     private lateinit var nextPickups: List<AbfuhrPickup>
+    private var databaseLocation: dev.imanuel.abfuhr.database.AbfuhrLocation? = null
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -47,7 +44,7 @@ class PickupDetailViewController(
     override fun viewDidLoad() {
         super.viewDidLoad()
 
-        location = database.abfuhrQueries.getLocationByStreetId(streetId).executeAsOne()
+        databaseLocation = database.abfuhrQueries.getLocationByStreetId(location.streetId).executeAsOneOrNull()
 
         title = if (location.locality == "Hildesheim") {
             "${location.street} Hildesheim"
@@ -55,8 +52,7 @@ class PickupDetailViewController(
             "${location.street} ${location.district}"
         }
 
-        nextPickups = database.abfuhrQueries.getPickupsByStreetId(streetId).executeAsList()
-            .filter { it.date >= Clock.System.now().toEpochMilliseconds() }
+        nextPickups = location.pickups.filter { it.date >= Clock.System.now() }
 
         val pickupsListView = listView(UITableViewStyle.UITableViewStyleGrouped) {
             backgroundColor = UIColor.systemBackgroundColor()
@@ -73,7 +69,7 @@ class PickupDetailViewController(
 
             for (pickup in nextPickups) {
                 val date = formatter.stringFromDate(
-                    Instant.fromEpochMilliseconds(pickup.date).toNSDate()
+                    pickup.date.toNSDate()
                 )
                 val trashCan = when (pickup.type) {
                     "B" -> "Biotonne"
@@ -113,14 +109,16 @@ class PickupDetailViewController(
             )
         )
 
-        renderReminderButton()
+        if (databaseLocation != null) {
+            renderReminderButton()
+        }
     }
 
     @ObjCAction
     fun onEnableReminder() {
         ioScope.launch {
-            database.abfuhrQueries.setReminder(streetId).await()
-            location = database.abfuhrQueries.getLocationByStreetId(streetId).executeAsOne()
+            database.abfuhrQueries.setReminder(location.streetId).await()
+            databaseLocation = database.abfuhrQueries.getLocationByStreetId(location.streetId).executeAsOne()
 
             mainScope.launch {
                 IosNotificationManager.requestAuthorization(completion = { granted, error ->
@@ -128,7 +126,7 @@ class PickupDetailViewController(
                         mainScope.launch {
                             renderReminderButton()
                         }
-                        enqueueNextPickups(streetId)
+                        enqueueNextPickups(location.streetId)
                     }
                 })
             }
@@ -138,18 +136,18 @@ class PickupDetailViewController(
     @ObjCAction
     fun onDisableReminder() {
         ioScope.launch {
-            database.abfuhrQueries.unsetReminder(streetId).await()
-            location = database.abfuhrQueries.getLocationByStreetId(streetId).executeAsOne()
+            database.abfuhrQueries.unsetReminder(location.streetId).await()
+            databaseLocation = database.abfuhrQueries.getLocationByStreetId(location.streetId).executeAsOne()
 
             mainScope.launch {
                 renderReminderButton()
-                dequeuePickups(streetId)
+                dequeuePickups(location.streetId)
             }
         }
     }
 
     fun renderReminderButton() {
-        if (location.hasReminder == 0L) {
+        if (databaseLocation != null && databaseLocation!!.hasReminder == 0L) {
             navigationItem.rightBarButtonItem = UIBarButtonItem(
                 UIImage.systemImageNamed("bell.fill"),
                 UIBarButtonItemStyle.UIBarButtonItemStylePlain,
@@ -167,4 +165,5 @@ class PickupDetailViewController(
     }
 }
 
-fun createPickupDetailViewController(streetId: Long) = PickupDetailViewController(streetId)
+fun createPickupDetailViewController(location: AbfuhrLocation) =
+    PickupDetailViewController(location)
