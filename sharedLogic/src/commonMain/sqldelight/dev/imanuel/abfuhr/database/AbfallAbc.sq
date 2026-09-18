@@ -150,6 +150,11 @@ getAllDisposalRoute:
 SELECT *
 FROM abfallAbcDisposalRoute;
 
+getAllDisposalRouteByLanguage:
+SELECT *
+FROM abfallAbcDisposalRoute
+WHERE language = :language;
+
 getAllWasteMapping:
 SELECT *
 FROM abfallAbcWasteMapping;
