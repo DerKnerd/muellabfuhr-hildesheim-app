@@ -22,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -122,21 +123,29 @@ fun MainComposable(
 
     AppTheme {
         if (syncing) {
-            Box(
+            Surface(
                 modifier = Modifier.fillMaxSize()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    LoadingIndicator()
-                    Text(
-                        "Bitte warte einen Moment, die Müllabfuhrdaten werden gerade auf dein Gerät runtergeladen, danach kannst du die App benutzen. Das geht sogar ohne Internet.",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(
+                            8.dp,
+                            Alignment.CenterVertically
+                        ),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LoadingIndicator()
+                        Text(
+                            "Bitte warte einen Moment, die Müllabfuhrdaten werden gerade auf dein Gerät runtergeladen, danach kannst du die App benutzen. Das geht sogar ohne Internet.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         } else {
