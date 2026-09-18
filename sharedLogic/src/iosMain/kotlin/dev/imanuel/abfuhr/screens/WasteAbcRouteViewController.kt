@@ -2,7 +2,7 @@ package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
-import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute
+import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +28,7 @@ fun UIViewController.downloadAndShareFile(fileName: String, urlString: String) {
             return@downloadTaskWithURL
         }
 
-        val safeFileName = fileName
-            .substringAfterLast('/')
-            .substringAfterLast('\\')
-            .ifBlank { "download" }
+        val safeFileName = fileName.substringAfterLast('/').substringAfterLast('\\').ifBlank { "download" }
         val targetPath = "${NSTemporaryDirectory().trimEnd('/')}/$safeFileName"
         val tempPath = tempUrl.path
         val shareUrl = if (tempPath != null) {
@@ -43,14 +40,11 @@ fun UIViewController.downloadAndShareFile(fileName: String, urlString: String) {
 
         dispatch_async(dispatch_get_main_queue()) {
             val shareController = UIActivityViewController(
-                activityItems = listOf(shareUrl),
-                applicationActivities = null
+                activityItems = listOf(shareUrl), applicationActivities = null
             )
 
             presentViewController(
-                shareController,
-                animated = true,
-                completion = null
+                shareController, animated = true, completion = null
             )
         }
     }
@@ -63,16 +57,13 @@ fun openInDefaultBrowser(urlString: String) {
 
     dispatch_async(dispatch_get_main_queue()) {
         UIApplication.sharedApplication.openURL(
-            url = url,
-            options = emptyMap<Any?, Any>(),
-            completionHandler = null
+            url = url, options = emptyMap<Any?, Any>(), completionHandler = null
         )
     }
 }
 
 class WasteAbcRouteViewController(
-    private val route: AbfallAbcDisposalRoute,
-    private val language: String
+    private val route: AbfallAbcDisposalRoute, private val language: String
 ) : UIViewController(nibName = null, bundle = null) {
     init {
         tabBarItem = UITabBarItem(
@@ -139,14 +130,10 @@ class WasteAbcRouteViewController(
             }
 
             val files = listOfNotNull(
-                route.file1,
-                route.file2,
-                route.file3
+                route.file1, route.file2, route.file3
             ).filter { it.isNotBlank() }
             val fileDescriptions = listOfNotNull(
-                route.descriptionFile1,
-                route.descriptionFile2,
-                route.descriptionFile3
+                route.descriptionFile1, route.descriptionFile2, route.descriptionFile3
             ).filter { it.isNotBlank() }
             if (files.isNotEmpty() && files.size == fileDescriptions.size) {
                 textView("Downloads") {
@@ -176,14 +163,10 @@ class WasteAbcRouteViewController(
             }
 
             val links = listOfNotNull(
-                route.link1,
-                route.link2,
-                route.link3
+                route.link1, route.link2, route.link3
             ).filter { it.isNotBlank() }
             val linkDescriptions = listOfNotNull(
-                route.descriptionLink1,
-                route.descriptionLink2,
-                route.descriptionLink3
+                route.descriptionLink1, route.descriptionLink2, route.descriptionLink3
             ).filter { it.isNotBlank() }
             if (links.isNotEmpty() && links.size == linkDescriptions.size) {
                 textView("Links") {

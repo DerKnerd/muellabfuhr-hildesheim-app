@@ -78,7 +78,7 @@ SELECT l.*
 FROM abfuhrLocation_fts f
 JOIN abfuhrLocation l ON l.streetId = f.rowid
 WHERE abfuhrLocation_fts MATCH :keyword
-ORDER BY l.locality, l.district, l.street;
+ORDER BY bm25(abfuhrLocation_fts, 5.0, 10.0, 1.0);
 
 getPickupsByStreetId:
 SELECT *

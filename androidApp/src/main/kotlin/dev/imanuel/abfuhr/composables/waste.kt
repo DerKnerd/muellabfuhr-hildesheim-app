@@ -47,12 +47,10 @@ import androidx.core.net.toUri
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
-import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoutes
 import dev.imanuel.abfuhr.models.AbfallAbcWaste
 import dev.imanuel.abfuhr.search.SearchClient
-import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.ui.SimpleTopSearchBar
 import dev.imanuel.abfuhr.utils.firstSyncHappened
 import kotlinx.coroutines.Dispatchers
@@ -229,9 +227,7 @@ fun DisposalRouteDialog(
 @Composable
 fun WasteAbcScreen(
     navController: NavController,
-    syncClient: SyncClient = koinInject(),
-    abfuhrClient: AbfuhrClient = koinInject(),
-    database: AbfallDatabase = koinInject()
+    searchClient: SearchClient = koinInject(),
 ) {
     val context = LocalContext.current
 
@@ -242,10 +238,6 @@ fun WasteAbcScreen(
 
     var wastes by remember { mutableStateOf(emptyList<AbfallAbcWaste>()) }
 
-    val searchClient = remember {
-        SearchClient(abfuhrClient, database, syncClient, context.firstSyncHappened())
-    }
-
     val coroutineScope = rememberCoroutineScope()
 
     val configuration = LocalConfiguration.current
@@ -255,75 +247,8 @@ fun WasteAbcScreen(
     }
 
     LaunchedEffect(keyword) {
-        if (keyword.isBlank()) {
-            val routes = database.abfallAbcQueries.getAllDisposalRoutesByLanguage(currentLanguage)
-                .executeAsList()
-            val route = database.abfallAbcQueries.getAllDisposalRouteByLanguage(currentLanguage)
-                .executeAsList().map { m ->
-                    Pair(
-                        m.id,
-                        AbfallAbcDisposalRoute(
-                            title = m.title,
-                            description = m.description,
-                            street = m.street,
-                            zipcode = m.zipcode,
-                            city = m.city,
-                            openingHours = m.openingHours,
-                            fees = m.fees,
-                            link1 = m.link1,
-                            link2 = m.link2,
-                            link3 = m.link3,
-                            descriptionLink1 = m.descriptionLink1,
-                            descriptionLink2 = m.descriptionLink2,
-                            descriptionLink3 = m.descriptionLink3,
-                            file1 = m.file1,
-                            file2 = m.file2,
-                            file3 = m.file3,
-                            descriptionFile1 = m.descriptionFile1,
-                            descriptionFile2 = m.descriptionFile2,
-                            descriptionFile3 = m.descriptionFile3,
-                            symbol = null,
-                        )
-                    )
-                }
-            val mappings = database.abfallAbcQueries.getAllWasteMapping().executeAsList()
-            wastes =
-                database.abfallAbcQueries.getAllWasteByLanguage(currentLanguage).executeAsList().map {
-                    val tips =
-                        database.abfallAbcQueries.getWasteTipsByWasteId(it.id, it.language)
-                            .executeAsList()
-                    val routes = mappings.filter { f -> f.wasteId == it.id }
-                        .mapNotNull { m -> routes.firstOrNull { r -> r.id == m.routesId } }
-                        .map { m ->
-                            val alternativeRoute =
-                                route.firstOrNull { r -> r.first == m.alternativeRouteId }?.second
-                            val collection =
-                                route.firstOrNull { r -> r.first == m.collectionId }?.second
-                            val dischargePoint =
-                                route.firstOrNull { r -> r.first == m.dischargePointId }?.second
-                            AbfallAbcDisposalRoutes(
-                                id = m.id,
-                                language = m.language,
-                                alternativeRoute = alternativeRoute,
-                                collection = collection,
-                                dischargePoint = dischargePoint,
-                            )
-                        }
-
-                    AbfallAbcWaste(
-                        id = it.id,
-                        language = it.language,
-                        title = it.title,
-                        description = it.description,
-                        tips = tips,
-                        routes = routes,
-                        symbol = null,
-                    )
-                }
-        } else {
-            wastes = searchClient.searchAbfallAbc(keyword, currentLanguage)
-            searched = true
-        }
+        wastes = searchClient.searchAbfallAbc(keyword, currentLanguage)
+        searched = true
     }
 
     Scaffold(

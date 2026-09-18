@@ -77,7 +77,6 @@ import dev.imanuel.abfuhr.database.AbfuhrPickup
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
-import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.ui.SimpleTopSearchBar
 import dev.imanuel.abfuhr.utils.clearAbfuhrNotifications
 import dev.imanuel.abfuhr.utils.createAbfuhrNotifications
@@ -379,14 +378,10 @@ enum class PickupTabs {
 @Composable
 fun PickupScreen(
     navController: NavController,
-    syncClient: SyncClient = koinInject(),
-    abfuhrClient: AbfuhrClient = koinInject(),
+    searchClient: SearchClient = koinInject(),
     database: AbfallDatabase = koinInject()
 ) {
     val context = LocalContext.current
-    val searchClient = remember {
-        SearchClient(abfuhrClient, database, syncClient, context.firstSyncHappened())
-    }
 
     val syncSuccessful = remember {
         context.firstSyncHappened()
@@ -456,35 +451,10 @@ fun PickupScreen(
         }
     }
     LaunchedEffect(locationAddressKeyword) {
-        if (locationAddressKeyword.isNotBlank()) {
-            loading = true
-            locations = searchClient.searchAbfuhr(locationAddressKeyword)
-            loading = false
-            searched = true
-        } else {
-            locations = database.abfuhrQueries.getAllLocations().executeAsList().map {
-                val pickups =
-                    database.abfuhrQueries.getPickupsByStreetId(it.streetId).executeAsList()
-                AbfuhrLocation(
-                    street = it.street,
-                    streetId = it.streetId,
-                    locality = it.locality,
-                    localityId = it.localityId,
-                    district = it.district,
-                    districtId = it.districtId,
-                    streetLatitude = it.streetLatitude,
-                    streetLongitude = it.streetLongitude,
-                    pickups = pickups.map { p ->
-                        dev.imanuel.abfuhr.models.AbfuhrPickup(
-                            streetId = p.streetId,
-                            date = Instant.fromEpochMilliseconds(p.date),
-                            type = p.type,
-                            isPostponed = p.isPostponed == 1L
-                        )
-                    },
-                )
-            }
-        }
+        loading = true
+        locations = searchClient.searchAbfuhr(locationAddressKeyword)
+        loading = false
+        searched = true
     }
 
     val locateMe = {

@@ -1,15 +1,12 @@
 package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
-import dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute
-import dev.imanuel.abfuhr.database.AbfallAbcWaste
-import dev.imanuel.abfuhr.database.AbfallDatabase
-import dev.imanuel.abfuhr.database.searchAbfallAbcByKeyword
+import dev.imanuel.abfuhr.models.AbfallAbcWaste
+import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.uikit.dsl.listView
 import kotlinx.coroutines.*
 import org.koin.mp.KoinPlatformTools
 import platform.Foundation.NSLocale
-import platform.Foundation.NSSelectorFromString
 import platform.Foundation.currentLocale
 import platform.Foundation.languageCode
 import platform.UIKit.*
@@ -31,11 +28,6 @@ private class WasteAbcSearchUpdaterBridge(
         onQueryChanged(text)
     }
 }
-
-private data class AbfallAbcData(
-    val waste: AbfallAbcWaste,
-    val routes: List<AbfallAbcDisposalRoute>
-)
 
 class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
     init {
@@ -59,7 +51,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
     private val currentLanguage: String
         get() = if (validLanguages.contains(NSLocale.currentLocale.languageCode)) NSLocale.currentLocale.languageCode else "de"
 
-    private val database: AbfallDatabase
+    private val searchClient: SearchClient
         get() = KoinPlatformTools.defaultContext().get().get()
 
     override fun viewDidLoad() {
@@ -67,12 +59,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
         view.setBackgroundColor(UIColor.systemBackgroundColor())
 
         setupSearchBar()
-        searchResults = database
-            .abfallAbcQueries
-            .getAllWasteByLanguage(currentLanguage)
-            .executeAsList()
-            .map { it.copy(title = it.title.trim()) }
-            .sortedBy { it.title }
+        updateSearchResults("")
         populateList()
     }
 
@@ -88,8 +75,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
                     accessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryDisclosureIndicator
                     onSelect {
                         navigationController?.pushViewController(
-                            createWasteAbcDetailViewController(waste),
-                            animated = true
+                            createWasteAbcDetailViewController(waste), animated = true
                         )
                     }
                 }
@@ -116,11 +102,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
         searchJob?.cancel()
         searchJob = ioScope.launch {
             val trimmed = query.trim()
-            searchResults = if (trimmed.isEmpty()) {
-                database.abfallAbcQueries.getAllWasteByLanguage(currentLanguage).executeAsList()
-            } else {
-                database.searchAbfallAbcByKeyword(currentLanguage, trimmed)
-            }
+            searchResults = searchClient.searchAbfallAbc(trimmed, currentLanguage)
             mainScope.launch {
                 populateList()
             }

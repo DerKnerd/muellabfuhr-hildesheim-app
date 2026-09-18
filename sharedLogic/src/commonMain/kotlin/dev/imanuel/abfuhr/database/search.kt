@@ -9,11 +9,21 @@ fun fts5PrefixQuery(value: String): String =
             "\"${token.replace("\"", "\"\"")}\"*"
         }
 
-fun AbfallDatabase.searchAddressByKeyword(keyword: String): List<AbfuhrLocation> =
-    abfuhrQueries.searchAbfuhrLocationByKeyword(fts5PrefixQuery(keyword)).executeAsList()
+fun AbfallDatabase.searchAddressByKeyword(keyword: String): List<AbfuhrLocation> {
+    return if (keyword.isEmpty()) {
+        abfuhrQueries.getAllLocations().executeAsList()
+    } else {
+        abfuhrQueries.searchAbfuhrLocationByKeyword(fts5PrefixQuery(keyword)).executeAsList()
+    }
+}
 
 fun AbfallDatabase.searchAbfallAbcByKeyword(
     language: String,
     keyword: String
-): List<AbfallAbcWaste> =
-    abfallAbcQueries.searchAbfallAbcByKeyword(language, fts5PrefixQuery(keyword)).executeAsList()
+): List<AbfallAbcWaste> {
+    return if (keyword.isEmpty()) {
+        abfallAbcQueries.getAllWasteByLanguage(language).executeAsList()
+    } else {
+        abfallAbcQueries.searchAbfallAbcByKeyword(language, fts5PrefixQuery(keyword)).executeAsList()
+    }
+}

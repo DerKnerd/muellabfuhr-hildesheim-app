@@ -1,10 +1,8 @@
 package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
-import dev.imanuel.abfuhr.database.AbfallAbcWaste
-import dev.imanuel.abfuhr.database.AbfallDatabase
+import dev.imanuel.abfuhr.models.AbfallAbcWaste
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
-import org.koin.mp.KoinPlatformTools
 import platform.UIKit.*
 
 class WasteAbcDetailViewController(
@@ -19,23 +17,8 @@ class WasteAbcDetailViewController(
         title = waste.title
     }
 
-    private val database: AbfallDatabase
-        get() = KoinPlatformTools.defaultContext().get().get()
-
     override fun viewDidLoad() {
         super.viewDidLoad()
-        val routes =
-            database
-                .abfallAbcQueries
-                .getDisposalRouteByWasteId(waste.id, waste.language)
-                .executeAsList()
-                .distinct()
-
-        val tips = database
-            .abfallAbcQueries
-            .getWasteTipsByWasteId(waste.id, waste.language)
-            .executeAsList()
-
         view.backgroundColor = UIColor.systemBackgroundColor()
 
         val detailsView = scrollableColumn {
@@ -44,12 +27,12 @@ class WasteAbcDetailViewController(
                 isSelectable = true
                 font = UIFont.systemFontOfSize(UIFont.systemFontSize)
             }
-            if (tips.isNotEmpty()) {
+            if (waste.tips.isNotEmpty()) {
                 textView("Tipps") {
                     padding(16.0, 8.0, 0.0, 8.0)
                     font = UIFont.systemFontOfSize(UIFont.labelFontSize)
                 }
-                textView(tips.joinToString("\n")) {
+                textView(waste.tips.joinToString("\n")) {
                     padding(8.0, 0.0)
                     isSelectable = true
                     font = UIFont.systemFontOfSize(UIFont.systemFontSize)
@@ -63,14 +46,16 @@ class WasteAbcDetailViewController(
                 isScrollEnabled = false
                 rowHeight = 44.0
 
+                val routes = waste.routes.flatMap {
+                    listOfNotNull(it.alternativeRoute, it.collection, it.dischargePoint)
+                }
                 for (route in routes) {
                     item(route.title.trim()) {
                         accessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryDisclosureIndicator
 
                         onSelect {
                             navigationController?.pushViewController(
-                                createWasteAbcRouteViewController(route, waste.language),
-                                animated = true
+                                createWasteAbcRouteViewController(route, waste.language), animated = true
                             )
                         }
                     }

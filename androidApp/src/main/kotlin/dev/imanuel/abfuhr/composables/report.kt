@@ -50,7 +50,6 @@ import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
-import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.utils.fetchFineLocation
 import dev.imanuel.abfuhr.utils.firstSyncHappened
 import dev.imanuel.abfuhr.utils.hasInternetConnection
@@ -69,14 +68,10 @@ private fun Bitmap.toJpegByteList(): ByteArray {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ReportWasteScreen(
-    syncClient: SyncClient = koinInject(),
     abfuhrClient: AbfuhrClient = koinInject(),
-    database: AbfallDatabase = koinInject()
+    searchClient: SearchClient = koinInject()
 ) {
     val context = LocalContext.current
-    val searchClient = remember {
-        SearchClient(abfuhrClient, database, syncClient, context.firstSyncHappened())
-    }
 
     val geolocationPermission = rememberPermissionState(
         android.Manifest.permission.ACCESS_FINE_LOCATION
