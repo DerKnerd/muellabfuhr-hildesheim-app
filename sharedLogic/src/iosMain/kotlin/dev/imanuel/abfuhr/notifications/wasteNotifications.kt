@@ -28,7 +28,7 @@ fun enqueueNextPickups(streetId: Long) {
         val pickupInstant = Instant.fromEpochMilliseconds(date)
         val pickupDate = pickupInstant.toLocalDateTime(timeZone).date
         val dayBefore = pickupDate.minus(1, DateTimeUnit.DAY)
-        val reminderDateTime = LocalDateTime(dayBefore.year, dayBefore.month, dayBefore.day, 18, 0, 0)
+        val reminderDateTime = LocalDateTime(dayBefore.year, dayBefore.month, dayBefore.day, 14, 0, 0)
         val reminderTimestamp = reminderDateTime.toInstant(timeZone).toEpochMilliseconds()
 
         IosNotificationManager.enqueueNotification(
