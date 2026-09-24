@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -111,7 +112,7 @@ fun MainComposable(
     val syncClientSyncing by syncClient.isSyncing.collectAsState()
     var syncing by remember { mutableStateOf(!context.firstSyncHappened() && syncClientSyncing) }
 
-    var activeScreen by remember { mutableStateOf(Screens.Pickup) }
+    var activeScreen by rememberSaveable { mutableStateOf(Screens.Pickup) }
 
     val locationEnabled = remember {
         context.isLocationEnabled()
