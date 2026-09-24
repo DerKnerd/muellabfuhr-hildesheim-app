@@ -23,6 +23,8 @@ fun AbfallDatabase.searchAbfallAbcByKeyword(
 ): List<AbfallAbcWaste> {
     return if (keyword.isEmpty()) {
         abfallAbcQueries.getAllWasteByLanguage(language).executeAsList()
+    } else if (keyword.length < 3) {
+        abfallAbcQueries.searchAbfallAbcByShortKeyword(language, keyword).executeAsList()
     } else {
         abfallAbcQueries.searchAbfallAbcByKeyword(language, fts5PrefixQuery(keyword)).executeAsList()
     }

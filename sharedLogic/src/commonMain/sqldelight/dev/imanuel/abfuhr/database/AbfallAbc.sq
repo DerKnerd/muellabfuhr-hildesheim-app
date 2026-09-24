@@ -66,19 +66,36 @@ CREATE VIRTUAL TABLE abfallAbcWaste_fts USING fts5(
     tokenize = 'trigram'
 );
 
-CREATE TRIGGER abfallAbcWaste_ai AFTER INSERT ON abfallAbcWaste BEGIN
-  INSERT INTO abfallAbcWaste_fts(rowid, title, description)
-  VALUES (new.id, new.title, new.description);
+CREATE TRIGGER abfallAbcWaste_ai
+AFTER INSERT ON abfallAbcWaste
+BEGIN
+    INSERT INTO abfallAbcWaste_fts(
+        rowid, title, description
+    )
+    VALUES (
+        new.rowid, new.title, new.description
+    );
 END;
 
-CREATE TRIGGER abfallAbcWaste_ad AFTER DELETE ON abfallAbcWaste BEGIN
-  DELETE FROM abfallAbcWaste_fts WHERE rowid = old.id;
+CREATE TRIGGER abfallAbcWaste_ad
+AFTER DELETE ON abfallAbcWaste
+BEGIN
+    DELETE FROM abfallAbcWaste_fts
+    WHERE rowid = old.rowid;
 END;
 
-CREATE TRIGGER abfallAbcWaste_au AFTER UPDATE ON abfallAbcWaste BEGIN
-  DELETE FROM abfallAbcWaste_fts WHERE rowid = old.id;
-  INSERT INTO abfallAbcWaste_fts(rowid, title, description)
-  VALUES (new.id, new.title, new.description);
+CREATE TRIGGER abfallAbcWaste_au
+AFTER UPDATE ON abfallAbcWaste
+BEGIN
+    DELETE FROM abfallAbcWaste_fts
+    WHERE rowid = old.rowid;
+
+    INSERT INTO abfallAbcWaste_fts(
+        rowid, title, description
+    )
+    VALUES (
+        new.rowid, new.title, new.description
+    );
 END;
 
 CREATE VIRTUAL TABLE abfallAbcWasteTips_fts USING fts5(
@@ -185,10 +202,19 @@ SELECT last_insert_rowid();
 searchAbfallAbcByKeyword:
 SELECT w.*
 FROM abfallAbcWaste w
-JOIN abfallAbcWaste_fts f ON w.id = f.rowid
+JOIN abfallAbcWaste_fts f ON w.rowid = f.rowid
 WHERE w.language = :language
   AND abfallAbcWaste_fts MATCH :keyword
 ORDER BY bm25(abfallAbcWaste_fts, 10.0, 1.0);
+
+searchAbfallAbcByShortKeyword:
+SELECT *
+FROM abfallAbcWaste
+WHERE language = :language
+  AND (
+    title LIKE '%' || :keyword || '%'
+    OR description LIKE '%' || :keyword || '%'
+  );
 
 getWasteTipsByWasteId:
 SELECT tip

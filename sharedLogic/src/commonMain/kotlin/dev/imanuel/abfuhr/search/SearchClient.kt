@@ -5,7 +5,6 @@ import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.searchAbfallAbcByKeyword
 import dev.imanuel.abfuhr.database.searchAddressByKeyword
 import dev.imanuel.abfuhr.models.*
-import dev.imanuel.abfuhr.sync.SyncClient
 import org.koin.core.module.Module
 import kotlin.time.Instant
 

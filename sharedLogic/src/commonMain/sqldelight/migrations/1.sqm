@@ -1,0 +1,55 @@
+-- Remove the old triggers
+DROP TRIGGER IF EXISTS abfallAbcWaste_ai;
+DROP TRIGGER IF EXISTS abfallAbcWaste_ad;
+DROP TRIGGER IF EXISTS abfallAbcWaste_au;
+
+-- Recreate the FTS index
+DROP TABLE IF EXISTS abfallAbcWaste_fts;
+
+CREATE VIRTUAL TABLE abfallAbcWaste_fts USING fts5(
+    title,
+    description,
+    tokenize = 'trigram'
+);
+
+-- Insert
+CREATE TRIGGER abfallAbcWaste_ai
+AFTER INSERT ON abfallAbcWaste
+BEGIN
+    INSERT INTO abfallAbcWaste_fts(
+        rowid, title, description
+    )
+    VALUES (
+        new.rowid, new.title, new.description
+    );
+END;
+
+-- Delete
+CREATE TRIGGER abfallAbcWaste_ad
+AFTER DELETE ON abfallAbcWaste
+BEGIN
+    DELETE FROM abfallAbcWaste_fts
+    WHERE rowid = old.rowid;
+END;
+
+-- Update
+CREATE TRIGGER abfallAbcWaste_au
+AFTER UPDATE ON abfallAbcWaste
+BEGIN
+    DELETE FROM abfallAbcWaste_fts
+    WHERE rowid = old.rowid;
+
+    INSERT INTO abfallAbcWaste_fts(
+        rowid, title, description
+    )
+    VALUES (
+        new.rowid, new.title, new.description
+    );
+END;
+
+-- Populate the new index with existing records
+INSERT INTO abfallAbcWaste_fts(
+    rowid, title, description
+)
+SELECT rowid, title, description
+FROM abfallAbcWaste;
