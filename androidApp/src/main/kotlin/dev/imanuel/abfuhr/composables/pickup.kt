@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package dev.imanuel.abfuhr.composables
 
 import android.content.Context
@@ -46,6 +48,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -292,11 +296,20 @@ fun PickupCalendarDialog(
                     .padding(innerPadding)
                     .fillMaxSize(),
             ) {
+                val pullToRefreshState = rememberPullToRefreshState()
                 PullToRefreshBox(
                     isRefreshing = loading,
                     onRefresh = { loading = true },
+                    state = pullToRefreshState,
+                    modifier = Modifier.fillMaxSize(),
                     enabled = canRemindMe,
-                    modifier = Modifier.fillMaxSize()
+                    indicator = {
+                        PullToRefreshDefaults.LoadingIndicator(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            state = pullToRefreshState,
+                            isRefreshing = loading
+                        )
+                    }
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
