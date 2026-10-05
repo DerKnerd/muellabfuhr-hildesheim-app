@@ -20,6 +20,9 @@ import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrLocation
 import dev.imanuel.abfuhr.worker.PickupReminderWorker
 import dev.imanuel.abfuhr.worker.RefreshDataWorker
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
@@ -56,6 +59,9 @@ suspend fun Context.fetchFineLocation(): Location? {
             cancellationTokenSource.token
         ).await()
     } catch (e: Exception) {
+        if (e is CancellationException) {
+            currentCoroutineContext().ensureActive()
+        }
         null
     }
 }

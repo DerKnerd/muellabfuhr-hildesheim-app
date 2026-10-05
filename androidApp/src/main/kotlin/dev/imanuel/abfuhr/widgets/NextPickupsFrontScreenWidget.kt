@@ -150,7 +150,7 @@ class NextPickupsFrontScreenWidget : GlanceAppWidget() {
                                     for ((streetId, date, isPostponed, type) in pickups) {
                                         val trashCanIcon = when (type) {
                                             "B" -> R.drawable.trashcan_b
-                                            "R" -> R.drawable.trashcan_r
+                                            "R", "S" -> R.drawable.trashcan_r
                                             "P" -> R.drawable.trashcan_p
                                             "G" -> R.drawable.trashcan_g
                                             else -> continue
@@ -158,8 +158,9 @@ class NextPickupsFrontScreenWidget : GlanceAppWidget() {
                                         val trashCan = when (type) {
                                             "B" -> "Biotonne"
                                             "R" -> "Restmülltonne"
+                                            "S" -> "Restmülltonne (14 tägige Abfuhr)"
                                             "P" -> "Papiertonne"
-                                            "G" -> "gelbe Tonne"
+                                            "G" -> "Gelbe Tonne"
                                             else -> continue
                                         }
 

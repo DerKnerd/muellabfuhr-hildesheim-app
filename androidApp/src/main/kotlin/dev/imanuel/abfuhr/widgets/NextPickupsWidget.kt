@@ -1,31 +1,16 @@
 package dev.imanuel.abfuhr.widgets
 
 import android.content.Context
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.glance.GlanceId
-import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
-import androidx.glance.Image
-import androidx.glance.LocalContext
+import androidx.glance.*
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
-import androidx.glance.layout.Alignment
-import androidx.glance.layout.Column
-import androidx.glance.layout.Row
-import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
-import androidx.glance.layout.padding
-import androidx.glance.layout.size
+import androidx.glance.layout.*
 import androidx.glance.text.Text
 import androidx.glance.text.TextDefaults
 import dev.imanuel.abfuhr.R
@@ -143,7 +128,7 @@ class NextPickupsWidget : GlanceAppWidget() {
                                 for ((streetId, date, isPostponed, type) in pickups) {
                                     val trashCanIcon = when (type) {
                                         "B" -> R.drawable.trashcan_b
-                                        "R" -> R.drawable.trashcan_r
+                                        "R", "S" -> R.drawable.trashcan_r
                                         "P" -> R.drawable.trashcan_p
                                         "G" -> R.drawable.trashcan_g
                                         else -> continue
@@ -151,8 +136,9 @@ class NextPickupsWidget : GlanceAppWidget() {
                                     val trashCan = when (type) {
                                         "B" -> "Biotonne"
                                         "R" -> "Restmülltonne"
+                                        "S" -> "Restmülltonne (14 tägige Abfuhr)"
                                         "P" -> "Papiertonne"
-                                        "G" -> "gelbe Tonne"
+                                        "G" -> "Gelbe Tonne"
                                         else -> continue
                                     }
 
