@@ -542,7 +542,7 @@ fun PickupScreen(
                             onClick = { activeTab = PickupTabs.Active },
                         ) {
                             Text(
-                                "Gemerkte Adressen",
+                                "Meine Adressen",
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }

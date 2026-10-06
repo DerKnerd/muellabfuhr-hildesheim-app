@@ -330,7 +330,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             if (locationsWithReminder.isNotEmpty()) {
                 column {
                     padding(horizontal = 16.0, vertical = 0.0)
-                    add(UISegmentedControl(listOf("Suche", "Gemerkte Adressen")).apply {
+                    add(UISegmentedControl(listOf("Suche", "Meine Adressen")).apply {
                         selectedSegmentIndex = this@PickupViewController.selectedSegmentIndex
                         addTarget(
                             target = this@PickupViewController,
