@@ -325,6 +325,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
         }
 
         reloadReminder()
+        var tmpSpacer: UIView? = null
         val newPageView = column {
             if (locationsWithReminder.isNotEmpty()) {
                 column {
@@ -337,6 +338,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                             forControlEvents = UIControlEventValueChanged
                         )
                     })
+                    tmpSpacer = spacer()
                 }
             }
         }
@@ -368,11 +370,13 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 mainScope.launch {
                     loader.stopAnimating()
                     loader.removeFromSuperview()
+                    tmpSpacer?.removeFromSuperview()
                     populateSearchList()
                     showSearchBar()
                 }
             }
         } else {
+            tmpSpacer?.removeFromSuperview()
             populateReminderList()
             hideSearchBar()
         }
