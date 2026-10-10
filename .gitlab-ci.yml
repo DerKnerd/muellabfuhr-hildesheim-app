@@ -5,6 +5,10 @@ workflow:
     - if: $CI_COMMIT_TAG
     - if: $CI_COMMIT_BRANCH
 
+variables:
+  iosTagPattern: "/.*-ios$/"
+  androidTagPattern: "/.*-android$/"
+
 .build-base:
   image:
     name: registry.ulbricht.casa/docker-images/android-native-app:latest
@@ -87,6 +91,8 @@ build-android-release-app:
     - ./gradlew -Pci --console=plain :androidApp:bundle -PbuildDir=build --no-daemon
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG !~ $iosTagPattern
+    - when: never
     - if: $CI_COMMIT_TAG
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
@@ -126,6 +132,8 @@ deploy-android-production-app:
     TRACK: release
   stage: deploy-android
   rules:
+    - if: $CI_COMMIT_TAG !~ $iosTagPattern
+      when: never
     - if: $CI_COMMIT_TAG
 
 deploy-testflight:
@@ -158,4 +166,6 @@ deploy-appstore:
     - bundle update
     - bundle exec fastlane ios production
   rules:
+    - if: $CI_COMMIT_TAG !~ $androidTagPattern
+      when: never
     - if: $CI_COMMIT_TAG
