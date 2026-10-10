@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.util.removeSuffixIfPresent
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -8,11 +10,11 @@ plugins {
 }
 
 fun computeVersionName(): String {
-    return System.getenv("CI_COMMIT_TAG") ?: "1.0.0"
+    return (System.getenv("CI_COMMIT_TAG") ?: "1.0.0").removeSuffixIfPresent("-android")
 }
 
 fun computeVersionCode(): Int {
-    val versionSplit = (System.getenv("CI_COMMIT_TAG") ?: "1.0.0").split(".")
+    val versionSplit = computeVersionName().split(".")
     if (versionSplit.size != 3) {
         throw IllegalArgumentException("The version tag needs to be in the format major.minor.patch")
     }
@@ -140,7 +142,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(libs.androidx.glance)
-    implementation(libs.androidx.glance.material3)
     implementation(libs.androidx.glance.appwidget)
 
     implementation(project(":sharedLogic"))

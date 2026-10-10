@@ -19,7 +19,7 @@ def build_ios_app()
         app_identifier: "dev.imanuel.abfuhr"
     )
     increment_version_number(
-        version_number: ENV["APP_VERSION"],
+        version_number: ENV["APP_VERSION"].delete_suffix("-ios"),
         xcodeproj: "iosApp/iosApp.xcodeproj"
     )
     increment_build_number(
