@@ -107,7 +107,7 @@ deploy-android-alpha-app:
     TRACK: alpha
   stage: deploy-android
   rules:
-    - if: $CI_COMMIT_BRANCH == "rewrite"
+    - if: $CI_COMMIT_BRANCH == "main"
 
 deploy-android-beta-app:
   extends:
@@ -120,7 +120,7 @@ deploy-android-beta-app:
     TRACK: beta
   stage: deploy-android
   rules:
-    - if: $CI_COMMIT_BRANCH == "rewrite"
+    - if: $CI_COMMIT_BRANCH == "main"
 
 deploy-android-production-app:
   extends:
