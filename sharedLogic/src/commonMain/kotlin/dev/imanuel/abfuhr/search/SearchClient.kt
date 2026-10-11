@@ -97,21 +97,18 @@ class SearchClient(
         val locations = database.searchAddressByKeyword(keyword = keyword)
 
         return locations.map { location ->
-            val pickups =
-                database.abfuhrQueries.getPickupsByStreetId(location.streetId).executeAsList()
-                    .map { pickup ->
-                        AbfuhrPickup(
-                            streetId = pickup.streetId,
-                            date = Instant.fromEpochMilliseconds(pickup.date),
-                            isPostponed = pickup.isPostponed == 1L,
-                            type = pickup.type,
-                        )
-                    }
             AbfuhrLocation(
                 street = location.street,
                 locality = location.locality,
                 district = location.district,
-                pickups = pickups,
+                pickups = listOf(
+                    AbfuhrPickup(
+                        location.streetId,
+                        Instant.fromEpochMilliseconds(location.pickupDate ?: 0),
+                        location.pickupIsPostponed == 1L,
+                        location.pickupType ?: ""
+                    )
+                ),
                 streetId = location.streetId,
                 localityId = location.localityId,
                 districtId = location.districtId,
@@ -123,7 +120,6 @@ class SearchClient(
 
     fun searchAbfuhrByGeolocation(lat: Double, lon: Double): List<AbfuhrLocation> {
         if (!isSyncCompletedAndSuccessful) {
-            // Searching by geolocation is not supported on the server for privacy reasons
             return emptyList()
         }
 

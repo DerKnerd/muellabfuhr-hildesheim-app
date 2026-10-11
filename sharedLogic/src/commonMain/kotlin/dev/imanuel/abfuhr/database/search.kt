@@ -1,5 +1,7 @@
 package dev.imanuel.abfuhr.database
 
+import kotlin.time.Clock
+
 fun fts5PrefixQuery(value: String): String =
     value
         .trim()
@@ -9,11 +11,41 @@ fun fts5PrefixQuery(value: String): String =
             "\"${token.replace("\"", "\"\"")}\"*"
         }
 
-fun AbfallDatabase.searchAddressByKeyword(keyword: String): List<AbfuhrLocation> {
+fun AbfallDatabase.searchAddressByKeyword(keyword: String): List<GetAllLocationsWithNextPickup> {
     return if (keyword.isEmpty()) {
-        abfuhrQueries.getAllLocations().executeAsList()
+        abfuhrQueries.getAllLocationsWithNextPickup(Clock.System.now().toEpochMilliseconds()).executeAsList()
     } else {
-        abfuhrQueries.searchAbfuhrLocationByKeyword(fts5PrefixQuery(keyword)).executeAsList()
+        abfuhrQueries.searchLocationsWithNextPickup(
+            Clock.System.now().toEpochMilliseconds(),
+            fts5PrefixQuery(keyword)
+        ) { streetId,
+            street,
+            locality,
+            localityId,
+            district,
+            districtId,
+            streetLatitude,
+            streetLongitude,
+            hasReminder,
+            pickupDate,
+            pickupIsPostponed,
+            pickupType ->
+            GetAllLocationsWithNextPickup(
+                streetId = streetId,
+                street = street,
+                locality = locality,
+                localityId = localityId,
+                district = district,
+                districtId = districtId,
+                streetLatitude = streetLatitude,
+                streetLongitude = streetLongitude,
+                hasReminder = hasReminder,
+                pickupDate = pickupDate,
+                pickupIsPostponed = pickupIsPostponed,
+                pickupType = pickupType
+            )
+        }
+            .executeAsList()
     }
 }
 

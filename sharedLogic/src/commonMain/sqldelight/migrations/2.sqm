@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS idx_abfuhr_pickup_street_date
+ON abfuhrPickup(streetId, date);

@@ -90,6 +90,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
 
     private var locationsWithReminder: List<dev.imanuel.abfuhr.database.AbfuhrLocation> = emptyList()
     private var filteredLocations: List<AbfuhrLocation> = emptyList()
+    private var isFiltered = false
 
     override fun viewWillAppear(animated: Boolean) {
         super.viewWillAppear(animated)
@@ -113,6 +114,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 } else {
                     searchJob?.cancel()
                     searchJob = ioScope.launch {
+                        isFiltered = true
                         filteredLocations = searchClient.searchAbfuhrByGeolocation(latitude, longitude)
                         mainScope.launch {
                             populateSearchList()
@@ -156,7 +158,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
     }
 
     private fun populateSearchList() {
-        val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped, true) {
+        val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped, !isFiltered) {
             backgroundColor = UIColor.systemBackgroundColor()
             separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension
@@ -370,6 +372,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                     loader.stopAnimating()
                     loader.removeFromSuperview()
                     tmpSpacer?.removeFromSuperview()
+                    isFiltered = false
                     populateSearchList()
                     showSearchBar()
                 }
@@ -399,6 +402,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 searchJob = ioScope.launch {
                     filteredLocations = searchClient.searchAbfuhr(query)
                     mainScope.launch {
+                        isFiltered = query.isNotEmpty()
                         populateSearchList()
                     }
                 }

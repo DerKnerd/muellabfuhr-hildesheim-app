@@ -19,6 +19,7 @@ import org.koin.mp.KoinPlatformTools
 import platform.Foundation.*
 import platform.UIKit.*
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class PickupDetailViewController(
     private val location: AbfuhrLocation
@@ -52,7 +53,17 @@ class PickupDetailViewController(
             "${location.street} ${location.district}"
         }
 
-        nextPickups = location.pickups.filter { it.date >= Clock.System.now() }
+        nextPickups = database.abfuhrQueries.getPickupsByStreetIdAndDate(
+            location.streetId,
+            Clock.System.now().toEpochMilliseconds()
+        ) { streetId, date, isPostponed, type ->
+            AbfuhrPickup(
+                streetId,
+                Instant.fromEpochMilliseconds(date),
+                isPostponed == 1L,
+                type
+            )
+        }.executeAsList()
 
         val pickupsListView = listView(UITableViewStyle.UITableViewStyleGrouped) {
             backgroundColor = UIColor.systemBackgroundColor()

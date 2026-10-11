@@ -142,7 +142,7 @@ deploy-testflight:
     - .ios-base
   variables:
     FL_BUILD_NUMBER_BUILD_NUMBER: $CI_JOB_ID
-    APP_VERSION: 1.0.0
+    APP_VERSION: 2.0.0
   needs:
     - lint-release-app
     - read-secure-files
