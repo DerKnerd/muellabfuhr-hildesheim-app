@@ -8,7 +8,6 @@ import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.models.AbfuhrPickup
 import dev.imanuel.abfuhr.search.SearchClient
-import dev.imanuel.abfuhr.uikit.dsl.ProgressIndicatorStyle
 import dev.imanuel.abfuhr.uikit.dsl.activityIndicator
 import dev.imanuel.abfuhr.uikit.dsl.column
 import dev.imanuel.abfuhr.uikit.dsl.listView
@@ -157,7 +156,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
     }
 
     private fun populateSearchList() {
-        val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped) {
+        val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped, true) {
             backgroundColor = UIColor.systemBackgroundColor()
             separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension
@@ -170,7 +169,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 timeZone = NSTimeZone.localTimeZone
             }
 
-            loop@ for (location in filteredLocations) {
+            for (location in filteredLocations) {
                 val nextPickups = location.pickups.filter { it.date >= Clock.System.now() }
                 val date = formatter.stringFromDate(nextPickups.first().date.toNSDate())
 

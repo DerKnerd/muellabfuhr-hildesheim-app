@@ -3,9 +3,10 @@
 package dev.imanuel.abfuhr.uikit.dsl
 
 import kotlinx.cinterop.*
-import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGRectZero
 import platform.Foundation.NSIndexPath
 import platform.UIKit.*
+import platform.darwin.NSInteger
 import platform.darwin.NSObject
 import platform.objc.OBJC_ASSOCIATION_RETAIN_NONATOMIC
 import platform.objc.objc_setAssociatedObject
@@ -101,12 +102,140 @@ class ListItemCellBuilder {
     }
 }
 
+class TableViewBridge(
+    items: List<ListItemModel>,
+    sectionTitlesByFirstLetter: Boolean
+) : NSObject(), UITableViewDataSourceProtocol, UITableViewDelegateProtocol {
+
+    private val groupedSections =
+        if (sectionTitlesByFirstLetter) {
+            items
+                .groupBy { it.title.firstOrNull()?.uppercase() ?: "#" }
+                .toList()
+                .sortedBy { it.first }
+                .map { (letter, entries) ->
+                    letter to entries.sortedBy { it.title }
+                }
+        } else {
+            listOf("" to items)
+        }
+
+    private val sectionTitles = if (sectionTitlesByFirstLetter) {
+        groupedSections.map { it.first }
+    } else {
+        emptyList()
+    }
+
+    private fun itemAt(indexPath: NSIndexPath) = groupedSections
+        .getOrNull(indexPath.section.toInt())
+        ?.second
+        ?.getOrNull(indexPath.row.toInt())
+
+    override fun numberOfSectionsInTableView(tableView: UITableView) = groupedSections.size.toLong()
+
+    @ObjCSignatureOverride
+    override fun tableView(tableView: UITableView, numberOfRowsInSection: Long) = groupedSections
+        .getOrNull(numberOfRowsInSection.toInt())
+        ?.second
+        ?.size
+        ?.toLong() ?: 0L
+
+    override fun sectionIndexTitlesForTableView(tableView: UITableView) = sectionTitles
+
+    @ObjCSignatureOverride
+    override fun tableView(tableView: UITableView, titleForHeaderInSection: Long) =
+        sectionTitles.getOrNull(titleForHeaderInSection.toInt())
+
+    @ObjCSignatureOverride
+    override fun tableView(tableView: UITableView, sectionForSectionIndexTitle: String, atIndex: NSInteger) =
+        sectionTitles
+            .indexOf(sectionForSectionIndexTitle)
+            .takeIf { it >= 0 }
+            ?.toLong() ?: 0L
+
+    @ObjCSignatureOverride
+    override fun tableView(tableView: UITableView, cellForRowAtIndexPath: NSIndexPath): UITableViewCell {
+        val item = itemAt(cellForRowAtIndexPath) ?: return UITableViewCell()
+
+        item.customCellProvider?.let {
+            return it(tableView, cellForRowAtIndexPath)
+        }
+
+        val reuseId = "DefaultDslCell"
+        val cell = tableView.dequeueReusableCellWithIdentifier(reuseId)
+            ?: UITableViewCell(
+                style = UITableViewCellStyle.UITableViewCellStyleSubtitle,
+                reuseIdentifier = reuseId
+            )
+
+        cell.textLabel?.apply {
+            text = item.title
+            textColor = item.titleColor ?: UIColor.labelColor
+            font = item.titleFont ?: UIFont.preferredFontForTextStyle(
+                UIFontTextStyleBody
+            )
+        }
+
+        cell.detailTextLabel?.apply {
+            text = item.subtitle
+            textColor = item.subtitleColor ?: UIColor.secondaryLabelColor
+            font = item.subtitleFont ?: UIFont.preferredFontForTextStyle(
+                UIFontTextStyleSubheadline
+            )
+        }
+
+        cell.imageView?.apply {
+            image = if (item.iconTintColor != null) {
+                item.icon?.imageWithRenderingMode(
+                    UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate
+                )
+            } else {
+                item.icon
+            }
+            tintColor = item.iconTintColor ?: UIColor.labelColor
+        }
+
+        cell.apply {
+            accessoryType = item.accessoryType
+            backgroundColor = item.backgroundColor ?: UIColor.clearColor
+            tintColor = item.tintColor ?: UIColor.systemBlueColor
+            userInteractionEnabled = item.isEnabled
+        }
+
+        return cell
+    }
+
+    @ObjCSignatureOverride
+    override fun tableView(tableView: UITableView, didSelectRowAtIndexPath: NSIndexPath) {
+        tableView.deselectRowAtIndexPath(
+            didSelectRowAtIndexPath,
+            animated = true
+        )
+
+        itemAt(didSelectRowAtIndexPath)?.onSelect?.invoke()
+    }
+}
+
+private val tableViewBridgeKey: COpaquePointer = nativeHeap.alloc<ByteVar>().ptr
+
 @UIKitDsl
-class ListSectionBuilder(
-    var headerTitle: String? = null,
-    var footerTitle: String? = null
+class ListItemsBuilder(
+    val style: UITableViewStyle = UITableViewStyle.UITableViewStylePlain,
+    val sectionTitlesByFirstLetter: Boolean,
 ) {
-    val items = mutableListOf<ListItemModel>()
+    val tableView: UITableView = UITableView(frame = CGRectZero.readValue(), style = style)
+
+    var backgroundColor: UIColor? = null
+    var separatorStyle: UITableViewCellSeparatorStyle? = null
+    var separatorColor: UIColor? = null
+    var isScrollEnabled: Boolean = true
+    var rowHeight: Double = UITableViewAutomaticDimension
+    var estimatedRowHeight: Double = 44.0
+    var tableHeaderView: UIView? = null
+    var tableFooterView: UIView? = null
+    var height: Double? = null
+
+    private var allItems = mutableListOf<ListItemModel>()
 
     fun item(
         title: String,
@@ -119,167 +248,7 @@ class ListSectionBuilder(
         b.subtitle = subtitle
         b.icon = icon
         b.builder()
-        items.add(b.buildModel())
-    }
-
-    fun <T> items(
-        itemList: Iterable<T>,
-        itemContent: ListItemCellBuilder.(T) -> Unit
-    ) {
-        for (item in itemList) {
-            val b = ListItemCellBuilder()
-            b.itemContent(item)
-            items.add(b.buildModel())
-        }
-    }
-
-    fun customItem(
-        onSelect: (() -> Unit)? = null,
-        cellProvider: (UITableView, NSIndexPath) -> UITableViewCell
-    ) {
-        items.add(
-            ListItemModel(
-                title = "",
-                customCellProvider = cellProvider,
-                onSelect = onSelect
-            )
-        )
-    }
-}
-
-class ListSection(
-    val headerTitle: String?,
-    val footerTitle: String?,
-    val items: List<ListItemModel>
-)
-
-class TableViewBridge(
-    private val sections: List<ListSection>
-) : NSObject(), UITableViewDataSourceProtocol, UITableViewDelegateProtocol {
-
-    override fun numberOfSectionsInTableView(tableView: UITableView): Long {
-        return sections.size.toLong()
-    }
-
-    @ObjCSignatureOverride
-    override fun tableView(tableView: UITableView, numberOfRowsInSection: Long): Long {
-        val sec = sections.getOrNull(numberOfRowsInSection.toInt()) ?: return 0L
-        return sec.items.size.toLong()
-    }
-
-    @ObjCSignatureOverride
-    override fun tableView(tableView: UITableView, cellForRowAtIndexPath: NSIndexPath): UITableViewCell {
-        val sectionIndex = cellForRowAtIndexPath.section.toInt()
-        val rowIndex = cellForRowAtIndexPath.row.toInt()
-        val item = sections.getOrNull(sectionIndex)?.items?.getOrNull(rowIndex)
-            ?: return UITableViewCell()
-
-        if (item.customCellProvider != null) {
-            return item.customCellProvider!!.invoke(tableView, cellForRowAtIndexPath)
-        }
-
-        val reuseId = "DefaultDslCell"
-        var cell = tableView.dequeueReusableCellWithIdentifier(reuseId)
-        if (cell == null) {
-            cell = UITableViewCell(style = UITableViewCellStyle.UITableViewCellStyleSubtitle, reuseIdentifier = reuseId)
-        }
-
-        cell.textLabel?.setText(item.title)
-        cell.detailTextLabel?.setText(item.subtitle ?: "")
-        cell.imageView?.apply {
-            if (item.iconTintColor != null) {
-                image = item.icon?.imageWithRenderingMode(
-                    UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate
-                )
-                tintColor = item.iconTintColor!!
-            } else {
-                image = item.icon
-            }
-        }
-        cell.setAccessoryType(item.accessoryType)
-        item.titleColor?.let { cell.textLabel?.setTextColor(it) }
-        item.subtitleColor?.let { cell.detailTextLabel?.setTextColor(it) }
-        item.titleFont?.let { cell.textLabel?.setFont(it) }
-        item.subtitleFont?.let { cell.detailTextLabel?.setFont(it) }
-        item.backgroundColor?.let { cell.setBackgroundColor(it) }
-        item.tintColor?.let { cell.setTintColor(it) }
-        cell.setUserInteractionEnabled(item.isEnabled)
-
-        return cell
-    }
-
-    @ObjCSignatureOverride
-    override fun tableView(tableView: UITableView, titleForHeaderInSection: Long): String? {
-        return sections.getOrNull(titleForHeaderInSection.toInt())?.headerTitle
-    }
-
-    @ObjCSignatureOverride
-    override fun tableView(tableView: UITableView, titleForFooterInSection: Long): String? {
-        return sections.getOrNull(titleForFooterInSection.toInt())?.footerTitle
-    }
-
-    @ObjCSignatureOverride
-    override fun tableView(tableView: UITableView, didSelectRowAtIndexPath: NSIndexPath) {
-        tableView.deselectRowAtIndexPath(didSelectRowAtIndexPath, animated = true)
-        val sectionIndex = didSelectRowAtIndexPath.section.toInt()
-        val rowIndex = didSelectRowAtIndexPath.row.toInt()
-        val item = sections.getOrNull(sectionIndex)?.items?.getOrNull(rowIndex)
-        item?.onSelect?.invoke()
-    }
-}
-
-private val tableViewBridgeKey: COpaquePointer = nativeHeap.alloc<ByteVar>().ptr
-
-@UIKitDsl
-class ListItemsBuilder(
-    val style: UITableViewStyle = UITableViewStyle.UITableViewStylePlain
-) {
-    val tableView: UITableView = UITableView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0), style = style)
-
-    var backgroundColor: UIColor? = null
-    var separatorStyle: UITableViewCellSeparatorStyle? = null
-    var separatorColor: UIColor? = null
-    var isScrollEnabled: Boolean = true
-    var rowHeight: Double = UITableViewAutomaticDimension
-    var estimatedRowHeight: Double = 44.0
-    var tableHeaderView: UIView? = null
-    var tableFooterView: UIView? = null
-    var height: Double? = null
-
-    private val sectionBuilders = mutableListOf<ListSectionBuilder>()
-    private val defaultSection = ListSectionBuilder()
-
-    fun section(
-        header: String? = null,
-        footer: String? = null,
-        builder: ListSectionBuilder.() -> Unit
-    ) {
-        val s = ListSectionBuilder(header, footer)
-        s.builder()
-        sectionBuilders.add(s)
-    }
-
-    fun item(
-        title: String,
-        subtitle: String? = null,
-        icon: UIImage? = null,
-        builder: ListItemCellBuilder.() -> Unit = {}
-    ) {
-        defaultSection.item(title, subtitle, icon, builder)
-    }
-
-    fun <T> items(
-        itemList: Iterable<T>,
-        itemContent: ListItemCellBuilder.(T) -> Unit
-    ) {
-        defaultSection.items(itemList, itemContent)
-    }
-
-    fun customItem(
-        onSelect: (() -> Unit)? = null,
-        cellProvider: (UITableView, NSIndexPath) -> UITableViewCell
-    ) {
-        defaultSection.customItem(onSelect, cellProvider)
+        allItems.add(b.buildModel())
     }
 
     fun build(): UITableView {
@@ -292,29 +261,12 @@ class ListItemsBuilder(
         tableHeaderView?.let { tableView.setTableHeaderView(it) }
         tableFooterView?.let { tableView.setTableFooterView(it) }
 
-        val allSections = if (sectionBuilders.isNotEmpty()) {
-            val list = mutableListOf<ListSection>()
-            if (defaultSection.items.isNotEmpty()) {
-                list.add(
-                    ListSection(
-                        defaultSection.headerTitle,
-                        defaultSection.footerTitle,
-                        defaultSection.items.toList()
-                    )
-                )
-            }
-            list.addAll(sectionBuilders.map { ListSection(it.headerTitle, it.footerTitle, it.items.toList()) })
-            list
-        } else {
-            listOf(ListSection(defaultSection.headerTitle, defaultSection.footerTitle, defaultSection.items.toList()))
-        }
-
-        val bridge = TableViewBridge(allSections)
+        val bridge = TableViewBridge(allItems, sectionTitlesByFirstLetter)
         tableView.setDataSource(bridge)
         tableView.setDelegate(bridge)
         objc_setAssociatedObject(tableView, tableViewBridgeKey, bridge, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 
-        val totalItems = allSections.sumOf { it.items.size }
+        val totalItems = allItems.size
         val effectiveHeight = height ?: if (!isScrollEnabled) {
             val itemHeight =
                 if (rowHeight > 0.0 && rowHeight != UITableViewAutomaticDimension) rowHeight else (if (estimatedRowHeight > 0.0) estimatedRowHeight else 44.0)
@@ -331,9 +283,10 @@ class ListItemsBuilder(
 
 inline fun listView(
     style: UITableViewStyle = UITableViewStyle.UITableViewStylePlain,
+    sectionTitlesByFirstLetter: Boolean = false,
     builder: ListItemsBuilder.() -> Unit
 ): UITableView {
-    val b = ListItemsBuilder(style)
+    val b = ListItemsBuilder(style, sectionTitlesByFirstLetter)
     b.builder()
     return b.build()
 }

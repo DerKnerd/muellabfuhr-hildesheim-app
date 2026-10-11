@@ -220,9 +220,10 @@ abstract class BaseFlexLayoutBuilder(
 
     fun listView(
         style: UITableViewStyle = UITableViewStyle.UITableViewStylePlain,
+        sectionTitlesByFirstLetter: Boolean = false,
         builder: ListItemsBuilder.() -> Unit
     ): UITableView {
-        val lv = dev.imanuel.abfuhr.uikit.dsl.listView(style, builder)
+        val lv = dev.imanuel.abfuhr.uikit.dsl.listView(style, sectionTitlesByFirstLetter, builder)
         stackView.addArrangedSubview(lv)
         return lv
     }

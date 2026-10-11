@@ -64,7 +64,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
     }
 
     private fun populateList() {
-        val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped) {
+        val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped, true) {
             backgroundColor = UIColor.systemBackgroundColor()
             separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension

@@ -146,9 +146,10 @@ class LiquidGlassCardBuilder {
 
     fun listView(
         style: UITableViewStyle = UITableViewStyle.UITableViewStylePlain,
+        sectionTitlesByFirstLetter: Boolean = false,
         builder: ListItemsBuilder.() -> Unit
     ): UITableView {
-        val lv = dev.imanuel.abfuhr.uikit.dsl.listView(style, builder)
+        val lv = dev.imanuel.abfuhr.uikit.dsl.listView(style, sectionTitlesByFirstLetter, builder)
         childViews.add(lv)
         return lv
     }
@@ -243,12 +244,27 @@ class LiquidGlassCardBuilder {
                     child.trailingAnchor.constraintEqualToAnchor(contentView.trailingAnchor, constant = -rightPadding),
                 )
                 if (index == 0) {
-                    constraints.add(child.topAnchor.constraintEqualToAnchor(contentView.topAnchor, constant = topPadding))
+                    constraints.add(
+                        child.topAnchor.constraintEqualToAnchor(
+                            contentView.topAnchor,
+                            constant = topPadding
+                        )
+                    )
                 } else {
-                    constraints.add(child.topAnchor.constraintEqualToAnchor(childViews[index - 1].bottomAnchor, constant = 8.0))
+                    constraints.add(
+                        child.topAnchor.constraintEqualToAnchor(
+                            childViews[index - 1].bottomAnchor,
+                            constant = 8.0
+                        )
+                    )
                 }
                 if (index == childViews.lastIndex) {
-                    constraints.add(child.bottomAnchor.constraintEqualToAnchor(contentView.bottomAnchor, constant = -bottomPadding))
+                    constraints.add(
+                        child.bottomAnchor.constraintEqualToAnchor(
+                            contentView.bottomAnchor,
+                            constant = -bottomPadding
+                        )
+                    )
                 }
                 NSLayoutConstraint.activateConstraints(constraints)
             }
