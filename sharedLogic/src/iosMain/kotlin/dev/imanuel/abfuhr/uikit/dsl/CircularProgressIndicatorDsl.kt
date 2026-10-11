@@ -29,11 +29,6 @@ class ActivityIndicatorBuilder(
 
     var isAnimating: Boolean = true
 
-    fun style(indicatorStyle: ProgressIndicatorStyle) {
-        this.style = indicatorStyle.toNativeStyle()
-        this.indicatorView.setActivityIndicatorViewStyle(this.style)
-    }
-
     fun startAnimating() {
         indicatorView.startAnimating()
     }
@@ -41,8 +36,8 @@ class ActivityIndicatorBuilder(
     fun build(): UIActivityIndicatorView {
         indicatorView.translatesAutoresizingMaskIntoConstraints = false
 
-        indicatorView.setActivityIndicatorViewStyle(style)
-        indicatorView.setHidesWhenStopped(true)
+        indicatorView.activityIndicatorViewStyle = style
+        indicatorView.hidesWhenStopped = true
 
         if (isAnimating) {
             indicatorView.startAnimating()

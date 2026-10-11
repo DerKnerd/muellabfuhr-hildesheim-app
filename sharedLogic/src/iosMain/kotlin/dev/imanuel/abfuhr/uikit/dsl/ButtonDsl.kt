@@ -36,10 +36,6 @@ class ButtonBuilder(buttonType: Long = UIButtonTypeSystem) {
         }
     }
 
-    fun horizontalAlignment(alignment: UIControlContentHorizontalAlignment) {
-        button.setContentHorizontalAlignment(alignment)
-    }
-
     fun onClick(action: () -> Unit) {
         this.clickAction = action
     }
@@ -105,8 +101,8 @@ class IconButtonBuilder {
         }
 
         finalImage?.let { button.setImage(it, UIControlStateNormal) }
-        tintColor?.let { button.setTintColor(it) }
-        if (!(isGlass && hasGlassSupport())) backgroundColor?.let { button.setBackgroundColor(it) }
+        tintColor?.let { button.tintColor = it }
+        if (!(isGlass && hasGlassSupport())) backgroundColor?.let { button.backgroundColor = it }
 
         menu?.let { button.menu = it }
         showsMenuAsPrimaryAction.let { button.showsMenuAsPrimaryAction = it }

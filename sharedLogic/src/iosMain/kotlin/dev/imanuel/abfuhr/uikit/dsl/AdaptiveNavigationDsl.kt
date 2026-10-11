@@ -50,7 +50,7 @@ class AdaptiveNavigationItem(
         val vc = UIViewController()
         if (contentView != null) {
             vc.view.addSubview(contentView)
-            contentView.setTranslatesAutoresizingMaskIntoConstraints(false)
+            contentView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activateConstraints(
                 listOf(
                     contentView.topAnchor.constraintEqualToAnchor(vc.view.topAnchor),
@@ -215,7 +215,7 @@ class AdaptiveNavigationController(
             onItemSelectedCallback?.invoke(idx, item)
         }
 
-        tabController.setDelegate(bridge)
+        tabController.delegate = bridge
 
         objc_setAssociatedObject(
             tabController,
@@ -227,7 +227,7 @@ class AdaptiveNavigationController(
         if (allItems.isNotEmpty()) {
             val targetIndex = selectedIndex.coerceIn(0, allItems.size - 1)
 
-            tabController.setSelectedIndex(targetIndex.toULong())
+            tabController.selectedIndex = targetIndex.toULong()
         }
 
         this.tabBarController = tabController
@@ -246,7 +246,7 @@ class AdaptiveNavigationController(
     private fun embedChild(child: UIViewController) {
         addChildViewController(child)
         view.addSubview(child.view)
-        child.view.setTranslatesAutoresizingMaskIntoConstraints(false)
+        child.view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activateConstraints(
             listOf(
                 child.view.topAnchor.constraintEqualToAnchor(view.topAnchor),
@@ -264,7 +264,7 @@ class AdaptiveNavigationController(
         this.selectedIndex = index
         val item = allItems[index]
 
-        tabBarController?.setSelectedIndex(index.toULong())
+        tabBarController?.selectedIndex = index.toULong()
 
         if (notify) {
             onItemSelectedCallback?.invoke(index, item)

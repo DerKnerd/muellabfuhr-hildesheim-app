@@ -20,7 +20,7 @@ class DialogActionBuilder(
                 actionHandler?.invoke(alertAction)
             }
         }
-        action.setEnabled(isEnabled)
+        action.enabled = isEnabled
         return action
     }
 }
@@ -75,7 +75,7 @@ class DialogBuilder(
 
         preferredActionIndex?.let { index ->
             if (index in actions.indices) {
-                controller.setPreferredAction(actions[index])
+                controller.preferredAction = actions[index]
             }
         }
 

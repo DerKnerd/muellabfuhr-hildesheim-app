@@ -76,11 +76,9 @@ class PickupDetailViewController(
                 timeZone = NSTimeZone.localTimeZone
             }
 
-            for (pickup in nextPickups) {
-                val date = formatter.stringFromDate(
-                    pickup.date.toNSDate()
-                )
-                val trashCan = when (pickup.type) {
+            for ((_, date, _, type) in nextPickups) {
+                val formattedDate = formatter.stringFromDate(date.toNSDate())
+                val trashCan = when (type) {
                     "B" -> "Biotonne"
                     "R" -> "Restmülltonne"
                     "S" -> "Restmülltonne (14-tägige Abfuhr)"
@@ -88,7 +86,7 @@ class PickupDetailViewController(
                     "P" -> "Papiertonne"
                     else -> continue
                 }
-                val tintColor = when (pickup.type) {
+                val tintColor = when (type) {
                     "B" -> UIColor.systemGreenColor
                     "R", "S" -> UIColor.darkGrayColor
                     "G" -> UIColor.systemYellowColor
@@ -97,7 +95,7 @@ class PickupDetailViewController(
                 }
                 item(
                     trashCan,
-                    subtitle = date,
+                    subtitle = formattedDate,
                     icon = UIImage.imageNamed("Trashcan")
                 ) {
                     iconTintColor = tintColor
@@ -105,7 +103,7 @@ class PickupDetailViewController(
                 }
             }
         }
-        pickupsListView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        pickupsListView.translatesAutoresizingMaskIntoConstraints = false
 
         view.addSubview(pickupsListView)
 

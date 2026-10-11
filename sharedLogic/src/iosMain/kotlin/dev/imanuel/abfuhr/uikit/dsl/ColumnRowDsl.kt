@@ -3,7 +3,9 @@
 package dev.imanuel.abfuhr.uikit.dsl
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.readValue
 import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGRectZero
 import platform.UIKit.*
 
 @UIKitDsl
@@ -44,7 +46,7 @@ private fun LayoutDistribution.toStackViewDistribution(): UIStackViewDistributio
 abstract class BaseFlexLayoutBuilder(
     val axis: UILayoutConstraintAxis
 ) {
-    val stackView: UIStackView = UIStackView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0)).apply {
+    val stackView: UIStackView = UIStackView(frame = CGRectZero.readValue()).apply {
         setAxis(this@BaseFlexLayoutBuilder.axis)
         setAlignment(UIStackViewAlignmentFill)
         setDistribution(UIStackViewDistributionFill)
@@ -54,19 +56,19 @@ abstract class BaseFlexLayoutBuilder(
     var spacing: Double
         get() = stackView.spacing
         set(value) {
-            stackView.setSpacing(value)
+            stackView.spacing = value
         }
 
     var alignment: UIStackViewAlignment
         get() = stackView.alignment
         set(value) {
-            stackView.setAlignment(value)
+            stackView.alignment = value
         }
 
     var distribution: UIStackViewDistribution
         get() = stackView.distribution
         set(value) {
-            stackView.setDistribution(value)
+            stackView.distribution = value
         }
 
     var backgroundColor: UIColor? = null
@@ -83,8 +85,8 @@ abstract class BaseFlexLayoutBuilder(
     }
 
     fun padding(top: Double, left: Double, bottom: Double, right: Double) {
-        stackView.setLayoutMargins(UIEdgeInsetsMake(top, left, bottom, right))
-        stackView.setLayoutMarginsRelativeArrangement(true)
+        stackView.layoutMargins = UIEdgeInsetsMake(top, left, bottom, right)
+        stackView.layoutMarginsRelativeArrangement = true
     }
 
     fun padding(all: Double) {
@@ -99,51 +101,12 @@ abstract class BaseFlexLayoutBuilder(
         stackView.addArrangedSubview(view)
     }
 
-    fun spacer(size: Double? = null): UIView {
-        val spacerView = UIView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0))
-        spacerView.setTranslatesAutoresizingMaskIntoConstraints(false)
-        if (size != null) {
-            if (axis == UILayoutConstraintAxisVertical) {
-                spacerView.heightAnchor.constraintEqualToConstant(size).setActive(true)
-            } else {
-                spacerView.widthAnchor.constraintEqualToConstant(size).setActive(true)
-            }
-        } else {
-            spacerView.setContentHuggingPriority(1f, forAxis = axis)
-            spacerView.setContentCompressionResistancePriority(1f, forAxis = axis)
-        }
-        stackView.addArrangedSubview(spacerView)
-        return spacerView
-    }
-
-    fun divider(color: UIColor = UIColor.lightGrayColor, thickness: Double = 1.0): UIView {
-        val div = UIView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0))
-        div.setBackgroundColor(color)
-        div.setTranslatesAutoresizingMaskIntoConstraints(false)
-        if (axis == UILayoutConstraintAxisVertical) {
-            div.heightAnchor.constraintEqualToConstant(thickness).setActive(true)
-        } else {
-            div.widthAnchor.constraintEqualToConstant(thickness).setActive(true)
-        }
-        stackView.addArrangedSubview(div)
-        return div
-    }
-
     fun button(
         title: String? = null,
         buttonType: Long = UIButtonTypeSystem,
         builder: ButtonBuilder.() -> Unit = {}
     ): UIButton {
         val btn = dev.imanuel.abfuhr.uikit.dsl.button(title, buttonType, builder)
-        stackView.addArrangedSubview(btn)
-        return btn
-    }
-
-    fun iconButton(
-        systemName: String? = null,
-        builder: IconButtonBuilder.() -> Unit = {}
-    ): UIButton {
-        val btn = dev.imanuel.abfuhr.uikit.dsl.iconButton(systemName, builder)
         stackView.addArrangedSubview(btn)
         return btn
     }
@@ -174,16 +137,6 @@ abstract class BaseFlexLayoutBuilder(
         return tv
     }
 
-    fun activityIndicator(
-        style: UIActivityIndicatorViewStyle = UIActivityIndicatorViewStyleMedium,
-        isAnimating: Boolean = true,
-        builder: ActivityIndicatorBuilder.() -> Unit = {}
-    ): UIActivityIndicatorView {
-        val cpi = dev.imanuel.abfuhr.uikit.dsl.activityIndicator(style, isAnimating, builder)
-        stackView.addArrangedSubview(cpi)
-        return cpi
-    }
-
     fun label(
         text: String? = null,
         builder: LabelBuilder.() -> Unit = {}
@@ -212,26 +165,8 @@ abstract class BaseFlexLayoutBuilder(
         return col
     }
 
-    fun scrollableColumn(
-        spacing: Double = 8.0,
-        builder: ColumnBuilder.() -> Unit
-    ): UIScrollView {
-        val col = dev.imanuel.abfuhr.uikit.dsl.scrollableColumn(spacing = spacing, builder = builder)
-        stackView.addArrangedSubview(col)
-        return col
-    }
-
-    fun scrollableRow(
-        spacing: Double = 8.0,
-        builder: RowBuilder.() -> Unit
-    ): UIScrollView {
-        val r = dev.imanuel.abfuhr.uikit.dsl.scrollableRow(spacing = spacing, builder = builder)
-        stackView.addArrangedSubview(r)
-        return r
-    }
-
     fun buildStackView(): UIStackView {
-        backgroundColor?.let { stackView.setBackgroundColor(it) }
+        backgroundColor?.let { stackView.backgroundColor = it }
         cornerRadius?.let {
             stackView.layer.cornerRadius = it
             stackView.layer.masksToBounds = true
@@ -243,9 +178,9 @@ abstract class BaseFlexLayoutBuilder(
     }
 
     fun buildScrollView(): UIScrollView {
-        val scrollView = UIScrollView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0))
-        scrollView.setTranslatesAutoresizingMaskIntoConstraints(false)
-        backgroundColor?.let { scrollView.setBackgroundColor(it) }
+        val scrollView = UIScrollView(frame = CGRectZero.readValue())
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        backgroundColor?.let { scrollView.backgroundColor = it }
         scrollView.addSubview(buildStackView())
 
         if (axis == UILayoutConstraintAxisVertical) {
@@ -322,19 +257,4 @@ inline fun row(
     b.builder()
 
     return b.buildStackView()
-}
-
-inline fun scrollableRow(
-    spacing: Double = 8.0,
-    alignment: UIStackViewAlignment = UIStackViewAlignmentFill,
-    distribution: UIStackViewDistribution = UIStackViewDistributionFill,
-    builder: RowBuilder.() -> Unit
-): UIScrollView {
-    val b = RowBuilder()
-    b.spacing = spacing
-    b.alignment = alignment
-    b.distribution = distribution
-    b.builder()
-
-    return b.buildScrollView()
 }

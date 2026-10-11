@@ -56,7 +56,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
 
     override fun viewDidLoad() {
         super.viewDidLoad()
-        view.setBackgroundColor(UIColor.systemBackgroundColor())
+        view.backgroundColor = UIColor.systemBackgroundColor
 
         setupSearchBar()
         updateSearchResults("")
@@ -81,7 +81,7 @@ class WasteAbcViewController : UIViewController(nibName = null, bundle = null) {
             }
         }
 
-        newResultsView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        newResultsView.translatesAutoresizingMaskIntoConstraints = false
 
         resultsView?.removeFromSuperview()
         resultsView = newResultsView

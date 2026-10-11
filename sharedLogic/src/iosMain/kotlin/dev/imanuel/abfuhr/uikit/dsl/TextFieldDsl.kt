@@ -61,8 +61,8 @@ class TextFieldBuilder {
 
     fun buildSingleLine(): UITextField {
         placeholder?.let {
-            singleLineTextField.setPlaceholder(it)
-            singleLineTextField.setAccessibilityLabel(it)
+            singleLineTextField.placeholder = it
+            singleLineTextField.accessibilityLabel = it
         }
 
         if (rightView != null) {
@@ -74,12 +74,12 @@ class TextFieldBuilder {
             } else {
                 rightView!!
             }
-            singleLineTextField.setRightView(accessory)
-            singleLineTextField.setRightViewMode(rightViewMode)
+            singleLineTextField.rightView = accessory
+            singleLineTextField.rightViewMode = rightViewMode
         } else if (rightPadding != null && rightPadding!! > 0.0) {
             val paddingView = UIView(frame = CGRectMake(0.0, 0.0, rightPadding!!, 1.0))
-            singleLineTextField.setRightView(paddingView)
-            singleLineTextField.setRightViewMode(UITextFieldViewMode.UITextFieldViewModeAlways)
+            singleLineTextField.rightView = paddingView
+            singleLineTextField.rightViewMode = UITextFieldViewMode.UITextFieldViewModeAlways
         }
 
         singleLineTextField.textAlignment = textAlignment
@@ -115,7 +115,7 @@ class TextFieldBuilder {
             val delegateBridge = MultiLineTextFieldDelegateBridge(
                 onTextChanged = textChangedListener
             )
-            multiLineTextField.setDelegate(delegateBridge)
+            multiLineTextField.delegate = delegateBridge
             objc_setAssociatedObject(
                 multiLineTextField, textFieldDelegateKey, delegateBridge, OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )

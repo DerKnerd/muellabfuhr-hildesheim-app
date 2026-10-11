@@ -16,6 +16,7 @@ import dev.imanuel.abfuhr.sync.SyncClient
 import dev.imanuel.abfuhr.sync.syncModule
 import dev.imanuel.abfuhr.uikit.dsl.*
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.readValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,6 +25,7 @@ import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.mp.KoinPlatformTools
 import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGRectZero
 import platform.Foundation.NSUserDefaults
 import platform.UIKit.*
 import kotlin.experimental.ExperimentalObjCName
@@ -72,7 +74,7 @@ enum class AbfuhrNavDestination(
     }
 }
 
-class AbfuhrSyncLoadingView : UIView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0)) {
+class AbfuhrSyncLoadingView : UIView(frame = CGRectZero.readValue()) {
 
     val activityIndicator = activityIndicator {
         setTranslatesAutoresizingMaskIntoConstraints(false)
@@ -157,7 +159,7 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
         syncLoadingView.stopAnimating()
         val nav = mainNavigationController ?: return
         addChildViewController(nav)
-        nav.view.setTranslatesAutoresizingMaskIntoConstraints(false)
+        nav.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(nav.view)
 
         NSLayoutConstraint.activateConstraints(
@@ -194,7 +196,7 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
     }
 
     private fun setupLoadingView() {
-        syncLoadingView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        syncLoadingView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(syncLoadingView)
 
         NSLayoutConstraint.activateConstraints(

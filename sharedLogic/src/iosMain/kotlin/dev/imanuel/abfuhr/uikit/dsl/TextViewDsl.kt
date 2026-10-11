@@ -38,15 +38,15 @@ class TextViewBuilder {
         attributedText?.let { textView.attributedText = it }
         textColor?.let { textView.textColor = it }
         textView.font = font
-        textView.setTextAlignment(textAlignment)
-        textView.setSelectable(isSelectable)
+        textView.textAlignment = textAlignment
+        textView.selectable = isSelectable
         textView.setEditable(false)
-        textView.setScrollEnabled(isScrollEnabled)
+        textView.scrollEnabled = isScrollEnabled
         textView.backgroundColor = UIColor.clearColor
-        textView.setDataDetectorTypes(dataDetectorTypes)
+        textView.dataDetectorTypes = dataDetectorTypes
 
         insets?.let {
-            textView.setTextContainerInset(it)
+            textView.textContainerInset = it
         }
 
         return textView

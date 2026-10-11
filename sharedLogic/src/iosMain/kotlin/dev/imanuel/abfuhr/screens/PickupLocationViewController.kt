@@ -7,6 +7,7 @@ import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.models.AbfuhrPickup
+import dev.imanuel.abfuhr.notifications.dequeuePickups
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.uikit.dsl.activityIndicator
 import dev.imanuel.abfuhr.uikit.dsl.column
@@ -25,24 +26,6 @@ import platform.UIKit.*
 import platform.darwin.NSObject
 import kotlin.time.Clock
 import kotlin.time.Instant
-
-data class NextPickup(
-    val date: Long,
-    val type: String
-)
-
-data class LocationWithNextPickups(
-    val streetId: Long,
-    val street: String,
-    val locality: String,
-    val localityId: Long,
-    val district: String,
-    val districtId: Long,
-    val streetLatitude: Double,
-    val streetLongitude: Double,
-    val hasReminder: Long,
-    val nextPickups: List<NextPickup>
-)
 
 class PickupManagerDelegateBridge(
     private val onLocationUpdated: (CLLocation) -> Unit
@@ -99,7 +82,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
 
     override fun viewDidLoad() {
         super.viewDidLoad()
-        view.setBackgroundColor(UIColor.systemBackgroundColor())
+        view.backgroundColor = UIColor.systemBackgroundColor
 
         locationManagerDelegateBridge = PickupManagerDelegateBridge { location ->
             locationManager.stopUpdatingLocation()
@@ -217,7 +200,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             }
         }
 
-        newResultsView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        newResultsView.translatesAutoresizingMaskIntoConstraints = false
 
         resultsView?.removeFromSuperview()
         resultsView = newResultsView
@@ -229,6 +212,25 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
         val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped) {
             rowHeight = UITableViewAutomaticDimension
             estimatedRowHeight = 72.0
+
+            deleteIcon = UIImage.systemImageNamed("bell.slash.fill")
+            deleteTitle = "Erinnerung löschen"
+            onDelete = { streetId ->
+                if (streetId is Long) {
+                    ioScope.launch {
+                        database.abfuhrQueries.unsetReminder(streetId)
+                        dequeuePickups(streetId)
+                        reloadReminder()
+                        mainScope.launch {
+                            if (locationsWithReminder.isEmpty()){
+                                populateSearchList()
+                                setupPageView()
+                            }
+                            populateReminderList()
+                        }
+                    }
+                }
+            }
 
             val formatter = NSDateFormatter().apply {
                 dateStyle = NSDateFormatterMediumStyle
@@ -276,7 +278,8 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                             append(district)
                         }
                     },
-                    subtitle = nextPickupLine
+                    subtitle = nextPickupLine,
+                    item = streetId
                 ) {
                     accessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryDisclosureIndicator
                     onSelect {
@@ -308,7 +311,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
             }
         }
 
-        newResultsView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        newResultsView.translatesAutoresizingMaskIntoConstraints = false
 
         resultsView?.removeFromSuperview()
         resultsView = newResultsView
