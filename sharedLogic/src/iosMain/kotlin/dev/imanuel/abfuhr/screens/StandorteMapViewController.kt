@@ -6,7 +6,6 @@ import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.Location
 import dev.imanuel.abfuhr.uikit.dsl.AppColors
-import dev.imanuel.abfuhr.uikit.dsl.button
 import dev.imanuel.abfuhr.uikit.dsl.iconButton
 import dev.imanuel.abfuhr.uikit.dsl.mapView
 import dev.imanuel.abfuhr.uikit.dsl.showAlert
@@ -15,15 +14,11 @@ import kotlinx.cinterop.ObjCSignatureOverride
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.*
 import org.koin.mp.KoinPlatformTools
-import platform.CoreGraphics.CGSizeMake
 import platform.CoreLocation.*
 import platform.MapKit.*
 import platform.UIKit.*
 import platform.darwin.NSObject
 
-/**
- * Builds the text content for the location detail dialog matching the Compose AlertDialog.
- */
 val Location.dialogText: String
     get() = buildString {
         val desc = description.trim()
@@ -61,10 +56,7 @@ val Location.dialogText: String
         }
     }
 
-/**
- * Validates whether the coordinates are finite numbers within valid WGS84 geographic bounds
- * and not uninitialized/zero values.
- */
+
 private fun isValidCoordinate(latitude: Double, longitude: Double): Boolean {
     if (latitude.isNaN() || longitude.isNaN() || latitude.isInfinite() || longitude.isInfinite()) {
         return false
@@ -78,19 +70,9 @@ private fun isValidCoordinate(latitude: Double, longitude: Double): Boolean {
     return true
 }
 
-/**
- * Default fallback coordinates centered on Hildesheim.
- */
 private const val DEFAULT_HILDESHEIM_LATITUDE = 52.15
 private const val DEFAULT_HILDESHEIM_LONGITUDE = 9.95
 
-/**
- * Returns the appropriate marker glyph image for a given location type.
- * - "container": custom container vector icon
- * - "deponie", "dump": system default recycle icon ("arrow.3.trianglepath")
- * - "office": system default office building icon ("building.2" / "building")
- * - other: default pin icon ("mappin.and.ellipse")
- */
 val String.markerGlyph: UIImage?
     get() {
         val config = UIImageSymbolConfiguration.configurationWithPointSize(16.0)
@@ -111,30 +93,24 @@ val String.markerGlyph: UIImage?
         }
     }
 
-/**
- * Custom annotation associating an MKPointAnnotation with a database Location model.
- */
-class LocationPointAnnotation(
-    val location: Location
-) : MKPointAnnotation() {
+class LocationPointAnnotation(val location: Location) : MKPointAnnotation() {
     init {
-        val lat = if (isValidCoordinate(
-                location.latitude, location.longitude
-            )
-        ) location.latitude else DEFAULT_HILDESHEIM_LATITUDE
-        val lon = if (isValidCoordinate(
-                location.latitude, location.longitude
-            )
-        ) location.longitude else DEFAULT_HILDESHEIM_LONGITUDE
+        val lat = if (isValidCoordinate(location.latitude, location.longitude)) {
+            location.latitude
+        } else {
+            DEFAULT_HILDESHEIM_LATITUDE
+        }
+        val lon = if (isValidCoordinate(location.latitude, location.longitude)) {
+            location.longitude
+        } else {
+            DEFAULT_HILDESHEIM_LONGITUDE
+        }
         setCoordinate(CLLocationCoordinate2DMake(lat, lon))
         setTitle(location.name.trim())
         setSubtitle(location.description.trim())
     }
 }
 
-/**
- * MapView delegate bridge handling marker rendering, selection dialogs, and initial user location centering.
- */
 class StandorteMapDelegateBridge(
     private val onMarkerSelected: (Location) -> Unit, private val onUserLocationFirstDetected: (Double, Double) -> Unit
 ) : NSObject(), MKMapViewDelegateProtocol {
@@ -142,30 +118,60 @@ class StandorteMapDelegateBridge(
     private var hasCenteredOnUser = false
 
     @ObjCSignatureOverride
-    override fun mapView(mapView: MKMapView, viewForAnnotation: MKAnnotationProtocol): MKAnnotationView? {
+    override fun mapView(
+        mapView: MKMapView,
+        viewForAnnotation: MKAnnotationProtocol
+    ): MKAnnotationView? {
         if (viewForAnnotation is MKUserLocation) {
             return null
         }
 
-        val reuseId = "StandorteMarkerAnnotationView"
-        var markerView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKMarkerAnnotationView
-        if (markerView == null) {
-            markerView = MKMarkerAnnotationView(annotation = viewForAnnotation, reuseIdentifier = reuseId)
-        } else {
-            markerView.annotation = viewForAnnotation
+        if (viewForAnnotation is MKClusterAnnotation) {
+            val reuseId = "StandorteCluster"
+
+            val marker = (mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKMarkerAnnotationView)
+                ?: MKMarkerAnnotationView(
+                    annotation = viewForAnnotation,
+                    reuseIdentifier = reuseId
+                )
+
+            marker.annotation = viewForAnnotation
+            marker.markerTintColor = AppColors.primary
+            marker.glyphTintColor = UIColor.whiteColor()
+            marker.glyphText = viewForAnnotation.memberAnnotations.size.toString()
+            marker.glyphImage = null
+            marker.clusteringIdentifier = null
+            marker.canShowCallout = false
+
+            return marker
         }
 
-        val locationAnno = viewForAnnotation as? LocationPointAnnotation
-        val loc = locationAnno?.location
+        val annotation = viewForAnnotation as? LocationPointAnnotation ?: return null
 
-        markerView.setMarkerTintColor(AppColors.primary)
-        markerView.setGlyphTintColor(UIColor.whiteColor())
-        markerView.canShowCallout = false
-        markerView.animatesWhenAdded = true
+        val reuseId = "StandorteMarker"
 
-        markerView.glyphImage = loc?.type?.markerGlyph
+        val marker = (mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKMarkerAnnotationView)
+            ?: MKMarkerAnnotationView(
+                annotation = annotation,
+                reuseIdentifier = reuseId
+            )
 
-        return markerView
+        marker.annotation = annotation
+        marker.markerTintColor = AppColors.primary
+        marker.glyphTintColor = UIColor.whiteColor()
+        marker.glyphImage = annotation.location.type.markerGlyph
+        marker.glyphText = null
+        marker.clusteringIdentifier = annotation.location.type
+        marker.canShowCallout = false
+        marker.animatesWhenAdded = true
+
+        marker.displayPriority = if (annotation.location.type == "container") {
+            MKFeatureDisplayPriorityDefaultLow
+        } else {
+            MKFeatureDisplayPriorityRequired
+        }
+
+        return marker
     }
 
     @ObjCSignatureOverride
@@ -195,12 +201,8 @@ class StandorteMapDelegateBridge(
     }
 }
 
-/**
- * Location manager delegate bridge for tracking user coordinates and permissions.
- */
-class StandorteLocationManagerDelegateBridge(
-    private val onLocationUpdated: (CLLocation) -> Unit
-) : NSObject(), CLLocationManagerDelegateProtocol {
+class StandorteLocationManagerDelegateBridge(private val onLocationUpdated: (CLLocation) -> Unit) : NSObject(),
+    CLLocationManagerDelegateProtocol {
 
     @ObjCSignatureOverride
     override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
@@ -209,10 +211,6 @@ class StandorteLocationManagerDelegateBridge(
     }
 }
 
-/**
- * UIViewController for the "Standorte" navigation point displaying an MKMapView with markers
- * for all locations from the database and centered on the user's current location.
- */
 class StandorteMapViewController : UIViewController(nibName = null, bundle = null) {
     init {
         tabBarItem = UITabBarItem(
@@ -229,10 +227,10 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
 
     private lateinit var mapView: MKMapView
     private lateinit var mapDelegateBridge: StandorteMapDelegateBridge
-    private val locationManager: CLLocationManager = CLLocationManager()
+    private val locationManager = CLLocationManager()
     private var locationManagerDelegateBridge: StandorteLocationManagerDelegateBridge? = null
 
-    private var hasCenteredOnUser: Boolean = false
+    private var hasCenteredOnUser = false
     private val annotations = mutableListOf<LocationPointAnnotation>()
 
     override fun viewDidLoad() {
@@ -253,26 +251,20 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
     }
 
     private fun setupMapView() {
+        mapDelegateBridge = StandorteMapDelegateBridge(
+            onMarkerSelected = { location ->
+                showLocationDetailDialog(location)
+            },
+            onUserLocationFirstDetected = { lat, lon ->
+                if (!hasCenteredOnUser) {
+                    centerMapOnCoordinate(lat, lon)
+                }
+            }
+        )
         mapView = mapView {
-            mapType = MKMapTypeStandard
-            showsUserLocation = true
-            isZoomEnabled = true
-            isScrollEnabled = true
-            isRotateEnabled = true
-            isPitchEnabled = true
+            delegate = mapDelegateBridge
         }
 
-        val delegate = StandorteMapDelegateBridge(onMarkerSelected = { location ->
-            showLocationDetailDialog(location)
-        }, onUserLocationFirstDetected = { lat, lon ->
-            if (!hasCenteredOnUser) {
-                centerMapOnCoordinate(lat, lon)
-            }
-        })
-        mapDelegateBridge = delegate
-        mapView.setDelegate(delegate)
-
-        mapView.setTranslatesAutoresizingMaskIntoConstraints(false)
         view.addSubview(mapView)
 
         NSLayoutConstraint.activateConstraints(
@@ -318,9 +310,13 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         NSLayoutConstraint.activateConstraints(
             listOf(
                 button.trailingAnchor.constraintEqualToAnchor(
-                    view.safeAreaLayoutGuide.trailingAnchor, constant = -16.0
+                    view.safeAreaLayoutGuide.trailingAnchor,
+                    constant = -16.0
                 ),
-                button.bottomAnchor.constraintEqualToAnchor(view.safeAreaLayoutGuide.bottomAnchor, constant = -24.0),
+                button.bottomAnchor.constraintEqualToAnchor(
+                    view.safeAreaLayoutGuide.bottomAnchor,
+                    constant = -24.0,
+                ),
                 button.widthAnchor.constraintEqualToConstant(48.0),
                 button.heightAnchor.constraintEqualToConstant(48.0)
             )
@@ -329,29 +325,24 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
 
     private fun recenterOnUserLocation() {
         val userLoc = mapView.userLocation.location
+        val lastLoc = locationManager.location
         if (userLoc != null) {
             userLoc.coordinate.useContents {
                 if (isValidCoordinate(latitude, longitude)) {
                     centerMapOnCoordinate(latitude, longitude, animated = true)
                 }
             }
-        } else {
-            val lastLoc = locationManager.location
-            if (lastLoc != null) {
-                lastLoc.coordinate.useContents {
-                    if (isValidCoordinate(latitude, longitude)) {
-                        centerMapOnCoordinate(latitude, longitude, animated = true)
-                    }
+        } else if (lastLoc != null) {
+            lastLoc.coordinate.useContents {
+                if (isValidCoordinate(latitude, longitude)) {
+                    centerMapOnCoordinate(latitude, longitude, animated = true)
                 }
-            } else {
-                locationManager.startUpdatingLocation()
             }
+        } else {
+            locationManager.startUpdatingLocation()
         }
     }
 
-    /**
-     * Centers the map view on the specified coordinate.
-     */
     private fun centerMapOnCoordinate(
         latitude: Double,
         longitude: Double,
@@ -369,9 +360,6 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         mapView.setRegion(region, animated = animated)
     }
 
-    /**
-     * Loads all locations from the database and creates map markers.
-     */
     private fun loadLocations() {
         ioScope.launch {
             val locationsList = database.locationQueries.getAllLocations().executeAsList()
@@ -379,9 +367,6 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         }
     }
 
-    /**
-     * Updates map annotations for the given list of locations.
-     */
     private fun setLocations(locationsList: List<Location>) {
         if (annotations.isNotEmpty()) {
             mainScope.launch {
@@ -393,7 +378,6 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
         val validLocations = locationsList.filter { isValidCoordinate(it.latitude, it.longitude) }
 
         if (validLocations.isEmpty()) {
-            // Default center around Hildesheim if no valid locations and no user position yet
             if (!hasCenteredOnUser) {
                 mainScope.launch {
                     centerMapOnCoordinate(
@@ -416,14 +400,17 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
             }
         }
 
-        // If user location is not available yet, center on average location coordinates
         if (!hasCenteredOnUser) {
             val avgLat = validLocations.map { it.latitude }.average()
             val avgLon = validLocations.map { it.longitude }.average()
             mainScope.launch {
                 if (isValidCoordinate(avgLat, avgLon)) {
                     centerMapOnCoordinate(
-                        avgLat, avgLon, latitudinalMeters = 6000.0, longitudinalMeters = 6000.0, animated = false
+                        avgLat,
+                        avgLon,
+                        latitudinalMeters = 6000.0,
+                        longitudinalMeters = 6000.0,
+                        animated = false,
                     )
                 } else {
                     centerMapOnCoordinate(
@@ -431,24 +418,18 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
                         DEFAULT_HILDESHEIM_LONGITUDE,
                         latitudinalMeters = 8000.0,
                         longitudinalMeters = 8000.0,
-                        animated = false
+                        animated = false,
                     )
                 }
             }
         }
     }
 
-    /**
-     * Opens an alert dialog with the details of the selected location.
-     */
     private fun showLocationDetailDialog(location: Location) {
         showAlert {
             title = location.name.trim().ifBlank { "Standort" }
             message = location.dialogText
-            style = UIAlertControllerStyleAlert
-            action(
-                title = "Schließen", style = UIAlertActionStyleCancel, handler = null
-            )
+            okAction("Schließen")
         }
     }
 }

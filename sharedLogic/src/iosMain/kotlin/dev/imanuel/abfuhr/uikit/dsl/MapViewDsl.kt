@@ -4,28 +4,34 @@ package dev.imanuel.abfuhr.uikit.dsl
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreGraphics.CGRectMake
-import platform.MapKit.*
+import platform.MapKit.MKMapTypeStandard
+import platform.MapKit.MKMapView
+import platform.MapKit.MKMapViewDelegateProtocol
 
 @UIKitDsl
 class MapViewBuilder {
-    val mapView: MKMapView = MKMapView(frame = CGRectMake(0.0, 0.0, 320.0, 480.0))
+    val mapView = MKMapView(frame = CGRectMake(0.0, 0.0, 320.0, 480.0))
 
-    var mapType: MKMapType = MKMapTypeStandard
-    var showsUserLocation: Boolean = false
-    var isZoomEnabled: Boolean = true
-    var isScrollEnabled: Boolean = true
-    var isRotateEnabled: Boolean = true
-    var isPitchEnabled: Boolean = true
+    var mapType = MKMapTypeStandard
+    var showsUserLocation = false
+    var isZoomEnabled = true
+    var isScrollEnabled = true
+    var isRotateEnabled = true
+    var isPitchEnabled = true
+
+    var delegate: MKMapViewDelegateProtocol? = null
 
     private var initialRegionAction: (() -> Unit)? = null
 
     fun build(): MKMapView {
-        mapView.setMapType(mapType)
-        mapView.setShowsUserLocation(showsUserLocation)
-        mapView.setZoomEnabled(isZoomEnabled)
-        mapView.setScrollEnabled(isScrollEnabled)
-        mapView.setRotateEnabled(isRotateEnabled)
-        mapView.setPitchEnabled(isPitchEnabled)
+        mapView.mapType = mapType
+        mapView.showsUserLocation = showsUserLocation
+        mapView.zoomEnabled = isZoomEnabled
+        mapView.scrollEnabled = isScrollEnabled
+        mapView.rotateEnabled = isRotateEnabled
+        mapView.pitchEnabled = isPitchEnabled
+        mapView.delegate = delegate
+        mapView.translatesAutoresizingMaskIntoConstraints = false
 
         initialRegionAction?.invoke()
 
@@ -33,9 +39,7 @@ class MapViewBuilder {
     }
 }
 
-inline fun mapView(
-    builder: MapViewBuilder.() -> Unit = {}
-): MKMapView {
+inline fun mapView(builder: MapViewBuilder.() -> Unit = {}): MKMapView {
     val b = MapViewBuilder()
     b.builder()
     return b.build()
