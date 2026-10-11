@@ -392,12 +392,14 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
             return
         }
 
-        for (loc in validLocations) {
-            val annotation = LocationPointAnnotation(loc)
-            mainScope.launch {
-                annotations.add(annotation)
-                mapView.addAnnotation(annotation)
-            }
+        val newAnnotations = validLocations.map(::LocationPointAnnotation)
+
+        mainScope.launch {
+            mapView.removeAnnotations(annotations)
+            annotations.clear()
+
+            annotations.addAll(newAnnotations)
+            mapView.addAnnotations(newAnnotations)
         }
 
         if (!hasCenteredOnUser) {
