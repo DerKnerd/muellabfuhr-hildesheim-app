@@ -8,9 +8,9 @@ import platform.UIKit.*
 
 @UIKitDsl
 class TextViewBuilder {
-    val textView: UITextView = UITextView()
+    val textView = UITextView()
 
-    var font: UIFont? = null
+    var font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
     var text: String? = null
     var attributedText: NSAttributedString? = null
     var textColor: UIColor? = null
@@ -34,9 +34,10 @@ class TextViewBuilder {
     }
 
     fun build(): UITextView {
-        text?.let { textView.setText(it) }
-        attributedText?.let { textView.setAttributedText(it) }
-        textColor?.let { textView.setTextColor(it) }
+        text?.let { textView.text = it }
+        attributedText?.let { textView.attributedText = it }
+        textColor?.let { textView.textColor = it }
+        textView.font = font
         textView.setTextAlignment(textAlignment)
         textView.setSelectable(isSelectable)
         textView.setEditable(false)

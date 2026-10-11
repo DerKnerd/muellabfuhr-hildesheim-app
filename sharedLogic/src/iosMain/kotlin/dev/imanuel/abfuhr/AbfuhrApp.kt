@@ -85,7 +85,6 @@ class AbfuhrSyncLoadingView : UIView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0)) {
         textAlignment = NSTextAlignmentCenter
         numberOfLines = 0
         textColor = UIColor.secondaryLabelColor()
-        font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
         lineBreakMode = NSLineBreakByWordWrapping
         setTranslatesAutoresizingMaskIntoConstraints(false)
     }

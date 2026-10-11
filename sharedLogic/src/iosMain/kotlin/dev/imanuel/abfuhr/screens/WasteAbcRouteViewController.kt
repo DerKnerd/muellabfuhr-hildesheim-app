@@ -1,19 +1,22 @@
+@file:OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+
 package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.helper.notifyDone
+import dev.imanuel.abfuhr.helper.openInAppleMaps
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatformTools
-import platform.Foundation.NSTemporaryDirectory
-import platform.Foundation.NSURL
-import platform.Foundation.NSURLSession
-import platform.Foundation.downloadTaskWithURL
+import platform.Foundation.*
 import platform.UIKit.*
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
@@ -86,6 +89,11 @@ class WasteAbcRouteViewController(
     private val abfuhrClient: AbfuhrClient
         get() = KoinPlatformTools.defaultContext().get().get()
 
+    @ObjCAction
+    fun addressTapped(sender: UITapGestureRecognizer) {
+        route.openInAppleMaps()
+    }
+
     override fun viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.systemBackgroundColor()
@@ -123,6 +131,11 @@ class WasteAbcRouteViewController(
                 }) {
                     padding(8.0, 0.0)
                     font = UIFont.systemFontOfSize(UIFont.systemFontSize)
+                    val tapGesture = UITapGestureRecognizer(
+                        target = this@WasteAbcRouteViewController,
+                        action = NSSelectorFromString("addressTapped:")
+                    )
+                    textView.addGestureRecognizer(tapGesture)
                 }
             }
             if (route.fees.isNotBlank()) {
