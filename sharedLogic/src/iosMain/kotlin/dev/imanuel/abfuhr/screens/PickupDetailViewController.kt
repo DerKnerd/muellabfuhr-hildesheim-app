@@ -66,8 +66,6 @@ class PickupDetailViewController(
         }.executeAsList()
 
         val pickupsListView = listView(UITableViewStyle.UITableViewStyleGrouped) {
-            backgroundColor = UIColor.systemBackgroundColor()
-            separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension
             estimatedRowHeight = 72.0
 

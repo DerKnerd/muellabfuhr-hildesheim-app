@@ -2,6 +2,7 @@
 
 package dev.imanuel.abfuhr.uikit.dsl
 
+import dev.imanuel.abfuhr.helper.isIos18
 import kotlinx.cinterop.*
 import platform.UIKit.*
 import platform.darwin.NSObject
@@ -34,23 +35,11 @@ enum class AdaptiveNavigationMode {
  */
 class AdaptiveNavigationItem(
     val title: String,
-    val subtitle: String? = null,
     val image: UIImage? = null,
-    val selectedImage: UIImage? = null,
-    val badgeValue: String? = null,
-    val badgeColor: UIColor? = null,
-    val tag: Long = 0L,
     val viewController: UIViewController? = null,
     val contentView: UIView? = null,
-    val onSelect: (() -> Unit)? = null
 ) {
-    fun toTabBarItem(): UITabBarItem {
-        val item = UITabBarItem(title = title, image = image, tag = tag)
-        item.selectedImage = selectedImage ?: image
-        item.badgeValue = badgeValue
-        badgeColor?.let { item.badgeColor = it }
-        return item
-    }
+    fun toTabBarItem() = UITabBarItem(title = title, image = image, tag = 0L)
 
     fun resolveViewController(): UIViewController {
         if (viewController != null) {
@@ -88,100 +77,20 @@ class AdaptiveNavigationSection(
 @UIKitDsl
 class AdaptiveNavigationItemBuilder {
     var title: String = ""
-    var subtitle: String? = null
-    var systemImageName: String? = null
     var image: UIImage? = null
-    var selectedImage: UIImage? = null
-    var selectedSystemImageName: String? = null
-    var badgeValue: String? = null
-    var badgeColor: UIColor? = null
-    var tag: Long = 0L
     var viewController: UIViewController? = null
     var contentView: UIView? = null
-
-    private var selectAction: (() -> Unit)? = null
-
-    fun systemIcon(name: String, pointSize: Double? = null) {
-        val config = pointSize?.let { UIImageSymbolConfiguration.configurationWithPointSize(it) }
-        image = if (config != null) UIImage.systemImageNamed(name, config) else UIImage.systemImageNamed(name)
-    }
-
-    fun selectedSystemIcon(name: String, pointSize: Double? = null) {
-        val config = pointSize?.let { UIImageSymbolConfiguration.configurationWithPointSize(it) }
-        selectedImage = if (config != null) UIImage.systemImageNamed(name, config) else UIImage.systemImageNamed(name)
-    }
-
-    fun onSelect(action: () -> Unit) {
-        this.selectAction = action
-    }
 
     fun content(viewProvider: () -> UIView) {
         this.contentView = viewProvider()
     }
 
-    fun viewController(controllerProvider: () -> UIViewController) {
-        this.viewController = controllerProvider()
-    }
-
     fun build(): AdaptiveNavigationItem {
-        val finalImage = image ?: systemImageName?.let { UIImage.systemImageNamed(it) }
-        val finalSelectedImage = selectedImage ?: selectedSystemImageName?.let { UIImage.systemImageNamed(it) }
-
         return AdaptiveNavigationItem(
             title = title,
-            subtitle = subtitle,
-            image = finalImage,
-            selectedImage = finalSelectedImage,
-            badgeValue = badgeValue,
-            badgeColor = badgeColor,
-            tag = tag,
+            image = image,
             viewController = viewController,
             contentView = contentView,
-            onSelect = selectAction
-        )
-    }
-}
-
-@UIKitDsl
-class AdaptiveNavigationSectionBuilder(
-    var title: String? = null,
-) {
-    private val itemsList = mutableListOf<AdaptiveNavigationItem>()
-
-    fun item(
-        title: String,
-        systemImageName: String? = null,
-        tag: Long = 0L,
-        builder: AdaptiveNavigationItemBuilder.() -> Unit = {}
-    ) {
-        val b = AdaptiveNavigationItemBuilder()
-        b.title = title
-        b.systemImageName = systemImageName
-        b.tag = tag
-        b.builder()
-        itemsList.add(b.build())
-    }
-
-    fun item(
-        title: String,
-        image: UIImage,
-        selectedImage: UIImage? = null,
-        tag: Long = 0L,
-        builder: AdaptiveNavigationItemBuilder.() -> Unit = {}
-    ) {
-        val b = AdaptiveNavigationItemBuilder()
-        b.title = title
-        b.image = image
-        b.selectedImage = selectedImage
-        b.tag = tag
-        b.builder()
-        itemsList.add(b.build())
-    }
-
-    fun build(): AdaptiveNavigationSection {
-        return AdaptiveNavigationSection(
-            title = title,
-            items = itemsList.toList()
         )
     }
 }
@@ -222,12 +131,10 @@ class AdaptiveNavigationController(
     var selectedIndex: Int = 0
         private set
 
-    var tabBarController: UITabBarController? = null
-        private set
-    var currentChildViewController: UIViewController? = null
-        private set
+    private var tabBarController: UITabBarController? = null
+    private var currentChildViewController: UIViewController? = null
 
-    val isPadLayout: Boolean
+    private val isPadLayout: Boolean
         get() = when (mode) {
             AdaptiveNavigationMode.PhoneTabBar -> false
             AdaptiveNavigationMode.Auto -> UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad
@@ -263,6 +170,7 @@ class AdaptiveNavigationController(
 
     private fun setupTabBarController(prefersConvertibleSidebar: Boolean = false) {
         val tabController = UITabBarController()
+
         if (prefersConvertibleSidebar) {
             tabController.configureAsConvertibleTabBar()
         }
@@ -274,28 +182,51 @@ class AdaptiveNavigationController(
         tabController.tabBar.standardAppearance = appearance
         tabController.tabBar.scrollEdgeAppearance = appearance
 
-        tabBarTintColor?.let { tabController.tabBar.setTintColor(it) }
-        tabBarBackgroundColor?.let { tabController.tabBar.setBackgroundColor(it) }
-        tabBarUnselectedItemTintColor?.let { tabController.tabBar.setUnselectedItemTintColor(it) }
+        tabBarTintColor?.let {
+            tabController.tabBar.tintColor = it
+        }
+        tabBarBackgroundColor?.let {
+            tabController.tabBar.backgroundColor = it
+        }
+        tabBarUnselectedItemTintColor?.let {
+            tabController.tabBar.unselectedItemTintColor = it
+        }
 
         val viewControllers = allItems.map { item ->
             val rootVc = item.resolveViewController()
+
             UINavigationController(rootViewController = rootVc).apply {
-                this.tabBarItem = item.toTabBarItem()
+                tabBarItem = item.toTabBarItem()
+
+                navigationBar.standardAppearance =
+                    UINavigationBarAppearance().apply {
+                        configureWithDefaultBackground()
+                    }
+
+                navigationBar.scrollEdgeAppearance =
+                    navigationBar.standardAppearance
             }
         }
+
         tabController.setViewControllers(viewControllers, animated = false)
 
         val bridge = AdaptiveTabBarControllerDelegateBridge(allItems) { idx, item ->
             this.selectedIndex = idx
-            item.onSelect?.invoke()
             onItemSelectedCallback?.invoke(idx, item)
         }
+
         tabController.setDelegate(bridge)
-        objc_setAssociatedObject(tabController, adaptiveTabBarDelegateKey, bridge, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+
+        objc_setAssociatedObject(
+            tabController,
+            adaptiveTabBarDelegateKey,
+            bridge,
+            OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        )
 
         if (allItems.isNotEmpty()) {
             val targetIndex = selectedIndex.coerceIn(0, allItems.size - 1)
+
             tabController.setSelectedIndex(targetIndex.toULong())
         }
 
@@ -304,17 +235,12 @@ class AdaptiveNavigationController(
     }
 
     private fun UITabBarController.configureAsConvertibleTabBar() {
-        if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPad || !UIDevice.currentDevice.isAtLeastIOS18()) {
+        if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPad || !isIos18()) {
             return
         }
 
         mode = UITabBarControllerModeTabSidebar
         tabBarMinimizeBehavior = UITabBarMinimizeBehaviorNever
-    }
-
-    private fun UIDevice.isAtLeastIOS18(): Boolean {
-        val majorVersion = systemVersion.substringBefore('.').toIntOrNull() ?: return false
-        return majorVersion >= 18
     }
 
     private fun embedChild(child: UIViewController) {
@@ -341,15 +267,7 @@ class AdaptiveNavigationController(
         tabBarController?.setSelectedIndex(index.toULong())
 
         if (notify) {
-            item.onSelect?.invoke()
             onItemSelectedCallback?.invoke(index, item)
-        }
-    }
-
-    fun selectItemByTag(tag: Long, notify: Boolean = true) {
-        val index = allItems.indexOfFirst { it.tag == tag }
-        if (index >= 0) {
-            selectItem(index, notify)
         }
     }
 }
@@ -358,75 +276,31 @@ class AdaptiveNavigationController(
 class AdaptiveNavigationBuilder {
     var mode: AdaptiveNavigationMode = AdaptiveNavigationMode.Auto
     var selectedIndex: Int = 0
-    var tabBarTintColor: UIColor? = null
-    var tabBarBackgroundColor: UIColor? = null
-    var tabBarUnselectedItemTintColor: UIColor? = null
 
-    private val sectionsList = mutableListOf<AdaptiveNavigationSection>()
     private val defaultItems = mutableListOf<AdaptiveNavigationItem>()
     private var itemSelectedListener: ((Int, AdaptiveNavigationItem) -> Unit)? = null
 
     fun item(
         title: String,
-        systemImageName: String? = null,
-        tag: Long = 0L,
-        builder: AdaptiveNavigationItemBuilder.() -> Unit = {}
-    ) {
-        val b = AdaptiveNavigationItemBuilder()
-        b.title = title
-        b.systemImageName = systemImageName
-        b.tag = tag
-        b.builder()
-        defaultItems.add(b.build())
-    }
-
-    fun item(
-        title: String,
         image: UIImage,
-        selectedImage: UIImage? = null,
-        tag: Long = 0L,
         builder: AdaptiveNavigationItemBuilder.() -> Unit = {}
     ) {
         val b = AdaptiveNavigationItemBuilder()
         b.title = title
         b.image = image
-        b.selectedImage = selectedImage
-        b.tag = tag
         b.builder()
         defaultItems.add(b.build())
     }
 
-    fun section(
-        title: String? = null,
-        builder: AdaptiveNavigationSectionBuilder.() -> Unit
-    ) {
-        val b = AdaptiveNavigationSectionBuilder(title = title)
-        b.builder()
-        sectionsList.add(b.build())
-    }
-
-    fun onItemSelected(action: (Int, AdaptiveNavigationItem) -> Unit) {
-        this.itemSelectedListener = action
-    }
-
     fun buildController(): AdaptiveNavigationController {
-        val allSections = mutableListOf<AdaptiveNavigationSection>()
-        if (defaultItems.isNotEmpty()) {
-            allSections.add(
+        val controller = AdaptiveNavigationController(
+            mode = mode,
+            sections = listOf(
                 AdaptiveNavigationSection(
                     title = null,
                     items = defaultItems.toList()
                 )
-            )
-        }
-        allSections.addAll(sectionsList)
-
-        val controller = AdaptiveNavigationController(
-            mode = mode,
-            sections = allSections,
-            tabBarTintColor = tabBarTintColor,
-            tabBarBackgroundColor = tabBarBackgroundColor,
-            tabBarUnselectedItemTintColor = tabBarUnselectedItemTintColor,
+            ),
             onItemSelectedCallback = itemSelectedListener
         )
 

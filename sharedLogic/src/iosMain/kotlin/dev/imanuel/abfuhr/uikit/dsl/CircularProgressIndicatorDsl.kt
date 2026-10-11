@@ -3,19 +3,21 @@
 package dev.imanuel.abfuhr.uikit.dsl
 
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.CoreGraphics.CGAffineTransformMakeScale
-import platform.UIKit.*
+import platform.UIKit.UIActivityIndicatorView
+import platform.UIKit.UIActivityIndicatorViewStyle
+import platform.UIKit.UIActivityIndicatorViewStyleLarge
+import platform.UIKit.UIActivityIndicatorViewStyleMedium
 
 @UIKitDsl
 enum class ProgressIndicatorStyle {
     Medium,
-    Large
-}
+    Large;
 
-private fun ProgressIndicatorStyle.toNativeStyle(): UIActivityIndicatorViewStyle {
-    return when (this) {
-        ProgressIndicatorStyle.Medium -> UIActivityIndicatorViewStyleMedium
-        ProgressIndicatorStyle.Large -> UIActivityIndicatorViewStyleLarge
+    fun toNativeStyle(): UIActivityIndicatorViewStyle {
+        return when (this) {
+            Medium -> UIActivityIndicatorViewStyleMedium
+            Large -> UIActivityIndicatorViewStyleLarge
+        }
     }
 }
 
@@ -25,11 +27,7 @@ class ActivityIndicatorBuilder(
 ) {
     val indicatorView: UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle = style)
 
-    var color: UIColor? = null
-    var hidesWhenStopped: Boolean = true
     var isAnimating: Boolean = true
-    var scale: Double? = null
-    var backgroundColor: UIColor? = null
 
     fun style(indicatorStyle: ProgressIndicatorStyle) {
         this.style = indicatorStyle.toNativeStyle()
@@ -41,14 +39,10 @@ class ActivityIndicatorBuilder(
     }
 
     fun build(): UIActivityIndicatorView {
-        indicatorView.setActivityIndicatorViewStyle(style)
-        color?.let { indicatorView.setColor(it) }
-        indicatorView.setHidesWhenStopped(hidesWhenStopped)
-        backgroundColor?.let { indicatorView.setBackgroundColor(it) }
+        indicatorView.translatesAutoresizingMaskIntoConstraints = false
 
-        scale?.let { factor ->
-            indicatorView.setTransform(CGAffineTransformMakeScale(factor, factor))
-        }
+        indicatorView.setActivityIndicatorViewStyle(style)
+        indicatorView.setHidesWhenStopped(true)
 
         if (isAnimating) {
             indicatorView.startAnimating()
@@ -62,12 +56,10 @@ class ActivityIndicatorBuilder(
 
 inline fun activityIndicator(
     style: UIActivityIndicatorViewStyle = UIActivityIndicatorViewStyleMedium,
-    color: UIColor? = null,
     isAnimating: Boolean = true,
     builder: ActivityIndicatorBuilder.() -> Unit = {}
 ): UIActivityIndicatorView {
     val b = ActivityIndicatorBuilder(style)
-    if (color != null) b.color = color
     b.isAnimating = isAnimating
     b.builder()
     return b.build()

@@ -2,9 +2,9 @@
 
 package dev.imanuel.abfuhr
 
+import dev.imanuel.abfuhr.uikit.dsl.AdaptiveNavigationController
 import dev.imanuel.abfuhr.api.client.apiModule
 import dev.imanuel.abfuhr.database.databaseModule
-import dev.imanuel.abfuhr.helper.resolveSystemSymbol
 import dev.imanuel.abfuhr.preferences.firstSyncHappened
 import dev.imanuel.abfuhr.preferences.markFirstSync
 import dev.imanuel.abfuhr.screens.createPickupViewController
@@ -67,7 +67,7 @@ enum class AbfuhrNavDestination(
 
     fun createIcon(pointSize: Double = 18.0): UIImage? {
         val config = UIImageSymbolConfiguration.configurationWithPointSize(pointSize)
-        val image = UIImage.resolveSystemSymbol(primarySymbolName)
+        val image = UIImage.systemImageNamed(primarySymbolName)
         return image?.imageWithConfiguration(config)
     }
 }
@@ -76,7 +76,6 @@ class AbfuhrSyncLoadingView : UIView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0)) {
 
     val activityIndicator = activityIndicator {
         setTranslatesAutoresizingMaskIntoConstraints(false)
-        hidesWhenStopped = true
         startAnimating()
     }
 
@@ -170,7 +169,7 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
                 nav.view.trailingAnchor.constraintEqualToAnchor(view.trailingAnchor)
             )
         )
-        nav.selectItemByTag(0L)
+        nav.selectItem(0)
         nav.didMoveToParentViewController(this)
     }
 
@@ -216,7 +215,6 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
             item(
                 title = AbfuhrNavDestination.Pickup.title,
                 image = AbfuhrNavDestination.Pickup.createIcon() ?: UIImage(),
-                tag = 0L
             ) {
                 viewController = createPickupViewController()
             }
@@ -224,7 +222,6 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
             item(
                 title = AbfuhrNavDestination.WasteAbc.title,
                 image = AbfuhrNavDestination.WasteAbc.createIcon() ?: UIImage(),
-                tag = 1L
             ) {
                 viewController = createWasteAbcViewController()
             }
@@ -232,7 +229,6 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
             item(
                 title = AbfuhrNavDestination.Locations.title,
                 image = AbfuhrNavDestination.Locations.createIcon() ?: UIImage(),
-                tag = 2L
             ) {
                 viewController = createStandorteMapViewController()
             }
@@ -240,7 +236,6 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
             item(
                 title = AbfuhrNavDestination.ReportWaste.title,
                 image = AbfuhrNavDestination.ReportWaste.createIcon() ?: UIImage(),
-                tag = 3L
             ) {
                 viewController = createReportWasteViewController()
             }
@@ -248,6 +243,4 @@ class AbfuhrAppViewController : UIViewController(nibName = null, bundle = null) 
     }
 }
 
-fun createAbfuhrAppViewController(): UIViewController {
-    return AbfuhrAppViewController()
-}
+fun createAbfuhrAppViewController()= AbfuhrAppViewController()

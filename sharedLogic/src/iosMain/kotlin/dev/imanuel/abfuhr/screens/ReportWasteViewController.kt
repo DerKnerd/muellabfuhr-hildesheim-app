@@ -9,6 +9,7 @@ import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.helper.notifyDone
 import dev.imanuel.abfuhr.helper.resizeToFit
 import dev.imanuel.abfuhr.helper.toJpegByteArray
+import dev.imanuel.abfuhr.uikit.dsl.activityIndicator
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
 import dev.imanuel.abfuhr.uikit.dsl.showAlert
 import kotlinx.cinterop.*
@@ -191,12 +192,9 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
 
     private fun showSendingSpinner() {
         if (sendingItem == null) {
-            val spinner = UIActivityIndicatorView().apply {
-                activityIndicatorViewStyle = UIActivityIndicatorViewStyleMedium
+            sendingItem = UIBarButtonItem(customView = activityIndicator {
                 startAnimating()
-                translatesAutoresizingMaskIntoConstraints = false
-            }
-            sendingItem = UIBarButtonItem(customView = spinner)
+            })
         }
         navigationItem.rightBarButtonItem = sendingItem
     }
@@ -263,10 +261,9 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
             }
         }
         setupForm()
-        val sendIcon = UIImage.systemImageNamed("arrow.up")
-        sendIconDefault = sendIcon
+        sendIconDefault = UIImage.systemImageNamed("arrow.up")
         sendButton = UIBarButtonItem(
-            image = sendIcon,
+            image = sendIconDefault,
             style = UIBarButtonItemStyle.UIBarButtonItemStyleDone,
             target = this,
             action = NSSelectorFromString("onSendButtonTapped"),
@@ -311,8 +308,9 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                     }
                 }
             }
+
             label("Kommentar")
-            commentView = multiLineTextField("Dein Kommentar")
+            commentView = multiLineTextField {}
 
             captureButton = button("Foto hinzufügen") {
                 systemImage("camera")
@@ -325,15 +323,14 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                         if (it != null) {
                             pictureAspectConstraint.active = false
 
-                            pictureAspectConstraint =
-                                pictureView.heightAnchor.constraintEqualToAnchor(
-                                    pictureView.widthAnchor,
-                                    multiplier = it.size().useContents {
-                                        height / width
-                                    }
-                                ).apply {
-                                    active = true
+                            pictureAspectConstraint = pictureView.heightAnchor.constraintEqualToAnchor(
+                                pictureView.widthAnchor,
+                                multiplier = it.size().useContents {
+                                    height / width
                                 }
+                            ).apply {
+                                active = true
+                            }
                             pictureView.layoutIfNeeded()
                         }
                     }
@@ -353,9 +350,6 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                     active = true
                 }
             })
-            pictureView.widthAnchor.constraintEqualToAnchor(
-                captureButton.widthAnchor
-            ).active = true
         }
 
         pictureView.widthAnchor.constraintEqualToAnchor(

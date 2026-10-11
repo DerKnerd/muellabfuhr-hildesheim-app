@@ -7,6 +7,7 @@ import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.Location
 import dev.imanuel.abfuhr.uikit.dsl.AppColors
 import dev.imanuel.abfuhr.uikit.dsl.button
+import dev.imanuel.abfuhr.uikit.dsl.iconButton
 import dev.imanuel.abfuhr.uikit.dsl.mapView
 import dev.imanuel.abfuhr.uikit.dsl.showAlert
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -304,20 +305,8 @@ class StandorteMapViewController : UIViewController(nibName = null, bundle = nul
     }
 
     private fun setupRecenterButton() {
-        val button = button {
-            button.setTranslatesAutoresizingMaskIntoConstraints(false)
+        val button = iconButton("location.fill") {
             backgroundColor = AppColors.background.colorWithAlphaComponent(0.9)
-            button.layer.run {
-                cornerRadius = 24.0
-                shadowColor = UIColor.blackColor.CGColor
-                shadowOpacity = 0.2f
-                shadowOffset = CGSizeMake(0.0, 2.0)
-                shadowRadius = 4.0
-            }
-
-            image = UIImage.systemImageNamed(
-                "location.fill", withConfiguration = UIImageSymbolConfiguration.configurationWithPointSize(20.0)
-            )
             tintColor = AppColors.primary
 
             onClick {

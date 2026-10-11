@@ -3,6 +3,8 @@ package dev.imanuel.abfuhr.sync
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -221,9 +223,10 @@ class SyncClient(
                 }
             }
             _isSuccess.value = true
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Throwable) {
+            if (e is CancellationException) {
+                currentCoroutineContext().ensureActive()
+            }
             _isSuccess.value = false
         } finally {
             _isSyncing.value = false

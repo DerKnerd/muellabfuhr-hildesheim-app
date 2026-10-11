@@ -17,15 +17,8 @@ class ListItemModel(
     var subtitle: String? = null,
     var icon: UIImage? = null,
     var accessoryType: UITableViewCellAccessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryNone,
-    var titleColor: UIColor? = null,
-    var subtitleColor: UIColor? = null,
-    var titleFont: UIFont? = null,
-    var subtitleFont: UIFont? = null,
-    var backgroundColor: UIColor? = null,
     var tintColor: UIColor? = null,
     var iconTintColor: UIColor? = null,
-    var isEnabled: Boolean = true,
-    var customCellProvider: ((UITableView, NSIndexPath) -> UITableViewCell)? = null,
     var onSelect: (() -> Unit)? = null
 )
 
@@ -35,15 +28,8 @@ class ListItemCellBuilder {
     var subtitle: String? = null
     var icon: UIImage? = null
     var accessoryType: UITableViewCellAccessoryType = UITableViewCellAccessoryType.UITableViewCellAccessoryNone
-    var titleColor: UIColor? = null
-    var subtitleColor: UIColor? = null
-    var titleFont: UIFont? = null
-    var subtitleFont: UIFont? = null
-    var backgroundColor: UIColor? = null
     var tintColor: UIColor? = null
     var iconTintColor: UIColor? = null
-    var isEnabled: Boolean = true
-    var cellStyle: UITableViewCellStyle = UITableViewCellStyle.UITableViewCellStyleSubtitle
 
     private var selectAction: (() -> Unit)? = null
 
@@ -62,20 +48,17 @@ class ListItemCellBuilder {
             subtitle = subtitle,
             icon = icon,
             accessoryType = accessoryType,
-            titleColor = titleColor,
-            subtitleColor = subtitleColor,
-            titleFont = titleFont,
-            subtitleFont = subtitleFont,
-            backgroundColor = backgroundColor,
             tintColor = tintColor,
             iconTintColor = iconTintColor,
-            isEnabled = isEnabled,
             onSelect = selectAction
         )
     }
 
     fun buildCell(reuseIdentifier: String? = "ListItemCell"): UITableViewCell {
-        val cell = UITableViewCell(style = cellStyle, reuseIdentifier = reuseIdentifier)
+        val cell = UITableViewCell(
+            style = UITableViewCellStyle.UITableViewCellStyleSubtitle,
+            reuseIdentifier = reuseIdentifier
+        )
         cell.textLabel?.setText(title)
         subtitle?.let { cell.detailTextLabel?.setText(it) }
         icon?.let {
@@ -91,13 +74,8 @@ class ListItemCellBuilder {
             }
         }
         cell.setAccessoryType(accessoryType)
-        titleColor?.let { cell.textLabel?.setTextColor(it) }
-        subtitleColor?.let { cell.detailTextLabel?.setTextColor(it) }
-        titleFont?.let { cell.textLabel?.setFont(it) }
-        subtitleFont?.let { cell.detailTextLabel?.setFont(it) }
-        backgroundColor?.let { cell.setBackgroundColor(it) }
         tintColor?.let { cell.setTintColor(it) }
-        cell.setUserInteractionEnabled(isEnabled)
+        cell.setUserInteractionEnabled(true)
         return cell
     }
 }
@@ -157,10 +135,6 @@ class TableViewBridge(
     override fun tableView(tableView: UITableView, cellForRowAtIndexPath: NSIndexPath): UITableViewCell {
         val item = itemAt(cellForRowAtIndexPath) ?: return UITableViewCell()
 
-        item.customCellProvider?.let {
-            return it(tableView, cellForRowAtIndexPath)
-        }
-
         val reuseId = "DefaultDslCell"
         val cell = tableView.dequeueReusableCellWithIdentifier(reuseId)
             ?: UITableViewCell(
@@ -170,25 +144,19 @@ class TableViewBridge(
 
         cell.textLabel?.apply {
             text = item.title
-            textColor = item.titleColor ?: UIColor.labelColor
-            font = item.titleFont ?: UIFont.preferredFontForTextStyle(
-                UIFontTextStyleBody
-            )
+            textColor = UIColor.labelColor
+            font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
         }
 
         cell.detailTextLabel?.apply {
             text = item.subtitle
-            textColor = item.subtitleColor ?: UIColor.secondaryLabelColor
-            font = item.subtitleFont ?: UIFont.preferredFontForTextStyle(
-                UIFontTextStyleSubheadline
-            )
+            textColor = UIColor.secondaryLabelColor
+            font = UIFont.preferredFontForTextStyle(UIFontTextStyleSubheadline)
         }
 
         cell.imageView?.apply {
             image = if (item.iconTintColor != null) {
-                item.icon?.imageWithRenderingMode(
-                    UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate
-                )
+                item.icon?.imageWithRenderingMode(UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate)
             } else {
                 item.icon
             }
@@ -197,9 +165,9 @@ class TableViewBridge(
 
         cell.apply {
             accessoryType = item.accessoryType
-            backgroundColor = item.backgroundColor ?: UIColor.clearColor
+            backgroundColor = UIColor.clearColor
             tintColor = item.tintColor ?: UIColor.systemBlueColor
-            userInteractionEnabled = item.isEnabled
+            userInteractionEnabled = true
         }
 
         return cell
@@ -225,15 +193,11 @@ class ListItemsBuilder(
 ) {
     val tableView: UITableView = UITableView(frame = CGRectZero.readValue(), style = style)
 
-    var backgroundColor: UIColor? = null
-    var separatorStyle: UITableViewCellSeparatorStyle? = null
-    var separatorColor: UIColor? = null
-    var isScrollEnabled: Boolean = true
-    var rowHeight: Double = UITableViewAutomaticDimension
-    var estimatedRowHeight: Double = 44.0
-    var tableHeaderView: UIView? = null
-    var tableFooterView: UIView? = null
-    var height: Double? = null
+    private val backgroundColor = UIColor.systemBackgroundColor
+    private val separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
+    var isScrollEnabled = true
+    var rowHeight = UITableViewAutomaticDimension
+    var estimatedRowHeight = 44.0
 
     private var allItems = mutableListOf<ListItemModel>()
 
@@ -252,14 +216,11 @@ class ListItemsBuilder(
     }
 
     fun build(): UITableView {
-        backgroundColor?.let { tableView.setBackgroundColor(it) }
-        separatorStyle?.let { tableView.setSeparatorStyle(it) }
-        separatorColor?.let { tableView.setSeparatorColor(it) }
+        tableView.setBackgroundColor(backgroundColor)
+        tableView.setSeparatorStyle(separatorStyle)
         tableView.setScrollEnabled(isScrollEnabled)
         tableView.setRowHeight(rowHeight)
         tableView.setEstimatedRowHeight(estimatedRowHeight)
-        tableHeaderView?.let { tableView.setTableHeaderView(it) }
-        tableFooterView?.let { tableView.setTableFooterView(it) }
 
         val bridge = TableViewBridge(allItems, sectionTitlesByFirstLetter)
         tableView.setDataSource(bridge)
@@ -267,9 +228,14 @@ class ListItemsBuilder(
         objc_setAssociatedObject(tableView, tableViewBridgeKey, bridge, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 
         val totalItems = allItems.size
-        val effectiveHeight = height ?: if (!isScrollEnabled) {
-            val itemHeight =
-                if (rowHeight > 0.0 && rowHeight != UITableViewAutomaticDimension) rowHeight else (if (estimatedRowHeight > 0.0) estimatedRowHeight else 44.0)
+        val effectiveHeight = if (!isScrollEnabled) {
+            val itemHeight = if (rowHeight > 0.0 && rowHeight != UITableViewAutomaticDimension) {
+                rowHeight
+            } else if (estimatedRowHeight > 0.0) {
+                estimatedRowHeight
+            } else {
+                44.0
+            }
             (totalItems * itemHeight).coerceAtLeast(1.0)
         } else null
 

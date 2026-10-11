@@ -2,46 +2,23 @@
 
 package dev.imanuel.abfuhr.uikit.dsl
 
+import dev.imanuel.abfuhr.helper.hasGlassSupport
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreGraphics.CGRectMake
 import platform.UIKit.*
 
 @UIKitDsl
-class ButtonBuilder(
-    buttonType: Long = UIButtonTypeSystem
-) {
+class ButtonBuilder(buttonType: Long = UIButtonTypeSystem) {
     val button: UIButton = UIButton.buttonWithType(buttonType)
 
     var title: String? = null
-    var titleColor: UIColor? = null
-    var highlightedTitleColor: UIColor? = null
-    var disabledTitleColor: UIColor? = null
-    var selectedTitleColor: UIColor? = null
-    var font: UIFont? = null
-    var backgroundColor: UIColor? = null
-    var cornerRadius: Double? = null
-    var borderWidth: Double? = null
-    var borderColor: UIColor? = null
-    var tintColor: UIColor? = null
     var image: UIImage? = null
-    // Spacing between image and title (in points)
-    var imageTitleSpacing: Double = 6.0
-    var isEnabled: Boolean = true
-    var isSelected: Boolean = false
-    var clipsToBounds: Boolean = true
+
+    var configuration: UIButtonConfiguration = UIButtonConfiguration.plainButtonConfiguration()
 
     private var clickAction: (() -> Unit)? = null
-    private var topInset: Double = 0.0
-    private var leftInset: Double = 0.0
-    private var bottomInset: Double = 0.0
-    private var rightInset: Double = 0.0
-    private var hasCustomInsets: Boolean = false
 
-    fun systemImage(
-        name: String,
-        pointSize: Double? = null,
-        weight: UIImageSymbolWeight? = null
-    ) {
+    fun systemImage(name: String, pointSize: Double? = null, weight: UIImageSymbolWeight? = null) {
         val config = if (pointSize != null && weight != null) {
             UIImageSymbolConfiguration.configurationWithPointSize(pointSize, weight)
         } else if (pointSize != null) {
@@ -59,28 +36,8 @@ class ButtonBuilder(
         }
     }
 
-    fun contentInsets(top: Double, left: Double, bottom: Double, right: Double) {
-        this.topInset = top
-        this.leftInset = left
-        this.bottomInset = bottom
-        this.rightInset = right
-        this.hasCustomInsets = true
-    }
-
-    fun contentPadding(horizontal: Double, vertical: Double) {
-        contentInsets(top = vertical, left = horizontal, bottom = vertical, right = horizontal)
-    }
-
-    fun contentPadding(all: Double) {
-        contentInsets(top = all, left = all, bottom = all, right = all)
-    }
-
     fun horizontalAlignment(alignment: UIControlContentHorizontalAlignment) {
         button.setContentHorizontalAlignment(alignment)
-    }
-
-    fun verticalAlignment(alignment: UIControlContentVerticalAlignment) {
-        button.setContentVerticalAlignment(alignment)
     }
 
     fun onClick(action: () -> Unit) {
@@ -88,53 +45,22 @@ class ButtonBuilder(
     }
 
     fun build(): UIButton {
-        val hasConfig = hasCustomInsets
-        if (hasConfig) {
-            val config = button.configuration ?: UIButtonConfiguration.plainButtonConfiguration()
-            title?.let { config.title = it }
-            config.contentInsets = NSDirectionalEdgeInsetsMake(
-                top = topInset,
-                leading = leftInset,
-                bottom = bottomInset,
-                trailing = rightInset
-            )
-            button.configuration = config
-        } else {
-            title?.let { button.setTitle(it, UIControlStateNormal) }
-        }
-
         title?.let { button.setTitle(it, UIControlStateNormal) }
-        titleColor?.let { button.setTitleColor(it, UIControlStateNormal) }
-        highlightedTitleColor?.let { button.setTitleColor(it, UIControlStateHighlighted) }
-        disabledTitleColor?.let { button.setTitleColor(it, UIControlStateDisabled) }
-        selectedTitleColor?.let { button.setTitleColor(it, UIControlStateSelected) }
-        font?.let { button.titleLabel?.setFont(it) }
-        backgroundColor?.let { button.setBackgroundColor(it) }
-        tintColor?.let { button.setTintColor(it) }
         image?.let { button.setImage(it, UIControlStateNormal) }
+        button.configuration = configuration
 
-        cornerRadius?.let {
-            button.layer.cornerRadius = it
-            button.layer.masksToBounds = clipsToBounds
-        }
-
-        borderWidth?.let { button.layer.borderWidth = it }
-        borderColor?.let { button.layer.borderColor = it.CGColor }
-
-        button.setEnabled(isEnabled)
-        button.setSelected(isSelected)
-        button.clipsToBounds = clipsToBounds
+        button.clipsToBounds = true
 
         // Add spacing between image and title when both are present
         if (image != null && title != null) {
             // Prefer UIButtonConfiguration if present
             val existingConfig = button.configuration
             if (existingConfig != null) {
-                existingConfig.imagePadding = imageTitleSpacing
+                existingConfig.imagePadding = 4.0
                 button.configuration = existingConfig
             } else {
                 // Fallback for pre-configuration style buttons
-                val inset = imageTitleSpacing
+                val inset = 4.0
                 button.setTitleEdgeInsets(UIEdgeInsetsMake(0.0, inset, 0.0, -inset))
                 button.setImageEdgeInsets(UIEdgeInsetsMake(0.0, -inset, 0.0, inset))
             }
@@ -151,16 +77,12 @@ class ButtonBuilder(
 @UIKitDsl
 class IconButtonBuilder {
     var systemName: String? = null
-    var image: UIImage? = null
-    var iconSize: Double = 20.0
-    var size: Double = 44.0
     var tintColor: UIColor? = null
     var backgroundColor: UIColor? = null
     var isCircular: Boolean = true
-    var cornerRadius: Double? = null
-    var borderWidth: Double? = null
-    var borderColor: UIColor? = null
-    var isEnabled: Boolean = true
+    var menu: UIMenu? = null
+    var showsMenuAsPrimaryAction: Boolean = false
+    var isGlass: Boolean = false
 
     private var clickAction: (() -> Unit)? = null
 
@@ -170,18 +92,26 @@ class IconButtonBuilder {
 
     fun build(): UIButton {
         val button = UIButton.buttonWithType(UIButtonTypeCustom)
-        button.setFrame(CGRectMake(0.0, 0.0, size, size))
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.configuration = if (isGlass && hasGlassSupport())
+            UIButtonConfiguration.glassButtonConfiguration()
+        else
+            UIButtonConfiguration.plainButtonConfiguration()
+        button.setFrame(CGRectMake(0.0, 0.0, 44.0, 44.0))
 
-        val finalImage = image ?: systemName?.let { name ->
-            val config = UIImageSymbolConfiguration.configurationWithPointSize(iconSize)
+        val finalImage = systemName?.let { name ->
+            val config = UIImageSymbolConfiguration.configurationWithPointSize(20.0)
             UIImage.systemImageNamed(name, config)
         }
 
         finalImage?.let { button.setImage(it, UIControlStateNormal) }
         tintColor?.let { button.setTintColor(it) }
-        backgroundColor?.let { button.setBackgroundColor(it) }
+        if (!(isGlass && hasGlassSupport())) backgroundColor?.let { button.setBackgroundColor(it) }
 
-        button.setEnabled(isEnabled)
+        menu?.let { button.menu = it }
+        showsMenuAsPrimaryAction.let { button.showsMenuAsPrimaryAction = it }
+
+        if (isCircular) button.layer.cornerRadius = 44.0 / 2.0
 
         clickAction?.let { action ->
             button.onClick(action)
@@ -208,16 +138,6 @@ inline fun iconButton(
 ): UIButton {
     val b = IconButtonBuilder()
     if (systemName != null) b.systemName = systemName
-    b.builder()
-    return b.build()
-}
-
-inline fun iconButton(
-    image: UIImage,
-    builder: IconButtonBuilder.() -> Unit = {}
-): UIButton {
-    val b = IconButtonBuilder()
-    b.image = image
     b.builder()
     return b.build()
 }

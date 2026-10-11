@@ -150,51 +150,36 @@ abstract class BaseFlexLayoutBuilder(
 
     fun singleLineTextField(
         placeholder: String? = null,
-        text: String? = null,
         builder: TextFieldBuilder.() -> Unit = {}
     ): UITextField {
-        val tf = dev.imanuel.abfuhr.uikit.dsl.singleLineTextField(placeholder, text, builder)
+        val tf = dev.imanuel.abfuhr.uikit.dsl.singleLineTextField(placeholder, builder)
         stackView.addArrangedSubview(tf)
         return tf
     }
 
     fun multiLineTextField(
-        placeholder: String? = null,
-        text: String? = null,
         builder: TextFieldBuilder.() -> Unit = {}
     ): UITextView {
-        val tf = dev.imanuel.abfuhr.uikit.dsl.multiLineTextField(placeholder, text, builder)
+        val tf = dev.imanuel.abfuhr.uikit.dsl.multiLineTextField(  builder)
         stackView.addArrangedSubview(tf)
         return tf
     }
 
-    fun searchField(
-        placeholder: String? = "Search",
-        text: String? = null,
-        builder: SearchFieldBuilder.() -> Unit = {}
-    ): UISearchTextField {
-        val sf = dev.imanuel.abfuhr.uikit.dsl.searchField(placeholder, text, builder)
-        stackView.addArrangedSubview(sf)
-        return sf
-    }
-
     fun textView(
         text: String? = null,
-        placeholder: String? = null,
         builder: TextViewBuilder.() -> Unit = {}
     ): UITextView {
-        val tv = dev.imanuel.abfuhr.uikit.dsl.textView(text, placeholder, builder)
+        val tv = dev.imanuel.abfuhr.uikit.dsl.textView(text,  builder)
         stackView.addArrangedSubview(tv)
         return tv
     }
 
     fun activityIndicator(
         style: UIActivityIndicatorViewStyle = UIActivityIndicatorViewStyleMedium,
-        color: UIColor? = null,
         isAnimating: Boolean = true,
         builder: ActivityIndicatorBuilder.() -> Unit = {}
     ): UIActivityIndicatorView {
-        val cpi = dev.imanuel.abfuhr.uikit.dsl.activityIndicator(style, color, isAnimating, builder)
+        val cpi = dev.imanuel.abfuhr.uikit.dsl.activityIndicator(style, isAnimating, builder)
         stackView.addArrangedSubview(cpi)
         return cpi
     }
@@ -206,16 +191,6 @@ abstract class BaseFlexLayoutBuilder(
         val lbl = dev.imanuel.abfuhr.uikit.dsl.label(text, builder)
         stackView.addArrangedSubview(lbl)
         return lbl
-    }
-
-    fun glassCard(
-        blurStyle: UIBlurEffectStyle = UIBlurEffectStyle.UIBlurEffectStyleSystemUltraThinMaterial,
-        cornerRadius: Double = 16.0,
-        builder: LiquidGlassCardBuilder.() -> Unit = {}
-    ): UIView {
-        val card = dev.imanuel.abfuhr.uikit.dsl.glassCard(blurStyle, cornerRadius, builder)
-        stackView.addArrangedSubview(card)
-        return card
     }
 
     fun listView(
@@ -253,16 +228,6 @@ abstract class BaseFlexLayoutBuilder(
         val r = dev.imanuel.abfuhr.uikit.dsl.scrollableRow(spacing = spacing, builder = builder)
         stackView.addArrangedSubview(r)
         return r
-    }
-
-    fun staggeredGrid(
-        columns: Int = 2,
-        spacing: Double = 8.0,
-        builder: StaggeredGridBuilder.() -> Unit
-    ): UIView {
-        val grid = dev.imanuel.abfuhr.uikit.dsl.staggeredGrid(columns = columns, spacing = spacing, builder = builder)
-        stackView.addArrangedSubview(grid)
-        return grid
     }
 
     fun buildStackView(): UIStackView {

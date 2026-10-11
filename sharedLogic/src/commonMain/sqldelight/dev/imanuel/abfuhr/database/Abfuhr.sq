@@ -54,19 +54,6 @@ insertLocation:
 INSERT OR REPLACE INTO abfuhrLocation(streetId, street, locality, localityId, district, districtId, streetLatitude, streetLongitude)
 VALUES ?;
 
-getAllPickups:
-SELECT *
-FROM abfuhrPickup;
-
-getNextPickups:
-SELECT *
-FROM abfuhrPickup;
-
-getAllLocations:
-SELECT l.*
-FROM abfuhrLocation l
-ORDER BY l.locality, l.district, l.street;
-
 clearPickups:
 DELETE
 FROM abfuhrPickup;
@@ -74,6 +61,26 @@ FROM abfuhrPickup;
 clearLocations:
 DELETE
 FROM abfuhrLocation;
+
+searchLocationsWithNextPickupWithShortKeyword:
+SELECT
+    l.*,
+    p.date AS pickupDate,
+    p.isPostponed AS pickupIsPostponed,
+    p.type AS pickupType
+FROM abfuhrLocation l
+LEFT JOIN abfuhrPickup p
+    ON p.streetId = l.streetId
+    AND p.date = (
+        SELECT MIN(p2.date)
+        FROM abfuhrPickup p2
+        WHERE p2.streetId = l.streetId
+          AND p2.date > :currentTime
+    )
+WHERE l.street LIKE '%' || :keyword || '%'
+   OR l.district LIKE '%' || :keyword || '%'
+   OR l.locality LIKE '%' || :keyword || '%'
+ORDER BY l.locality, l.district, l.street;
 
 searchLocationsWithNextPickup:
 SELECT
@@ -111,13 +118,6 @@ LEFT JOIN abfuhrPickup p
         LIMIT 1
     )
 ORDER BY l.locality, l.district, l.street;
-
-searchAbfuhrLocationByKeyword:
-SELECT l.*
-FROM abfuhrLocation_fts f
-JOIN abfuhrLocation l ON l.streetId = f.rowid
-WHERE abfuhrLocation_fts MATCH :keyword
-ORDER BY bm25(abfuhrLocation_fts, 5.0, 10.0, 1.0);
 
 getPickupsByStreetId:
 SELECT *
@@ -158,13 +158,6 @@ SELECT *
 FROM abfuhrLocation l
 WHERE l.hasReminder = 1
 ORDER BY l.locality, l.district, l.street;
-
-getPickupByStreetDateAndType:
-SELECT *
-FROM abfuhrPickup
-WHERE streetId = :streetId
-  AND date = :date
-  AND type = :type;
 
 getPickupByStreetAndDate:
 SELECT *

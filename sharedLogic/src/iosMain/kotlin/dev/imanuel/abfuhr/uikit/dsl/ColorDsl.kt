@@ -70,13 +70,18 @@ fun colorFromHex(hex: String, defaultAlpha: Double = 1.0): UIColor {
 object AppColors {
     private const val PRIMARY_HEX: String = "#388E3C"
 
-    val primaryLight: UIColor = colorFromHex(PRIMARY_HEX)
-
-    val primary: UIColor = primaryLight
-
-    val background: UIColor get() = UIColor.systemBackgroundColor()
-    val systemBackground: UIColor get() = UIColor.systemBackgroundColor()
-    val secondarySystemBackground: UIColor get() = UIColor.secondarySystemBackgroundColor()
-    val tertiarySystemBackground: UIColor get() = UIColor.tertiarySystemBackgroundColor()
-    val systemGroupedBackground: UIColor get() = UIColor.systemGroupedBackgroundColor()
+    val primaryLight: UIColor
+        get() = colorFromHex(PRIMARY_HEX)
+    val primary: UIColor
+        get() = primaryLight
+    val background: UIColor
+        get() = UIColor.systemBackgroundColor()
+    val systemBackground: UIColor
+        get() = UIColor.systemBackgroundColor()
+    val secondarySystemBackground: UIColor
+        get() = UIColor.secondarySystemBackgroundColor()
+    val tertiarySystemBackground: UIColor
+        get() = UIColor.tertiarySystemBackgroundColor()
+    val systemGroupedBackground: UIColor
+        get() = UIColor.systemGroupedBackgroundColor()
 }

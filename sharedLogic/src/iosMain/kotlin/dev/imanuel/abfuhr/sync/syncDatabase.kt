@@ -29,7 +29,7 @@ fun initializeBackgroundTasks() {
 private fun handleSyncTask(task: BGProcessingTask) {
     scheduleSync()
 
-    try {
+    task.setTaskCompletedWithSuccess(try {
         val syncClient =
             KoinPlatformTools
                 .defaultContext()
@@ -48,10 +48,10 @@ private fun handleSyncTask(task: BGProcessingTask) {
             }
         }
 
-        task.setTaskCompletedWithSuccess(true)
+        true
     } catch (e: Throwable) {
-        task.setTaskCompletedWithSuccess(false)
-    }
+        false
+    })
 }
 
 private fun scheduleSync() {

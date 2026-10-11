@@ -139,33 +139,16 @@ insertWasteMapping:
 INSERT OR REPLACE INTO abfallAbcWasteMapping(wasteId, routesId)
 VALUES ?;
 
-getAllWaste:
-SELECT *
-FROM abfallAbcWaste
-ORDER BY title;
-
 getAllWasteByLanguage:
 SELECT *
 FROM abfallAbcWaste
 WHERE language = :language
 ORDER BY title;
 
-getAllWasteTips:
-SELECT *
-FROM abfallAbcWasteTips;
-
-getAllDisposalRoutes:
-SELECT *
-FROM abfallAbcDisposalRoutes;
-
 getAllDisposalRoutesByLanguage:
 SELECT *
 FROM abfallAbcDisposalRoutes
 WHERE language = :language;
-
-getAllDisposalRoute:
-SELECT *
-FROM abfallAbcDisposalRoute;
 
 getAllDisposalRouteByLanguage:
 SELECT *
@@ -221,24 +204,3 @@ SELECT tip
 FROM abfallAbcWasteTips
 WHERE wasteId = :wasteId
   AND language = :language;
-
-getDisposalRouteById:
-SELECT *
-FROM abfallAbcDisposalRoute
-WHERE id = :id;
-
-getDisposalRoutesByWasteId:
-SELECT r.*
-FROM abfallAbcWaste w
-JOIN abfallAbcWasteMapping m ON w.id = m.wasteId
-JOIN abfallAbcDisposalRoutes r ON r.id = m.routesId
-WHERE m.wasteId = :wasteId
-  AND w.language = :language
-  AND r.language = :language;
-
-getDisposalRouteByWasteId:
-SELECT r.*
-FROM abfallAbcWasteMapping m
-JOIN abfallAbcDisposalRoute r ON m.routesId == r.routesId
-WHERE m.wasteId = :wasteId
-  AND r.language = :language;

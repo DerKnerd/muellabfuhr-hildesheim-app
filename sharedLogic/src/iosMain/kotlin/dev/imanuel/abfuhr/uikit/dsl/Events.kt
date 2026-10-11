@@ -37,11 +37,3 @@ fun UIControl.onEvent(event: UIControlEvents, action: (UIControl) -> Unit) {
 fun UIControl.onClick(action: () -> Unit) {
     onEvent(UIControlEventTouchUpInside) { action() }
 }
-
-fun UIControl.onValueChanged(action: () -> Unit) {
-    onEvent(UIControlEventValueChanged) { action() }
-}
-
-fun UIControl.onPrimaryAction(action: () -> Unit) {
-    onEvent(UIControlEventPrimaryActionTriggered) { action() }
-}

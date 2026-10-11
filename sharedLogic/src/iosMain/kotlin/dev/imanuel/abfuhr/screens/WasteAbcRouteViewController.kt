@@ -2,6 +2,7 @@ package dev.imanuel.abfuhr.screens
 
 import dev.imanuel.abfuhr.AbfuhrNavDestination
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
+import dev.imanuel.abfuhr.helper.notifyDone
 import dev.imanuel.abfuhr.models.AbfallAbcDisposalRoute
 import dev.imanuel.abfuhr.uikit.dsl.scrollableColumn
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +25,7 @@ fun UIViewController.downloadAndShareFile(fileName: String, urlString: String) {
 
     val task = NSURLSession.sharedSession.downloadTaskWithURL(url) { tempUrl, response, error ->
         if (error != null || tempUrl == null) {
-            // show error alert
+            notifyDone(false)
             return@downloadTaskWithURL
         }
 
@@ -40,11 +41,14 @@ fun UIViewController.downloadAndShareFile(fileName: String, urlString: String) {
 
         dispatch_async(dispatch_get_main_queue()) {
             val shareController = UIActivityViewController(
-                activityItems = listOf(shareUrl), applicationActivities = null
+                activityItems = listOf(shareUrl),
+                applicationActivities = null,
             )
 
             presentViewController(
-                shareController, animated = true, completion = null
+                shareController,
+                animated = true,
+                completion = null,
             )
         }
     }
@@ -57,13 +61,16 @@ fun openInDefaultBrowser(urlString: String) {
 
     dispatch_async(dispatch_get_main_queue()) {
         UIApplication.sharedApplication.openURL(
-            url = url, options = emptyMap<Any?, Any>(), completionHandler = null
+            url = url,
+            options = emptyMap<Any?, Any>(),
+            completionHandler = null,
         )
     }
 }
 
 class WasteAbcRouteViewController(
-    private val route: AbfallAbcDisposalRoute, private val language: String
+    private val route: AbfallAbcDisposalRoute,
+    private val language: String,
 ) : UIViewController(nibName = null, bundle = null) {
     init {
         tabBarItem = UITabBarItem(

@@ -25,20 +25,6 @@ data class CancellableNotification(
 }
 
 /**
- * Data class representing scheduled notification request details.
- */
-data class ScheduledNotification(
-    val id: String,
-    val title: String,
-    val body: String,
-    val subtitle: String? = null,
-    val tags: Set<String> = emptySet(),
-    val targetTimeMillis: Long? = null,
-    val icon: String? = null,
-    val userInfo: Map<String, Any> = emptyMap()
-)
-
-/**
  * Default implementation backed by UNUserNotificationCenter.currentNotificationCenter().
  */
 class NotificationCenterClient {

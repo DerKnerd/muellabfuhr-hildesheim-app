@@ -73,7 +73,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
         style = UIActivityIndicatorViewStyleLarge
     }
 
-    private lateinit var searchController: UISearchController
+    private var searchController: UISearchController? = null
     private lateinit var searchUpdater: PickupSearchUpdaterBridge
     private lateinit var locationManagerDelegateBridge: PickupManagerDelegateBridge
 
@@ -159,8 +159,6 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
 
     private fun populateSearchList() {
         val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped, !isFiltered) {
-            backgroundColor = UIColor.systemBackgroundColor()
-            separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension
             estimatedRowHeight = 72.0
 
@@ -229,8 +227,6 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
 
     private fun populateReminderList() {
         val newResultsView = listView(UITableViewStyle.UITableViewStyleGrouped) {
-            backgroundColor = UIColor.systemBackgroundColor()
-            separatorStyle = UITableViewCellSeparatorStyle.UITableViewCellSeparatorStyleSingleLine
             rowHeight = UITableViewAutomaticDimension
             estimatedRowHeight = 72.0
 
@@ -241,8 +237,8 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 timeZone = NSTimeZone.localTimeZone
             }
 
-            loop@ for (location in locationsWithReminder) {
-                val nextPickups = database.abfuhrQueries.getPickupsByStreetId(location.streetId).executeAsList()
+            for ((streetId, street, locality, localityId, district, districtId, streetLatitude, streetLongitude) in locationsWithReminder) {
+                val nextPickups = database.abfuhrQueries.getPickupsByStreetId(streetId).executeAsList()
                     .filter { it.date >= Clock.System.now().toEpochMilliseconds() }
 
                 val date = formatter.stringFromDate(
@@ -272,12 +268,12 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                 }
                 item(
                     buildString {
-                        append(location.street)
-                        if (location.locality == "Hildesheim") {
+                        append(street)
+                        if (locality == "Hildesheim") {
                             append(", Hildesheim")
                         } else {
                             append(", ")
-                            append(location.district)
+                            append(district)
                         }
                     },
                     subtitle = nextPickupLine
@@ -287,14 +283,14 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                         navigationController?.pushViewController(
                             createPickupDetailViewController(
                                 AbfuhrLocation(
-                                    street = location.street,
-                                    streetId = location.streetId,
-                                    locality = location.locality,
-                                    localityId = location.localityId,
-                                    district = location.district,
-                                    districtId = location.districtId,
-                                    streetLatitude = location.streetLatitude,
-                                    streetLongitude = location.streetLongitude,
+                                    street = street,
+                                    streetId = streetId,
+                                    locality = locality,
+                                    localityId = localityId,
+                                    district = district,
+                                    districtId = districtId,
+                                    streetLatitude = streetLatitude,
+                                    streetLongitude = streetLongitude,
                                     pickups = nextPickups.map {
                                         AbfuhrPickup(
                                             streetId = it.streetId,
@@ -339,7 +335,7 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
                             forControlEvents = UIControlEventValueChanged
                         )
                     })
-                    tmpSpacer = spacer()
+                    tmpSpacer = column { }
                 }
             }
         }
@@ -385,18 +381,18 @@ class PickupViewController : UIViewController(nibName = null, bundle = null) {
     }
 
     private fun hideSearchBar() {
-        if (::searchController.isInitialized) {
-            if (searchController.isActive()) {
-                searchController.setActive(false)
+        searchController?.run {
+            if (active) {
+                active = false
             }
-            searchController.searchBar.resignFirstResponder()
+            searchBar.resignFirstResponder()
         }
         navigationItem.searchController = null
         navigationItem.rightBarButtonItem = null
     }
 
     private fun showSearchBar() {
-        if (!::searchController.isInitialized) {
+        if (searchController == null) {
             searchUpdater = PickupSearchUpdaterBridge { query ->
                 searchJob?.cancel()
                 searchJob = ioScope.launch {

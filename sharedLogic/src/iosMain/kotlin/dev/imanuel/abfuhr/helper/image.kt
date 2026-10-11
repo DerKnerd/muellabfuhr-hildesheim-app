@@ -9,14 +9,7 @@ import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.UIKit.*
 
-/**
- * Safely resolves an SF Symbol image
- */
-fun UIImage.Companion.resolveSystemSymbol(symbolName: String): UIImage? {
-    return UIImage.systemImageNamed(symbolName)
-}
-
-fun UIImage.resize(width: Int, height: Int): UIImage? {
+private fun UIImage.resize(width: Int, height: Int): UIImage? {
     val size = CGSizeMake(width.toDouble(), height.toDouble())
 
     UIGraphicsBeginImageContextWithOptions(
@@ -25,15 +18,15 @@ fun UIImage.resize(width: Int, height: Int): UIImage? {
         scale = 1.0
     )
 
-    size.useContents {
-        drawInRect(CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
+    return try {
+        size.useContents {
+            drawInRect(CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
+        }
+
+        UIGraphicsGetImageFromCurrentImageContext() ?: return null
+    } finally {
+        UIGraphicsEndImageContext()
     }
-
-    val resized = UIGraphicsGetImageFromCurrentImageContext() ?: return null
-
-    UIGraphicsEndImageContext()
-
-    return resized
 }
 
 fun UIImage.resizeToFit(maxWidth: Int, maxHeight: Int): UIImage? =

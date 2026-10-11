@@ -41,11 +41,3 @@ FROM location;
 clearLocations:
 DELETE
 FROM location;
-
-searchLocationByKeyword:
-SELECT l.*
-FROM location_fts f
-JOIN location l ON l.id = f.rowid
-WHERE (:locationType = '' OR l.type = :locationType)
-  AND location_fts MATCH :keyword
-LIMIT 5;

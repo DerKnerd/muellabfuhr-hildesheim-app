@@ -55,7 +55,8 @@ class WasteAbcDetailViewController(
 
                         onSelect {
                             navigationController?.pushViewController(
-                                createWasteAbcRouteViewController(route, waste.language), animated = true
+                                createWasteAbcRouteViewController(route, waste.language),
+                                animated = true
                             )
                         }
                     }
