@@ -15,10 +15,7 @@ import dev.imanuel.abfuhr.uikit.dsl.showAlert
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import org.koin.mp.KoinPlatformTools
-import platform.CoreLocation.CLLocation
-import platform.CoreLocation.CLLocationManager
-import platform.CoreLocation.CLLocationManagerDelegateProtocol
-import platform.CoreLocation.kCLLocationAccuracyBest
+import platform.CoreLocation.*
 import platform.Foundation.NSSelectorFromString
 import platform.SystemConfiguration.SCNetworkReachabilityCreateWithName
 import platform.SystemConfiguration.SCNetworkReachabilityGetFlags
@@ -271,6 +268,14 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
             enabled = false
         }
         navigationItem.rightBarButtonItem = sendButton
+        if (locationManager.authorizationStatus in listOf(
+                kCLAuthorizationStatusAuthorized,
+                kCLAuthorizationStatusAuthorizedWhenInUse,
+                kCLAuthorizationStatusAuthorizedAlways
+            )
+        ) {
+            locate()
+        }
     }
 
     override fun traitCollectionDidChange(previousTraitCollection: UITraitCollection?) {

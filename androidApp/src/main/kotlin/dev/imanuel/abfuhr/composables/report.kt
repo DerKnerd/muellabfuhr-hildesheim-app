@@ -7,36 +7,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.LocationSearching
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -46,12 +22,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dev.imanuel.abfuhr.api.client.AbfuhrClient
-import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.utils.fetchFineLocation
-import dev.imanuel.abfuhr.utils.firstSyncHappened
 import dev.imanuel.abfuhr.utils.hasInternetConnection
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -81,7 +55,7 @@ fun ReportWasteScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var locateMeNow by remember { mutableStateOf(false) }
+    var locateMeNow by remember { mutableStateOf(true) }
     var notInHildesheimMessageOpen by remember { mutableStateOf(false) }
 
     var myLocation by remember { mutableStateOf<AbfuhrLocation?>(null) }
@@ -157,8 +131,8 @@ fun ReportWasteScreen(
                         .firstOrNull()
             }
             notInHildesheimMessageOpen = !inHildesheim
-            locateMeNow = false
         }
+        locateMeNow = false
     }
 
     Scaffold(
