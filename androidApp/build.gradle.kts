@@ -25,8 +25,6 @@ fun computeVersionCode(): Int {
 
     val versionCode =
         buildString {
-            append("10")
-
             val number =
                 ((major.toInt() * 100000) + (minor.toInt() * 10000) + patch.toInt() + (System.getenv("CI_JOB_ID")
                     ?: "1").toInt()).toString(10).padStart(7, '0')
