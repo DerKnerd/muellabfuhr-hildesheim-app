@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.1"
+agp = "9.3.3"
 kotlinxHtml = "0.12.0"
 mapsCompose = "9.0.1"
 xmlutil = "1.0.2.1"

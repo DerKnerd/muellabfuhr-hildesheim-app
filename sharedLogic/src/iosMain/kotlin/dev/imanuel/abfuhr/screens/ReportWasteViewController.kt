@@ -23,6 +23,7 @@ import platform.SystemConfiguration.kSCNetworkReachabilityFlagsConnectionRequire
 import platform.SystemConfiguration.kSCNetworkReachabilityFlagsReachable
 import platform.UIKit.*
 import platform.darwin.NSObject
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalForeignApi::class)
@@ -88,9 +89,19 @@ class ReportWasteManagerDelegateBridge(
 ) : NSObject(), CLLocationManagerDelegateProtocol {
 
     @ObjCSignatureOverride
-    override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
-        val firstLocation = didUpdateLocations.firstOrNull() as? CLLocation ?: return
-        onLocationUpdated(firstLocation)
+    override fun locationManager(
+        manager: CLLocationManager,
+        didUpdateLocations: List<*>
+    ) {
+        val location = didUpdateLocations
+            .filterIsInstance<CLLocation>()
+            .lastOrNull() ?: return
+
+        if (location.horizontalAccuracy !in 0.0..50.0) {
+            return
+        }
+
+        onLocationUpdated(location)
     }
 }
 
@@ -244,8 +255,11 @@ class ReportWasteViewController : UIViewController(nibName = null, bundle = null
                 } else {
                     this@ReportWasteViewController.latitude = latitude
                     this@ReportWasteViewController.longitude = longitude
-                    val loc =
-                        database.abfuhrQueries.searchByGeolocation(latitude, longitude).executeAsList().firstOrNull()
+                    val loc = database
+                        .abfuhrQueries
+                        .searchByGeolocation(latitude, longitude, Clock.System.now().toEpochMilliseconds())
+                        .executeAsList()
+                        .firstOrNull()
                     if (loc != null) {
                         if (loc.locality == "Hildesheim") {
                             myLocationField.text = "${loc.street} Hildesheim"

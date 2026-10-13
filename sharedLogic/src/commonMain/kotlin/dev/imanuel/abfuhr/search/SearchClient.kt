@@ -6,6 +6,7 @@ import dev.imanuel.abfuhr.database.searchAbfallAbcByKeyword
 import dev.imanuel.abfuhr.database.searchAddressByKeyword
 import dev.imanuel.abfuhr.models.*
 import org.koin.core.module.Module
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 expect val searchModule: Module
@@ -94,28 +95,38 @@ class SearchClient(
             return client.searchAbfuhr(keyword = keyword)
         }
 
-        val locations = database.searchAddressByKeyword(keyword = keyword)
+        return database
+            .searchAddressByKeyword(keyword = keyword)
+            .groupBy { it.streetId }
+            .map { (_, rows) ->
+                val location = rows.first()
 
-        return locations.map { location ->
-            AbfuhrLocation(
-                street = location.street,
-                locality = location.locality,
-                district = location.district,
-                pickups = listOf(
-                    AbfuhrPickup(
-                        location.streetId,
-                        Instant.fromEpochMilliseconds(location.pickupDate ?: 0),
-                        location.pickupIsPostponed == 1L,
-                        location.pickupType ?: ""
-                    )
-                ),
-                streetId = location.streetId,
-                localityId = location.localityId,
-                districtId = location.districtId,
-                streetLatitude = location.streetLatitude,
-                streetLongitude = location.streetLongitude,
-            )
-        }
+                AbfuhrLocation(
+                    streetId = location.streetId,
+                    street = location.street,
+                    locality = location.locality,
+                    district = location.district,
+                    localityId = location.localityId,
+                    districtId = location.districtId,
+                    streetLatitude = location.streetLatitude,
+                    streetLongitude = location.streetLongitude,
+                    pickups = rows.mapNotNull { row ->
+                        val date = row.pickupDate
+                        val type = row.pickupType
+
+                        if (date == null || type == null) {
+                            null
+                        } else {
+                            AbfuhrPickup(
+                                streetId = row.streetId,
+                                date = Instant.fromEpochMilliseconds(date),
+                                isPostponed = row.pickupIsPostponed == 1L,
+                                type = type
+                            )
+                        }
+                    }
+                )
+            }
     }
 
     fun searchAbfuhrByGeolocation(lat: Double, lon: Double): List<AbfuhrLocation> {
@@ -123,32 +134,42 @@ class SearchClient(
             return emptyList()
         }
 
-        val locations =
-            database.abfuhrQueries.searchByGeolocation(lat = lat, lon = lon).executeAsList()
+        return database
+            .abfuhrQueries
+            .searchByGeolocation(lat, lon, Clock.System.now().toEpochMilliseconds())
+            .executeAsList()
+            .groupBy { it.streetId }
+            .map { (_, rows) ->
+                val location = rows.first()
 
-        return locations.map { location ->
-            val pickups =
-                database.abfuhrQueries.getPickupsByStreetId(location.streetId).executeAsList()
-                    .map { pickup ->
-                        AbfuhrPickup(
-                            streetId = pickup.streetId,
-                            date = Instant.fromEpochMilliseconds(pickup.date),
-                            isPostponed = pickup.isPostponed == 1L,
-                            type = pickup.type,
-                        )
+                println("Location: lat: ${location.streetLatitude}, lon: ${location.streetLongitude}, distance: ${location.distance}")
+
+                AbfuhrLocation(
+                    streetId = location.streetId,
+                    street = location.street,
+                    locality = location.locality,
+                    district = location.district,
+                    localityId = location.localityId,
+                    districtId = location.districtId,
+                    streetLatitude = location.streetLatitude,
+                    streetLongitude = location.streetLongitude,
+                    pickups = rows.mapNotNull { row ->
+                        val date = row.pickupDate
+                        val type = row.pickupType
+
+                        if (date == null || type == null) {
+                            null
+                        } else {
+                            AbfuhrPickup(
+                                streetId = row.streetId,
+                                date = Instant.fromEpochMilliseconds(date),
+                                isPostponed = row.pickupIsPostponed == 1L,
+                                type = type
+                            )
+                        }
                     }
-            AbfuhrLocation(
-                street = location.street,
-                locality = location.locality,
-                district = location.district,
-                pickups = pickups,
-                streetId = location.streetId,
-                localityId = location.localityId,
-                districtId = location.districtId,
-                streetLatitude = location.streetLatitude,
-                streetLongitude = location.streetLongitude,
-            )
-        }
+                )
+            }
     }
 
     private fun dev.imanuel.abfuhr.database.AbfallAbcDisposalRoute.toModel(): AbfallAbcDisposalRoute {

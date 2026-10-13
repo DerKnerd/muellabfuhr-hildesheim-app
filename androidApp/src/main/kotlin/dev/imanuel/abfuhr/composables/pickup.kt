@@ -5,60 +5,19 @@ package dev.imanuel.abfuhr.composables
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.LocationSearching
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberSearchBarState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,28 +34,19 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dev.imanuel.abfuhr.R
-import dev.imanuel.abfuhr.api.client.AbfuhrClient
 import dev.imanuel.abfuhr.database.AbfallDatabase
 import dev.imanuel.abfuhr.database.AbfuhrPickup
 import dev.imanuel.abfuhr.geo.checkIfLocationInHildesheim
 import dev.imanuel.abfuhr.models.AbfuhrLocation
 import dev.imanuel.abfuhr.search.SearchClient
 import dev.imanuel.abfuhr.ui.SimpleTopSearchBar
-import dev.imanuel.abfuhr.utils.clearAbfuhrNotifications
-import dev.imanuel.abfuhr.utils.createAbfuhrNotifications
-import dev.imanuel.abfuhr.utils.fetchFineLocation
-import dev.imanuel.abfuhr.utils.firstSyncHappened
-import dev.imanuel.abfuhr.utils.isLocationEnabled
+import dev.imanuel.abfuhr.utils.*
 import dev.imanuel.abfuhr.widgets.NextPickupsFrontScreenWidget
 import dev.imanuel.abfuhr.widgets.NextPickupsWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atTime
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toJavaZoneId
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.*
 import org.koin.compose.koinInject
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -107,6 +57,55 @@ import kotlin.time.toJavaInstant
 private suspend fun Context.updateAllWidgets() {
     NextPickupsWidget().updateAll(this)
     NextPickupsFrontScreenWidget().updateAll(this)
+}
+
+private fun nextPickupLine(nextPickups: List<dev.imanuel.abfuhr.models.AbfuhrPickup>): String {
+    val date = nextPickups.first().date.toLocalDateTime(TimeZone.currentSystemDefault()).let {
+        buildString {
+            append(it.day + 1)
+            append(". ")
+            append(
+                when (it.month) {
+                    Month.JANUARY -> "Jan"
+                    Month.FEBRUARY -> "Feb"
+                    Month.MARCH -> "Mär"
+                    Month.APRIL -> "Apr"
+                    Month.MAY -> "Mai"
+                    Month.JUNE -> "Jun"
+                    Month.JULY -> "Jul"
+                    Month.AUGUST -> "Aug"
+                    Month.SEPTEMBER -> "Sep"
+                    Month.OCTOBER -> "Okt"
+                    Month.NOVEMBER -> "Nov"
+                    Month.DECEMBER -> "Dez"
+                }
+            )
+        }
+    }
+
+    val cans = if (nextPickups.size > 1) {
+        nextPickups.map {
+            when (it.type) {
+                "B" -> "Bio"
+                "R", "S" -> "Restmüll"
+                "G" -> "Gelbe Tonne"
+                "P" -> "Papier"
+                else -> ""
+            }
+        }
+    } else {
+        listOf(
+            when (nextPickups.first().type) {
+                "B" -> "Bio"
+                "R", "S" -> "Restmüll"
+                "G" -> "Gelbe Tonne"
+                "P" -> "Papier"
+                else -> ""
+            }
+        )
+    }.filter { it.isNotEmpty() }.distinct()
+
+    return "$date: ${cans.joinToString(", ")}"
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -621,35 +620,7 @@ fun PickupScreen(
                             SegmentedListItem(
                                 shapes = ListItemDefaults.segmentedShapes(it, locations.size),
                                 supportingContent = {
-                                    val nextPickup =
-                                        location.pickups.firstOrNull { pickup -> pickup.date > today && pickup.type != "S" }
-                                    if (nextPickup != null) {
-                                        val trashCan = when (nextPickup.type) {
-                                            "B" -> "die Biotonne"
-                                            "R", "S" -> "die Restmülltonne"
-                                            "P" -> "die Papiertonne"
-                                            "G" -> "die gelbe Tonne"
-                                            else -> return@SegmentedListItem
-                                        }
-                                        Text(
-                                            "Als nächstes ist $trashCan am ${
-                                                nextPickup
-                                                    .date
-                                                    .toJavaInstant()
-                                                    .atZone(
-                                                        TimeZone.currentSystemDefault()
-                                                            .toJavaZoneId()
-                                                    )
-                                                    .toLocalDateTime()
-                                                    .toLocalDate()
-                                                    .format(
-                                                        DateTimeFormatter.ofLocalizedDate(
-                                                            FormatStyle.MEDIUM
-                                                        )
-                                                    )
-                                            } dran"
-                                        )
-                                    }
+                                    Text(nextPickupLine(location.pickups.filter { pickup -> pickup.date > today }))
                                 },
                                 onClick = {
                                     open = true
@@ -725,7 +696,9 @@ fun PickupScreen(
                             var open by remember { mutableStateOf(false) }
                             val pickups by remember {
                                 derivedStateOf {
-                                    database.abfuhrQueries.getPickupsByStreetId(location.streetId)
+                                    database
+                                        .abfuhrQueries
+                                        .getPickupsByStreetId(location.streetId)
                                         .executeAsList()
                                 }
                             }
@@ -735,35 +708,19 @@ fun PickupScreen(
                                     locationsWithReminder.size
                                 ),
                                 supportingContent = {
-                                    val nextPickup =
-                                        pickups.firstOrNull { pickup -> pickup.date > today.toEpochMilliseconds() && pickup.type != "S" }
-                                    if (nextPickup != null) {
-                                        val trashCan = when (nextPickup.type) {
-                                            "B" -> "die Biotonne"
-                                            "R", "S" -> "die Restmülltonne"
-                                            "P" -> "die Papiertonne"
-                                            "G" -> "die gelbe Tonne"
-                                            else -> return@SegmentedListItem
-                                        }
-                                        Text(
-                                            "Als nächstes ist $trashCan am ${
-                                                Instant
-                                                    .fromEpochMilliseconds(nextPickup.date)
-                                                    .toJavaInstant()
-                                                    .atZone(
-                                                        TimeZone.currentSystemDefault()
-                                                            .toJavaZoneId()
+                                    Text(
+                                        nextPickupLine(
+                                            pickups
+                                                .map { pickup ->
+                                                    dev.imanuel.abfuhr.models.AbfuhrPickup(
+                                                        streetId = pickup.streetId,
+                                                        date = Instant.fromEpochMilliseconds(pickup.date),
+                                                        isPostponed = pickup.isPostponed == 1L,
+                                                        type = pickup.type,
                                                     )
-                                                    .toLocalDateTime()
-                                                    .toLocalDate()
-                                                    .format(
-                                                        DateTimeFormatter.ofLocalizedDate(
-                                                            FormatStyle.MEDIUM
-                                                        )
-                                                    )
-                                            } dran"
-                                        )
-                                    }
+                                                }
+                                                .filter { pickup -> pickup.date > today }
+                                        ))
                                 },
                                 onClick = {
                                     open = true
@@ -795,7 +752,7 @@ fun PickupScreen(
             AlertDialog(
                 onDismissRequest = { notInHildesheimMessageOpen = false },
                 title = { Text("Nicht in Hildesheim") },
-                text = { Text("Du bist nicht im Landkreis Hildesheim. Bitte benutz die Textsuche um eine Straße zu finden.") },
+                text = { Text("Du bist nicht im Landkreis Hildesheim. Bitte benutze die Textsuche um eine Straße zu finden.") },
                 confirmButton = {
                     Button(onClick = { notInHildesheimMessageOpen = false }) {
                         Text("Schließen")

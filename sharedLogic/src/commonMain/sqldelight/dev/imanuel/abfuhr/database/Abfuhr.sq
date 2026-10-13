@@ -88,8 +88,9 @@ SELECT
     p.date AS pickupDate,
     p.isPostponed AS pickupIsPostponed,
     p.type AS pickupType
-FROM abfuhrLocation_fts l
-JOIN abfuhrLocation al ON al.streetId = l.rowid
+FROM abfuhrLocation_fts
+JOIN abfuhrLocation al
+    ON al.streetId = abfuhrLocation_fts.rowid
 LEFT JOIN abfuhrPickup p
     ON p.streetId = al.streetId
     AND p.date = (
@@ -109,13 +110,12 @@ SELECT
     p.type AS pickupType
 FROM abfuhrLocation l
 LEFT JOIN abfuhrPickup p
-    ON p.rowid = (
-        SELECT p2.rowid
+    ON p.streetId = l.streetId
+    AND p.date = (
+        SELECT MIN(p2.date)
         FROM abfuhrPickup p2
         WHERE p2.streetId = l.streetId
           AND p2.date > :currentTime
-        ORDER BY p2.date ASC
-        LIMIT 1
     )
 ORDER BY l.locality, l.district, l.street;
 
@@ -138,10 +138,32 @@ FROM abfuhrLocation
 WHERE streetId = :streetId;
 
 searchByGeolocation:
-SELECT *, ((streetLatitude - :lat) * (streetLatitude - :lat) + (streetLongitude - :lon) * (streetLongitude - :lon)) AS distance
-FROM abfuhrLocation
-ORDER BY distance ASC
-LIMIT 5;
+SELECT
+    l.*,
+    p.date AS pickupDate,
+    p.isPostponed AS pickupIsPostponed,
+    p.type AS pickupType,
+    l.distance
+FROM (
+    SELECT
+        *,
+        (
+            (streetLatitude - :lat) * (streetLatitude - :lat) +
+            (streetLongitude - :lon) * (streetLongitude - :lon) * 0.375
+        ) AS distance
+    FROM abfuhrLocation
+    ORDER BY distance ASC
+    LIMIT 5
+) AS l
+LEFT JOIN abfuhrPickup p
+    ON p.streetId = l.streetId
+    AND p.date = (
+        SELECT MIN(p2.date)
+        FROM abfuhrPickup p2
+        WHERE p2.streetId = l.streetId
+          AND p2.date > :currentTime
+    )
+ORDER BY l.distance ASC, p.type;
 
 setReminder:
 UPDATE abfuhrLocation
