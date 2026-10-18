@@ -132,9 +132,7 @@ deploy-android-production-app:
     TRACK: release
   stage: deploy-android
   rules:
-    - if: $CI_COMMIT_TAG !~ $iosTagPattern
-      when: never
-    - if: $CI_COMMIT_TAG
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ $iosTagPattern'
 
 deploy-testflight:
   stage: deploy-ios
@@ -166,6 +164,4 @@ deploy-appstore:
     - bundle update
     - bundle exec fastlane ios production
   rules:
-    - if: $CI_COMMIT_TAG !~ $androidTagPattern
-      when: never
-    - if: $CI_COMMIT_TAG
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ $androidTagPattern'
