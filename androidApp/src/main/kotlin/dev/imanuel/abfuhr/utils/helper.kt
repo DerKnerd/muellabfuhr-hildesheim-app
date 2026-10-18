@@ -10,6 +10,7 @@ import android.net.NetworkCapabilities
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.location.LocationManagerCompat
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -117,12 +118,13 @@ fun Context.createAbfuhrNotifications(
                     .addTag("trash-reminder-${location.streetId}")
                     .build()
 
-                request
+                Pair("trash-reminder-${location.streetId}-${it.date}", request)
             }
     }
-        .first()
 
-    workManager.enqueue(workRequests)
+    for ((name, request) in workRequests) {
+        workManager.enqueueUniqueWork(name, ExistingWorkPolicy.REPLACE, request)
+    }
 }
 
 fun Context.enqueueRefreshDataWorker() {
