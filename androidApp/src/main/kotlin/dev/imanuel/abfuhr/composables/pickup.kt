@@ -60,9 +60,9 @@ private suspend fun Context.updateAllWidgets() {
 }
 
 private fun nextPickupLine(nextPickups: List<dev.imanuel.abfuhr.models.AbfuhrPickup>): String {
-    val date = nextPickups.first().date.toLocalDateTime(TimeZone.currentSystemDefault()).let {
+    val date = nextPickups.first().date.toLocalDateTime(TimeZone.UTC).let {
         buildString {
-            append(it.day + 1)
+            append(it.day)
             append(". ")
             append(
                 when (it.month) {
@@ -720,6 +720,10 @@ fun PickupScreen(
                                                     )
                                                 }
                                                 .filter { pickup -> pickup.date > today }
+                                                .groupBy { pickup -> pickup.date }
+                                                .toSortedMap()
+                                                .firstEntry()
+                                                .value
                                         ))
                                 },
                                 onClick = {

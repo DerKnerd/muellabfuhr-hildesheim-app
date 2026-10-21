@@ -15,7 +15,6 @@ class RescheduleNotificationsWorker(
 
     override suspend fun doWork(): Result {
         return try {
-
             val locations = abfallDatabase
                 .abfuhrQueries
                 .getLocationsWithReminder()
