@@ -43,7 +43,9 @@ fun computeVersionCode(): Int {
 android {
     namespace = "dev.imanuel.abfuhr"
     compileSdk {
-        version = release(37)
+        version = release(37) {
+            minorApiLevel = 2
+        }
     }
 
     defaultConfig {
@@ -144,6 +146,8 @@ dependencies {
 
     implementation(libs.androidx.glance)
     implementation(libs.androidx.glance.appwidget)
+
+    implementation(libs.material.kolor)
 
     implementation(project(":sharedLogic"))
 }
